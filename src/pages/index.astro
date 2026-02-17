@@ -1,8 +1,18 @@
 ---
 import Layout from "../layouts/Layout.astro"
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Videohero from "../components/CinematicHero.astro"
 ---
 
-<Layout />
+<Layout>
+  <Videohero
+    title="Mennis"
+    subtitle="Director / Editor. Fast, clean, story-first."
+    mp4="/videos/reel.mp4"
+    poster="/posters/reel.jpg"
+    primaryHref="/portfolio"
+    primaryLabel="View Portfolio"
+    secondaryHref="/contact"
+    secondaryLabel="Book a Project"
+    minRevealMs={600}
+  />
+</Layout>
