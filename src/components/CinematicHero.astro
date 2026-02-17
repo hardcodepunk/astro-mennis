@@ -8,35 +8,18 @@ const {
   secondaryLabel = "Book a Project",
   minRevealMs = 600,
 
-  mp4 = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_auto,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4",
-  webm = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_auto,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm",
+  mp4 = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4",
+  webm = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm",
   poster = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg",
 
   disableOnMobile = true,
 } = Astro.props
-
-const bgStyle = poster ? `background-image:url(${poster});background-size:cover;background-position:center;` : ""
 ---
 
-<section
-  class="vh-hero"
-  style={bgStyle}
-  data-min-reveal={minRevealMs}
-  data-disable-mobile={disableOnMobile ? "1" : "0"}
->
-  <video
-    class="vh-video"
-    autoplay
-    muted
-    loop
-    playsinline
-    preload="metadata"
-    poster={poster}
-    disableRemotePlayback
-    aria-hidden="true"
-  >
-    {webm ? <source src={webm} type="video/webm" /> : null}
-    {mp4 ? <source src={mp4} type="video/mp4" /> : null}
+<section class="vh-hero" data-min-reveal={minRevealMs} data-disable-mobile={disableOnMobile ? "1" : "0"}>
+  <video class="vh-video" autoplay muted loop playsinline poster={poster} disableRemotePlayback aria-hidden="true">
+    <source src={webm} type="video/webm" />
+    <source src={mp4} type="video/mp4" />
   </video>
 
   <div class="vh-grad"></div>
@@ -53,77 +36,23 @@ const bgStyle = poster ? `background-image:url(${poster});background-size:cover;
     </div>
   </div>
 
-  <script>
-    const root = document.currentScript?.closest(".vh-hero")
-    if (!(root instanceof HTMLElement)) return
+  <script is:inline>
+    ;(() => {
+      const root = document.querySelector(".vh-hero")
+      if (!root) return
 
-    const video = root.querySelector("video")
-    const overlay = root.querySelector(".vh-overlay")
-    const inner = root.querySelector(".vh-inner")
+      const video = root.querySelector("video")
+      if (!video) return
 
-    if (!(video instanceof HTMLVideoElement) || !overlay || !inner) return
-
-    const reducedMQ = window.matchMedia("(prefers-reduced-motion: reduce)")
-    const mobileMQ = window.matchMedia("(max-width: 640px)")
-    const disableOnMobile = root.getAttribute("data-disable-mobile") === "1"
-
-    const mountedAt = Date.now()
-    const minRevealMs = Number(root.getAttribute("data-min-reveal") || "600")
-
-    let revealed = false
-
-    const reveal = () => {
-      if (revealed) return
-      revealed = true
-      root.classList.add("is-playing")
-    }
-
-    const revealWithMin = () => {
-      const elapsed = Date.now() - mountedAt
-      const delay = Math.max(0, minRevealMs - elapsed)
-      window.setTimeout(reveal, delay)
-    }
-
-    const startVideo = async () => {
-      try {
-        await video.play()
-      } catch {
-        revealWithMin()
+      const reveal = () => {
+        root.classList.add("is-playing")
       }
-    }
 
-    const applyMode = () => {
-      const reduced = reducedMQ.matches
-      const isMobile = mobileMQ.matches
+      video.addEventListener("playing", reveal)
+      video.addEventListener("loadeddata", reveal)
 
-      if (reduced || (disableOnMobile && isMobile)) {
-        video.pause()
-        root.dataset.reduced = "1"
-        revealWithMin()
-      } else {
-        root.dataset.reduced = "0"
-        startVideo()
-      }
-    }
-
-    const onPlaying = () => revealWithMin()
-    const onLoadedData = () => revealWithMin()
-
-    video.addEventListener("playing", onPlaying)
-    video.addEventListener("loadeddata", onLoadedData)
-
-    reducedMQ.addEventListener?.("change", applyMode)
-    mobileMQ.addEventListener?.("change", applyMode)
-
-    applyMode()
-
-    const hardTimeout = window.setTimeout(revealWithMin, 1500)
-
-    window.addEventListener("beforeunload", () => {
-      video.removeEventListener("playing", onPlaying)
-      video.removeEventListener("loadeddata", onLoadedData)
-      clearTimeout(hardTimeout)
-    })
+      setTimeout(reveal, 1500)
+    })()
   </script>
 
   <style>
@@ -132,6 +61,7 @@ const bgStyle = poster ? `background-image:url(${poster});background-size:cover;
       height: 90vh;
       width: 100%;
       overflow: hidden;
+      background: #000;
     }
     .vh-video {
       position: absolute;
@@ -218,15 +148,15 @@ const bgStyle = poster ? `background-image:url(${poster});background-size:cover;
       background: #f5f5f5;
       color: #000;
     }
-    .vh-hero.is-playing .vh-video {
-      opacity: 1;
-    }
-    .vh-hero.is-playing .vh-overlay {
+    .vh-hero.is-revealed .vh-overlay {
       opacity: 0;
     }
-    .vh-hero.is-playing .vh-inner {
+    .vh-hero.is-revealed .vh-inner {
       opacity: 1;
       transform: translateY(0);
+    }
+    .vh-hero.is-playing .vh-video {
+      opacity: 1;
     }
     .vh-hero[data-reduced="1"] .vh-video {
       opacity: 0;

@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+}
+
 @layer base {
   :root {
     --font-display: "Bebas Neue", sans-serif;
