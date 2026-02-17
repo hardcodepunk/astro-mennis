@@ -1,0 +1,249 @@
+---
+const {
+  title = "Mennis",
+  subtitle,
+  primaryHref = "/portfolio",
+  primaryLabel = "View Portfolio",
+  secondaryHref = "/contact",
+  secondaryLabel = "Book a Project",
+  minRevealMs = 600,
+
+  mp4 = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_auto,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4",
+  webm = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_auto,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm",
+  poster = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg",
+
+  disableOnMobile = true,
+} = Astro.props
+
+const bgStyle = poster ? `background-image:url(${poster});background-size:cover;background-position:center;` : ""
+---
+
+<section
+  class="vh-hero"
+  style={bgStyle}
+  data-min-reveal={minRevealMs}
+  data-disable-mobile={disableOnMobile ? "1" : "0"}
+>
+  <video
+    class="vh-video"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="metadata"
+    poster={poster}
+    disableRemotePlayback
+    aria-hidden="true"
+  >
+    {webm ? <source src={webm} type="video/webm" /> : null}
+    {mp4 ? <source src={mp4} type="video/mp4" /> : null}
+  </video>
+
+  <div class="vh-grad"></div>
+  <div class="vh-overlay" aria-hidden="true"></div>
+
+  <div class="vh-content">
+    <div class="vh-inner">
+      <h1 class="vh-title">{title}</h1>
+      {subtitle ? <p class="vh-sub">{subtitle}</p> : null}
+      <div class="vh-cta">
+        <a href={primaryHref} class="vh-btn vh-btn-primary">{primaryLabel}</a>
+        <a href={secondaryHref} class="vh-btn vh-btn-secondary">{secondaryLabel}</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const root = document.currentScript?.closest(".vh-hero")
+    if (!(root instanceof HTMLElement)) return
+
+    const video = root.querySelector("video")
+    const overlay = root.querySelector(".vh-overlay")
+    const inner = root.querySelector(".vh-inner")
+
+    if (!(video instanceof HTMLVideoElement) || !overlay || !inner) return
+
+    const reducedMQ = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const mobileMQ = window.matchMedia("(max-width: 640px)")
+    const disableOnMobile = root.getAttribute("data-disable-mobile") === "1"
+
+    const mountedAt = Date.now()
+    const minRevealMs = Number(root.getAttribute("data-min-reveal") || "600")
+
+    let revealed = false
+
+    const reveal = () => {
+      if (revealed) return
+      revealed = true
+      root.classList.add("is-playing")
+    }
+
+    const revealWithMin = () => {
+      const elapsed = Date.now() - mountedAt
+      const delay = Math.max(0, minRevealMs - elapsed)
+      window.setTimeout(reveal, delay)
+    }
+
+    const startVideo = async () => {
+      try {
+        await video.play()
+      } catch {
+        revealWithMin()
+      }
+    }
+
+    const applyMode = () => {
+      const reduced = reducedMQ.matches
+      const isMobile = mobileMQ.matches
+
+      if (reduced || (disableOnMobile && isMobile)) {
+        video.pause()
+        root.dataset.reduced = "1"
+        revealWithMin()
+      } else {
+        root.dataset.reduced = "0"
+        startVideo()
+      }
+    }
+
+    const onPlaying = () => revealWithMin()
+    const onLoadedData = () => revealWithMin()
+
+    video.addEventListener("playing", onPlaying)
+    video.addEventListener("loadeddata", onLoadedData)
+
+    reducedMQ.addEventListener?.("change", applyMode)
+    mobileMQ.addEventListener?.("change", applyMode)
+
+    applyMode()
+
+    const hardTimeout = window.setTimeout(revealWithMin, 1500)
+
+    window.addEventListener("beforeunload", () => {
+      video.removeEventListener("playing", onPlaying)
+      video.removeEventListener("loadeddata", onLoadedData)
+      clearTimeout(hardTimeout)
+    })
+  </script>
+
+  <style>
+    .vh-hero {
+      position: relative;
+      height: 90vh;
+      width: 100%;
+      overflow: hidden;
+    }
+    .vh-video {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      height: 100%;
+      width: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.8s ease-out;
+    }
+    .vh-grad {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3), transparent);
+    }
+    .vh-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 1;
+      transition: opacity 0.8s ease-out;
+    }
+    .vh-content {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      height: 100%;
+      max-width: 72rem;
+      margin: 0 auto;
+      align-items: center;
+      padding: 0 1rem;
+    }
+    .vh-inner {
+      opacity: 0;
+      transform: translateY(18px);
+      transition:
+        opacity 0.8s ease-out,
+        transform 0.8s ease-out;
+    }
+    .vh-title {
+      font-size: clamp(2.25rem, 5vw, 3.75rem);
+      line-height: 1.05;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .vh-sub {
+      margin-top: 1rem;
+      max-width: 36rem;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .vh-cta {
+      margin-top: 2rem;
+      display: flex;
+      gap: 0.75rem;
+    }
+    .vh-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.375rem;
+      padding: 0.5rem 1.25rem;
+      font-weight: 500;
+      transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+    }
+    .vh-btn-primary {
+      background: #f5f5f5;
+      color: #000;
+    }
+    .vh-btn-primary:hover {
+      background: #e5e5e5;
+    }
+    .vh-btn-secondary {
+      border: 1px solid #f5f5f5;
+      color: #f5f5f5;
+    }
+    .vh-btn-secondary:hover {
+      background: #f5f5f5;
+      color: #000;
+    }
+    .vh-hero.is-playing .vh-video {
+      opacity: 1;
+    }
+    .vh-hero.is-playing .vh-overlay {
+      opacity: 0;
+    }
+    .vh-hero.is-playing .vh-inner {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .vh-hero[data-reduced="1"] .vh-video {
+      opacity: 0;
+    }
+    .vh-hero[data-reduced="1"] .vh-overlay {
+      opacity: 1;
+    }
+    .vh-hero[data-reduced="1"] .vh-inner {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .vh-video,
+      .vh-overlay,
+      .vh-inner {
+        transition: none;
+      }
+    }
+  </style>
+</section>
