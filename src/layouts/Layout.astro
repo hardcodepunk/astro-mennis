@@ -1,0 +1,19 @@
+---
+import "../styles/global.css"
+import "plyr/dist/plyr.css"
+import "@fontsource/bebas-neue/400.css"
+import Header from "../components/Header.astro"
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <slot name="head" />
+  </head>
+  <body class="min-h-screen bg-black text-white">
+    <Header logoText="Mennis" />
+    <slot />
+  </body>
+</html>
