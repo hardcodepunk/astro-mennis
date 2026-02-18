@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro"
 import Videohero from "../components/CinematicHero.astro"
+import LogosMarquee from "../components/LogosMarquee.astro"
 ---
 
 <Layout>
@@ -12,5 +13,10 @@ import Videohero from "../components/CinematicHero.astro"
     secondaryHref="/contact"
     secondaryLabel="Book a Project"
     minRevealMs={600}
+  />
+  <LogosMarquee
+    items={["Craftgram", "techtide", "Lum Labs", "swift", "sparkle", "Northmark", "Studio 9"]}
+    speed={30}
+    height={210}
   />
 </Layout>

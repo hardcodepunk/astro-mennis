@@ -1,0 +1,110 @@
+---
+const { items = ["Craftgram", "techtide", "Lum Labs", "swift", "sparkle"], speed = 28, height = 96 } = Astro.props
+
+const duration = Math.max(8, Number(speed) || 28)
+const h = Math.max(48, Number(height) || 96)
+---
+
+<section class="lm" style={`--lm-duration:${duration}s;--lm-h:${h}px;`}>
+  <div class="lm-mask">
+    <div class="lm-track" aria-label="Client logos">
+      <ul class="lm-row">
+        {
+          items.map(label => (
+            <li class="lm-item">
+              <span class="lm-pill">{label}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <ul class="lm-row" aria-hidden="true">
+        {
+          items.map(label => (
+            <li class="lm-item">
+              <span class="lm-pill">{label}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .lm {
+    width: 100%;
+  }
+
+  .lm-mask {
+    height: var(--lm-h);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+
+  .lm-track {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+    animation: lm-marquee var(--lm-duration) linear infinite;
+  }
+
+  .lm-row {
+    display: flex;
+    align-items: center;
+    gap: 56px;
+    padding-right: 56px;
+    list-style: none;
+    margin: 0;
+    padding-left: 0;
+  }
+
+  .lm-item {
+    display: flex;
+    align-items: center;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+  }
+
+  .lm-item:hover {
+    opacity: 1;
+  }
+
+  .lm-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.8);
+    white-space: nowrap;
+    text-transform: none;
+    font-weight: 600;
+  }
+
+  @keyframes lm-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .lm-mask:hover .lm-track {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lm-track {
+      animation: none;
+      transform: none;
+    }
+    .lm-mask {
+      mask-image: none;
+      -webkit-mask-image: none;
+    }
+  }
+</style>
