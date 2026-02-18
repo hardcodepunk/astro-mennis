@@ -8,6 +8,13 @@ body {
 html {
   margin: 0;
   padding: 0;
+  scroll-behavior: smooth;
+}
+
+#recent,
+#services,
+#contact {
+  scroll-margin-top: 80px;
 }
 
 @layer base {
