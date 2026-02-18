@@ -20,8 +20,12 @@ const { items = [] } = Astro.props
             </div>
 
             <div class="rw-right">
-              <div class="rw-media">
+              <div class="rw-media" data-hover-video>
                 <img class="rw-img" src={w.preview.poster} alt="" loading="lazy" />
+                <video class="rw-vid" muted loop playsinline preload="none" aria-hidden="true">
+                  {w.preview.webm ? <source data-src={w.preview.webm} type="video/webm" /> : null}
+                  {w.preview.mp4 ? <source data-src={w.preview.mp4} type="video/mp4" /> : null}
+                </video>
               </div>
             </div>
           </a>
@@ -29,6 +33,64 @@ const { items = [] } = Astro.props
       }
     </div>
   </div>
+
+  <script>
+    ;(() => {
+      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)")
+      if (!finePointer.matches) return
+
+      const items = document.querySelectorAll(".rw-item")
+      items.forEach(item => {
+        if (!(item instanceof HTMLElement)) return
+
+        const block = item.querySelector("[data-hover-video]")
+        if (!(block instanceof HTMLElement)) return
+
+        const video = block.querySelector("video")
+        if (!(video instanceof HTMLVideoElement)) return
+
+        const sources = Array.from(video.querySelectorAll("source"))
+        let hydrated = false
+        let playing = false
+
+        const hydrate = () => {
+          if (hydrated) return
+          hydrated = true
+          sources.forEach(s => {
+            const src = s.getAttribute("data-src")
+            if (src) s.setAttribute("src", src)
+          })
+          video.load()
+        }
+
+        const start = async () => {
+          if (playing) return
+          hydrate()
+          try {
+            await video.play()
+            playing = true
+            block.classList.add("is-playing")
+          } catch {
+            playing = false
+            block.classList.remove("is-playing")
+          }
+        }
+
+        const stop = () => {
+          playing = false
+          video.pause()
+          video.currentTime = 0
+          block.classList.remove("is-playing")
+        }
+
+        item.addEventListener("pointerenter", start)
+        item.addEventListener("pointerleave", stop)
+
+        item.addEventListener("focusin", start)
+        item.addEventListener("focusout", stop)
+      })
+    })()
+  </script>
 
   <style>
     .rw {
@@ -117,12 +179,25 @@ const { items = [] } = Astro.props
       background: #000;
     }
 
-    .rw-img {
+    .rw-img,
+    .rw-vid {
       display: block;
       width: 100%;
       height: auto;
       aspect-ratio: 16 / 9;
       object-fit: cover;
+    }
+
+    .rw-vid {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 180ms ease;
+      pointer-events: none;
+    }
+
+    .rw-media.is-playing .rw-vid {
+      opacity: 1;
     }
 
     @media (max-width: 900px) {
@@ -136,10 +211,6 @@ const { items = [] } = Astro.props
 
       .rw-tag {
         max-width: 60ch;
-      }
-
-      .rw-img {
-        aspect-ratio: 16 / 9;
       }
 
       .rw-meta {
