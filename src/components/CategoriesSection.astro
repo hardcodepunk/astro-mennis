@@ -1,0 +1,200 @@
+---
+// src/components/CategoriesSection.astro
+const { items = [] } = Astro.props
+---
+
+<section id="services" class="cs">
+  <div class="cs-inner">
+    <h2 class="cs-title">SERVICES</h2>
+
+    <div class="cs-list">
+      {
+        items.map(c => (
+          <a class="cs-item" href={`/categories/${c.slug}`} aria-label={`Open ${c.title}`}>
+            <div class="cs-media" data-hover-video>
+              <img class="cs-img" src={c.preview.poster} alt="" loading="lazy" />
+              <video class="cs-vid" muted loop playsinline preload="none" aria-hidden="true">
+                {c.preview.webm ? <source data-src={c.preview.webm} type="video/webm" /> : null}
+                {c.preview.mp4 ? <source data-src={c.preview.mp4} type="video/mp4" /> : null}
+              </video>
+
+              <div class="cs-shade" aria-hidden="true" />
+
+              <div class="cs-overlay">
+                <div class="cs-name">{c.title}</div>
+                <div class="cs-tag">{c.tagline}</div>
+              </div>
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+
+  <script>
+    ;(() => {
+      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)")
+      if (!finePointer.matches) return
+
+      const blocks = document.querySelectorAll("[data-hover-video]")
+      blocks.forEach(block => {
+        const video = block.querySelector("video")
+        if (!(video instanceof HTMLVideoElement)) return
+
+        const sources = Array.from(video.querySelectorAll("source"))
+        let hydrated = false
+
+        const hydrate = () => {
+          if (hydrated) return
+          hydrated = true
+          sources.forEach(s => {
+            const src = s.getAttribute("data-src")
+            if (src) s.setAttribute("src", src)
+          })
+          video.load()
+        }
+
+        const onEnter = async () => {
+          hydrate()
+          try {
+            await video.play()
+            block.classList.add("is-playing")
+          } catch {
+            block.classList.remove("is-playing")
+          }
+        }
+
+        const onLeave = () => {
+          video.pause()
+          video.currentTime = 0
+          block.classList.remove("is-playing")
+        }
+
+        const host = block.closest("a")
+        if (!host) return
+
+        host.addEventListener("mouseenter", onEnter)
+        host.addEventListener("mouseleave", onLeave)
+        host.addEventListener("focusin", onEnter)
+        host.addEventListener("focusout", onLeave)
+      })
+    })()
+  </script>
+
+  <style>
+    .cs {
+      padding: 88px 0;
+      background: #000;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+    }
+
+    .cs-inner {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    .cs-title {
+      margin: 0 0 44px 0;
+      font-size: clamp(3.2rem, 8vw, 6.8rem);
+      line-height: 0.9;
+      letter-spacing: 0.02em;
+      color: rgba(255, 255, 255, 0.95);
+      font-weight: 400;
+      text-transform: uppercase;
+    }
+
+    .cs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    .cs-item {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .cs-media {
+      position: relative;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .cs-img,
+    .cs-vid {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    .cs-vid {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 180ms ease;
+      pointer-events: none;
+    }
+
+    .cs-media.is-playing .cs-vid {
+      opacity: 1;
+    }
+
+    .cs-shade {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .cs-overlay {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      padding: 22px 22px 18px;
+      z-index: 3;
+      max-width: 56rem;
+    }
+
+    .cs-name {
+      font-size: clamp(2.2rem, 4.2vw, 3.8rem);
+      line-height: 0.95;
+      letter-spacing: 0.06em;
+      color: rgba(255, 255, 255, 0.96);
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+
+    .cs-tag {
+      margin-top: 10px;
+      max-width: 52ch;
+      color: rgba(255, 255, 255, 0.82);
+      line-height: 1.55;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+      font-family:
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+      text-transform: none;
+    }
+
+    @media (max-width: 900px) {
+      .cs-overlay {
+        max-width: none;
+        padding: 18px 16px 14px;
+      }
+
+      .cs-tag {
+        max-width: 70ch;
+      }
+    }
+  </style>
+</section>

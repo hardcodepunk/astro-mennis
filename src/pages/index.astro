@@ -5,6 +5,8 @@ import LogosMarquee from "../components/LogosMarquee.astro"
 import BioWithPreview from "../components/BioWithPreview.astro"
 import RecentWorks from "../components/RecentWorks.astro"
 import { works } from "../content/works.js"
+import CategoriesSection from "../components/CategoriesSection.astro"
+import { categories } from "../content/categories"
 
 const recent = works.slice(0, 2)
 ---
@@ -31,4 +33,6 @@ const recent = works.slice(0, 2)
   />
 
   <RecentWorks items={recent} />
+
+  <CategoriesSection items={categories} />
 </Layout>

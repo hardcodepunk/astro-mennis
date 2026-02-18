@@ -1,0 +1,128 @@
+---
+// src/pages/categories/[slug].astro
+import Layout from "../../layouts/Layout.astro"
+import PlyrPreview from "../../components/PlyrPreview.astro"
+import RecentWorks from "../../components/RecentWorks.astro"
+import { categories } from "../../content/categories.js"
+import { works } from "../../content/works.js"
+
+export function getStaticPaths() {
+  return categories.map(c => ({
+    params: { slug: c.slug },
+    props: { category: c },
+  }))
+}
+
+const { category } = Astro.props
+const related = works.filter(w => (w.category || "").toLowerCase() === category.title.toLowerCase())
+---
+
+<Layout>
+  <main class="cp">
+    <div class="cp-inner">
+      <h1 class="cp-title">{category.title}</h1>
+
+      <div class="cp-hero">
+        {
+          category.preview?.mp4 || category.preview?.webm ? (
+            <PlyrPreview mp4={category.preview.mp4} webm={category.preview.webm} poster={category.preview.poster} />
+          ) : (
+            <img class="cp-img" src={category.preview.poster} alt="" loading="eager" />
+          )
+        }
+      </div>
+
+      <section class="cp-overview">
+        <div class="cp-over-label">[{category.overviewLabel ?? "OVERVIEW"}]</div>
+        <p class="cp-lead">{category.overviewLead}</p>
+        <p class="cp-body">{category.overviewBody}</p>
+      </section>
+
+      {related.length ? <RecentWorks items={related} /> : null}
+    </div>
+  </main>
+
+  <style>
+    .cp {
+      padding: 28px 0 96px;
+      background: #000;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+    }
+
+    .cp-inner {
+      max-width: 92rem;
+      margin: 4rem auto 0;
+      padding: 0 1.25rem;
+    }
+
+    .cp-title {
+      margin: 0;
+      font-size: clamp(3.4rem, 9vw, 7.2rem);
+      line-height: 0.9;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      color: rgba(255, 255, 255, 0.96);
+      text-transform: uppercase;
+    }
+
+    .cp-hero {
+      margin-top: 28px;
+      max-width: 82rem;
+    }
+
+    .cp-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background: #000;
+    }
+
+    .cp-overview {
+      margin-top: 72px;
+      max-width: 50rem;
+    }
+
+    .cp-over-label {
+      color: rgba(255, 255, 255, 0.55);
+      letter-spacing: 0.18em;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+    }
+
+    .cp-lead {
+      margin: 16px 0 0 0;
+      font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+      line-height: 1.3;
+      color: rgba(255, 255, 255, 0.9);
+      max-width: 36ch;
+    }
+
+    .cp-body {
+      margin: 20px 0 0 0;
+      font-family:
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+      color: rgba(255, 255, 255, 0.68);
+      line-height: 1.75;
+      max-width: 52ch;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 1000px) {
+      .cp-hero {
+        max-width: none;
+      }
+      .cp-overview {
+        max-width: none;
+      }
+      .cp-body {
+        max-width: 65ch;
+      }
+    }
+  </style>
+</Layout>
