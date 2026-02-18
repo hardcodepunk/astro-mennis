@@ -1,0 +1,57 @@
+---
+import PlyrPreview from "./PlyrPreview.astro"
+
+const {
+  bio = `I SHOOT CLEAN, CINEMATIC VIDEO FOR BRANDS AND PEOPLE WHO CARE ABOUT CRAFT.
+FAST TURNAROUND, CALM SETS, SHARP EDITS. COMMERCIALS, SOCIAL CUTS, EVENT RECAPS,
+AND STORY-DRIVEN PIECES — DONE PROPERLY.`,
+  mp4 = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4",
+  webm = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm",
+  poster = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg",
+} = Astro.props
+---
+
+<section class="bp">
+  <div class="bp-inner">
+    <div class="bp-left">
+      <p class="bp-bio">{bio}</p>
+    </div>
+
+    <div class="bp-right">
+      <PlyrPreview mp4={mp4} webm={webm} poster={poster} />
+    </div>
+  </div>
+
+  <style>
+    .bp {
+      padding: 72px 0;
+    }
+    .bp-inner {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .bp-bio {
+      margin: 0;
+      font-family: var(--font-display, "Bebas Neue", sans-serif);
+      font-size: clamp(2.1rem, 4vw, 3.2rem);
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      color: rgba(255, 255, 255, 0.92);
+      text-transform: uppercase;
+      max-width: 28ch;
+    }
+    @media (max-width: 900px) {
+      .bp-inner {
+        grid-template-columns: 1fr;
+      }
+      .bp-bio {
+        max-width: 34ch;
+      }
+    }
+  </style>
+</section>

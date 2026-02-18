@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro"
 import Videohero from "../components/CinematicHero.astro"
 import LogosMarquee from "../components/LogosMarquee.astro"
+import BioWithPreview from "../components/BioWithPreview.astro"
 ---
 
 <Layout>
@@ -18,5 +19,8 @@ import LogosMarquee from "../components/LogosMarquee.astro"
     items={["Craftgram", "techtide", "Lum Labs", "swift", "sparkle", "Northmark", "Studio 9"]}
     speed={30}
     height={210}
+  />
+  <BioWithPreview
+    bio="I shoot clean, cinematic video for brands and people who care about craft but also a creative edge."
   />
 </Layout>

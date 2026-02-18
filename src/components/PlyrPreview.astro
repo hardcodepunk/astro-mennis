@@ -1,0 +1,45 @@
+---
+const { mp4, webm, poster } = Astro.props
+const id = Astro.props.id ?? `plyr-${Math.random().toString(36).slice(2)}`
+---
+
+<div class="pp">
+  <video id={id} class="pp-video" playsinline preload="metadata" poster={poster} muted autoplay loop>
+    {webm ? <source src={webm} type="video/webm" /> : null}
+    {mp4 ? <source src={mp4} type="video/mp4" /> : null}
+  </video>
+
+  <script define:vars={{ id }}>
+    ;(() => {
+      const el = document.getElementById(id)
+      if (!(el instanceof HTMLVideoElement)) return
+
+      import("plyr").then(({ default: Plyr }) => {
+        new Plyr(el, {
+          clickToPlay: false,
+          hideControls: true,
+          autoplay: true,
+          muted: true,
+          loop: { active: true },
+        })
+      })
+    })()
+  </script>
+
+  <style>
+    .pp {
+      overflow: hidden;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .pp-video {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background: #000;
+    }
+  </style>
+</div>
