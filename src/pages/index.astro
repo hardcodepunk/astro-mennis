@@ -3,6 +3,10 @@ import Layout from "../layouts/Layout.astro"
 import Videohero from "../components/CinematicHero.astro"
 import LogosMarquee from "../components/LogosMarquee.astro"
 import BioWithPreview from "../components/BioWithPreview.astro"
+import RecentWorks from "../components/RecentWorks.astro"
+import { works } from "../content/works.js"
+
+const recent = works.slice(0, 2)
 ---
 
 <Layout>
@@ -15,12 +19,16 @@ import BioWithPreview from "../components/BioWithPreview.astro"
     secondaryLabel="Book a Project"
     minRevealMs={600}
   />
+
   <LogosMarquee
     items={["Craftgram", "techtide", "Lum Labs", "swift", "sparkle", "Northmark", "Studio 9"]}
     speed={30}
     height={210}
   />
+
   <BioWithPreview
-    bio="I shoot clean, cinematic video for brands and people who care about craft but also a creative edge."
+    bio="I shoot clean, cinematic video for brands and people who care about craft, precision and a strong visual identity. Story-first direction. No noise. Just work that lasts."
   />
+
+  <RecentWorks items={recent} />
 </Layout>
