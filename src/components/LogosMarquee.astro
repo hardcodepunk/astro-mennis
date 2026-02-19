@@ -10,7 +10,7 @@ const h = Math.max(48, Number(height) || 96)
     <div class="lm-track" aria-label="Client logos">
       <ul class="lm-row">
         {
-          items.map(label => (
+          items.map((label: string) => (
             <li class="lm-item">
               <span class="lm-pill">{label}</span>
             </li>
@@ -19,7 +19,7 @@ const h = Math.max(48, Number(height) || 96)
       </ul>
       <ul class="lm-row" aria-hidden="true">
         {
-          items.map(label => (
+          items.map((label: string) => (
             <li class="lm-item">
               <span class="lm-pill">{label}</span>
             </li>

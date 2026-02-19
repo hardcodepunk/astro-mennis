@@ -1,5 +1,18 @@
 ---
-const { items = [] } = Astro.props
+interface WorkItem {
+  slug: string
+  title: string
+  category: string
+  client: string
+  tagline: string
+  preview: {
+    poster: string
+    webm?: string
+    mp4?: string
+  }
+}
+
+const { items = [] } = Astro.props as { items: WorkItem[] }
 ---
 
 <section id="recent" class="rw">
@@ -8,7 +21,7 @@ const { items = [] } = Astro.props
 
     <div class="rw-list">
       {
-        items.map(w => (
+        items.map((w: WorkItem) => (
           <a class="rw-item" href={`/works/${w.slug}`} aria-label={`Open ${w.title}`}>
             <div class="rw-left">
               <div class="rw-name">{w.title}</div>

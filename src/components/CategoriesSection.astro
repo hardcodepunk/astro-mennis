@@ -1,6 +1,16 @@
 ---
-// src/components/CategoriesSection.astro
-const { items = [] } = Astro.props
+interface Category {
+  slug: string
+  title: string
+  tagline: string
+  preview: {
+    poster: string
+    webm?: string
+    mp4?: string
+  }
+}
+
+const { items = [] } = Astro.props as { items: Category[] }
 ---
 
 <section id="services" class="cs">
@@ -9,7 +19,7 @@ const { items = [] } = Astro.props
 
     <div class="cs-list">
       {
-        items.map(c => (
+        items.map((c: Category) => (
           <a class="cs-item" href={`/categories/${c.slug}`} aria-label={`Open ${c.title}`}>
             <div class="cs-media" data-hover-video>
               <img class="cs-img" src={c.preview.poster} alt="" loading="lazy" />
