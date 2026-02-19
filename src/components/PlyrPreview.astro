@@ -30,8 +30,6 @@ const id = Astro.props.id ?? `plyr-${Math.random().toString(36).slice(2)}`
     .pp {
       overflow: hidden;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .pp-video {
       display: block;
@@ -39,7 +37,6 @@ const id = Astro.props.id ?? `plyr-${Math.random().toString(36).slice(2)}`
       height: auto;
       aspect-ratio: 16 / 9;
       object-fit: cover;
-      background: #000;
     }
   </style>
 </div>

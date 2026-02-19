@@ -12,11 +12,11 @@ const { items = [] } = Astro.props
           <a class="rw-item" href={`/works/${w.slug}`} aria-label={`Open ${w.title}`}>
             <div class="rw-left">
               <div class="rw-name">{w.title}</div>
-              <div class="rw-tag">{w.tagline}</div>
               <div class="rw-meta">
                 <span>{w.category}</span>
                 <span>{w.client}</span>
               </div>
+              <div class="rw-tag">{w.tagline}</div>
             </div>
 
             <div class="rw-right">
@@ -110,8 +110,6 @@ const { items = [] } = Astro.props
       font-size: clamp(3.2rem, 8vw, 6.8rem);
       line-height: 0.9;
       letter-spacing: 0.02em;
-      color: rgba(255, 255, 255, 0.95);
-      font-weight: 400;
       text-transform: uppercase;
     }
 
@@ -138,7 +136,6 @@ const { items = [] } = Astro.props
     .rw-name {
       font-size: 1.7rem;
       line-height: 1.05;
-      color: rgba(255, 255, 255, 0.92);
       letter-spacing: 0.05em;
       text-transform: uppercase;
     }
@@ -146,7 +143,6 @@ const { items = [] } = Astro.props
     .rw-tag {
       margin-top: 10px;
       max-width: 28ch;
-      color: rgba(255, 255, 255, 0.6);
       font-size: 0.95rem;
       line-height: 1.45;
       letter-spacing: 0.02em;
@@ -201,11 +197,29 @@ const { items = [] } = Astro.props
     }
 
     @media (max-width: 900px) {
+      .rw {
+        padding: 0;
+      }
+
+      .rw-list {
+        flex-direction: column-reverse;
+      }
+
+      .rw-item {
+        grid-template-columns: 1fr;
+        margin-bottom: 2.5rem;
+      }
+
       .rw-item {
         grid-template-columns: 1fr;
       }
 
+      .rw-right {
+        grid-row: 1;
+      }
+
       .rw-left {
+        grid-row: 2;
         max-width: none;
       }
 
@@ -214,7 +228,6 @@ const { items = [] } = Astro.props
       }
 
       .rw-meta {
-        flex-direction: column;
         gap: 0.5rem;
       }
     }
