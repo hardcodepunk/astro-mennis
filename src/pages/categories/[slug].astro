@@ -33,7 +33,6 @@ const related = works.filter(w => (w.category || "").toLowerCase() === category.
       </div>
 
       <section class="cp-overview">
-        <div class="cp-over-label">[{category.overviewLabel ?? "OVERVIEW"}]</div>
         <p class="cp-lead">{category.overviewLead}</p>
         <p class="cp-body">{category.overviewBody}</p>
       </section>
@@ -81,14 +80,7 @@ const related = works.filter(w => (w.category || "").toLowerCase() === category.
 
     .cp-overview {
       margin-top: 72px;
-      max-width: 50rem;
-    }
-
-    .cp-over-label {
-      color: rgba(255, 255, 255, 0.55);
-      letter-spacing: 0.18em;
-      font-size: 0.95rem;
-      text-transform: uppercase;
+      max-width: 64rem;
     }
 
     .cp-lead {
@@ -96,7 +88,7 @@ const related = works.filter(w => (w.category || "").toLowerCase() === category.
       font-size: clamp(1.6rem, 2.4vw, 2.1rem);
       line-height: 1.3;
       color: rgba(255, 255, 255, 0.9);
-      max-width: 36ch;
+      max-width: 48ch;
     }
 
     .cp-body {
@@ -109,7 +101,7 @@ const related = works.filter(w => (w.category || "").toLowerCase() === category.
         sans-serif;
       color: rgba(255, 255, 255, 0.68);
       line-height: 1.75;
-      max-width: 52ch;
+      max-width: 70ch;
       font-size: 1rem;
     }
 
