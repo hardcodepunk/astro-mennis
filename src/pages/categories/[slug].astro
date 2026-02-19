@@ -1,5 +1,4 @@
 ---
-// src/pages/categories/[slug].astro
 import Layout from "../../layouts/Layout.astro"
 import PlyrPreview from "../../components/PlyrPreview.astro"
 import RecentWorks from "../../components/RecentWorks.astro"
@@ -18,43 +17,43 @@ const related = works.filter(w => (w.category || "").toLowerCase() === category.
 ---
 
 <Layout>
-  <main class="cp">
-    <div class="cp-inner">
-      <h1 class="cp-title">{category.title}</h1>
+  <main class="page">
+    <div class="page-inner">
+      <h1 class="page-title">{category.title}</h1>
 
-      <div class="cp-hero">
+      <div class="page-hero">
         {
           category.preview?.mp4 || category.preview?.webm ? (
             <PlyrPreview mp4={category.preview.mp4} webm={category.preview.webm} poster={category.preview.poster} />
           ) : (
-            <img class="cp-img" src={category.preview.poster} alt="" loading="eager" />
+            <img class="page-img" src={category.preview.poster} alt="" loading="eager" />
           )
         }
       </div>
 
-      <section class="cp-overview">
-        <p class="cp-lead">{category.overviewLead}</p>
-        <p class="cp-body">{category.overviewBody}</p>
+      <section class="page-overview">
+        <p class="page-lead">{category.overviewLead}</p>
+        <p class="page-body">{category.overviewBody}</p>
       </section>
-
-      {related.length ? <RecentWorks items={related} /> : null}
     </div>
   </main>
 
+  {related.length ? <RecentWorks items={related} /> : null}
+
   <style>
-    .cp {
+    .page {
       padding: 28px 0 96px;
       background: #000;
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
     }
 
-    .cp-inner {
-      max-width: 92rem;
+    .page-inner {
+      max-width: 72rem;
       margin: 4rem auto 0;
-      padding: 0 1.25rem;
+      padding: 0 1rem;
     }
 
-    .cp-title {
+    .page-title {
       margin: 0;
       font-size: clamp(3.4rem, 9vw, 7.2rem);
       line-height: 0.9;
@@ -64,12 +63,11 @@ const related = works.filter(w => (w.category || "").toLowerCase() === category.
       text-transform: uppercase;
     }
 
-    .cp-hero {
+    .page-hero {
       margin-top: 28px;
-      max-width: 82rem;
     }
 
-    .cp-img {
+    .page-img {
       display: block;
       width: 100%;
       height: auto;
@@ -78,12 +76,12 @@ const related = works.filter(w => (w.category || "").toLowerCase() === category.
       background: #000;
     }
 
-    .cp-overview {
+    .page-overview {
       margin-top: 72px;
       max-width: 64rem;
     }
 
-    .cp-lead {
+    .page-lead {
       margin: 16px 0 0 0;
       font-size: clamp(1.6rem, 2.4vw, 2.1rem);
       line-height: 1.3;
@@ -91,7 +89,7 @@ const related = works.filter(w => (w.category || "").toLowerCase() === category.
       max-width: 48ch;
     }
 
-    .cp-body {
+    .page-body {
       margin: 20px 0 0 0;
       font-family:
         ui-sans-serif,
@@ -106,13 +104,11 @@ const related = works.filter(w => (w.category || "").toLowerCase() === category.
     }
 
     @media (max-width: 1000px) {
-      .cp-hero {
+      .page-overview {
         max-width: none;
       }
-      .cp-overview {
-        max-width: none;
-      }
-      .cp-body {
+
+      .page-body {
         max-width: 65ch;
       }
     }

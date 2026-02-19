@@ -16,50 +16,43 @@ const recent = works.slice(0, 2)
 ---
 
 <Layout>
-  <main class="wp">
-    <div class="wp-inner">
-      <h1 class="wp-title">{work.title}</h1>
+  <main class="page">
+    <div class="page-inner">
+      <h1 class="page-title">{work.title}</h1>
 
-      <div class="wp-meta">
-        <div class="wp-k">
-          <div class="wp-val">{work.year}</div>
-        </div>
-
-        <div class="wp-k">
-          <div class="wp-val">{work.category}</div>
-        </div>
-
-        <div class="wp-k">
-          <div class="wp-val">{work.client}</div>
-        </div>
+      <div class="page-meta">
+        <div class="page-meta-val">{work.year}</div>
+        <div class="page-meta-val">{work.category}</div>
+        <div class="page-meta-val">{work.client}</div>
       </div>
 
-      <div class="wp-hero">
+      <div class="page-hero">
         <PlyrPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />
       </div>
 
-      <section class="wp-overview">
-        <p class="wp-lead">{work.overviewLead}</p>
-        <p class="wp-body">{work.overviewBody}</p>
+      <section class="page-overview">
+        <p class="page-lead">{work.overviewLead}</p>
+        <p class="page-body">{work.overviewBody}</p>
       </section>
     </div>
   </main>
+
   <RecentWorks items={recent} />
 
   <style>
-    .wp {
+    .page {
       padding: 28px 0 96px;
       background: #000;
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
     }
 
-    .wp-inner {
-      max-width: 92rem;
+    .page-inner {
+      max-width: 72rem;
       margin: 4rem auto 0;
-      padding: 0 1.25rem;
+      padding: 0 1rem;
     }
 
-    .wp-title {
+    .page-title {
       margin: 0;
       font-size: clamp(3.4rem, 9vw, 7.2rem);
       line-height: 0.9;
@@ -69,7 +62,7 @@ const recent = works.slice(0, 2)
       text-transform: uppercase;
     }
 
-    .wp-meta {
+    .page-meta {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 28px;
@@ -78,36 +71,23 @@ const recent = works.slice(0, 2)
       max-width: 52rem;
     }
 
-    .wp-label {
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 0.95rem;
-      letter-spacing: 0.16em;
-    }
-
-    .wp-val {
+    .page-meta-val {
       margin-top: 8px;
       color: rgba(255, 255, 255, 0.9);
       font-size: 1.05rem;
       letter-spacing: 0.08em;
     }
 
-    .wp-hero {
+    .page-hero {
       margin-top: 10px;
-      max-width: 82rem;
     }
 
-    .wp-over-label {
-      color: rgba(255, 255, 255, 0.55);
-      letter-spacing: 0.18em;
-      font-size: 0.95rem;
-    }
-
-    .wp-overview {
+    .page-overview {
       margin-top: 72px;
       max-width: 64rem;
     }
 
-    .wp-lead {
+    .page-lead {
       margin: 16px 0 0 0;
       font-size: clamp(1.6rem, 2.4vw, 2.1rem);
       line-height: 1.3;
@@ -115,7 +95,7 @@ const recent = works.slice(0, 2)
       max-width: 48ch;
     }
 
-    .wp-body {
+    .page-body {
       margin: 20px 0 0 0;
       font-family:
         ui-sans-serif,
@@ -130,20 +110,16 @@ const recent = works.slice(0, 2)
     }
 
     @media (max-width: 1000px) {
-      .wp-meta {
+      .page-meta {
         grid-template-columns: 1fr;
         max-width: none;
       }
 
-      .wp-hero {
+      .page-overview {
         max-width: none;
       }
 
-      .wp-overview {
-        max-width: none;
-      }
-
-      .wp-body {
+      .page-body {
         max-width: 65ch;
       }
     }
