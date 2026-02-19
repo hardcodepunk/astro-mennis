@@ -1,57 +1,92 @@
 ---
 const {
-  title = "Mennis",
-  subtitle,
-  primaryHref = "/portfolio",
-  primaryLabel = "View Portfolio",
-  secondaryHref = "/contact",
-  secondaryLabel = "Book a Project",
-  minRevealMs = 600,
-
   mp4 = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4",
   webm = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm",
   poster = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg",
-
-  disableOnMobile = true,
+  minRevealMs = 600,
 } = Astro.props
 ---
 
-<section class="vh-hero" data-min-reveal={minRevealMs} data-disable-mobile={disableOnMobile ? "1" : "0"}>
-  <video class="vh-video" autoplay muted loop playsinline poster={poster} disableRemotePlayback aria-hidden="true">
-    <source src={webm} type="video/webm" />
-    <source src={mp4} type="video/mp4" />
+<section class="vh-hero" data-min-reveal={minRevealMs}>
+  <video
+    class="vh-video"
+    muted
+    playsinline
+    preload="metadata"
+    poster={poster}
+    autoplay
+    loop
+    disableRemotePlayback
+    aria-hidden="true"
+  >
+    {webm ? <source src={webm} type="video/webm" /> : null}
+    {mp4 ? <source src={mp4} type="video/mp4" /> : null}
   </video>
 
-  <div class="vh-grad"></div>
   <div class="vh-overlay" aria-hidden="true"></div>
 
-  <div class="vh-content">
-    <div class="vh-inner">
-      <h1 class="vh-title">{title}</h1>
-      {subtitle ? <p class="vh-sub">{subtitle}</p> : null}
-      <div class="vh-cta">
-        <a href={primaryHref} class="vh-btn vh-btn-primary">{primaryLabel}</a>
-        <a href={secondaryHref} class="vh-btn vh-btn-secondary">{secondaryLabel}</a>
-      </div>
-    </div>
+  <div class="vh-bottom">
+    <a
+      href="mailto:hello@demennis.be"
+      class="font-display text-2xl tracking-widest text-white/90 hover:text-white transition-colors"
+    >
+      HELLO@DEMENNIS.BE
+    </a>
   </div>
 
   <script is:inline>
     ;(() => {
-      const root = document.querySelector(".vh-hero")
-      if (!root) return
+      const root = document.currentScript?.closest(".vh-hero")
+      if (!(root instanceof HTMLElement)) return
 
       const video = root.querySelector("video")
-      if (!video) return
+      if (!(video instanceof HTMLVideoElement)) return
+
+      const mountedAt = Date.now()
+      const minRevealMs = Number(root.getAttribute("data-min-reveal") || "600")
+
+      let revealed = false
 
       const reveal = () => {
+        if (revealed) return
+        revealed = true
+        root.classList.add("is-revealed")
         root.classList.add("is-playing")
       }
 
-      video.addEventListener("playing", reveal)
-      video.addEventListener("loadeddata", reveal)
+      const revealWithMin = () => {
+        const elapsed = Date.now() - mountedAt
+        const delay = Math.max(0, minRevealMs - elapsed)
+        window.setTimeout(reveal, delay)
+      }
 
-      setTimeout(reveal, 1500)
+      const onPlaying = () => revealWithMin()
+      const onLoadedData = () => revealWithMin()
+
+      video.addEventListener("playing", onPlaying)
+      video.addEventListener("loadeddata", onLoadedData)
+
+      window.setTimeout(revealWithMin, 1500)
+
+      window.addEventListener("beforeunload", () => {
+        video.removeEventListener("playing", onPlaying)
+        video.removeEventListener("loadeddata", onLoadedData)
+      })
     })()
   </script>
+
+  <style>
+    .vh-bottom {
+      position: absolute;
+      left: 0;
+      bottom: 3rem;
+      padding: 0 1.5rem;
+      z-index: 30;
+    }
+    @media (max-width: 640px) {
+      .vh-bottom {
+        bottom: 2.25rem;
+      }
+    }
+  </style>
 </section>

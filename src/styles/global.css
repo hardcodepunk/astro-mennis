@@ -52,10 +52,17 @@ html {
   position: absolute;
   inset: 0;
   z-index: 10;
-  background: rgba(0, 0, 0, 0.5);
-  opacity: 1;
-  transition: opacity 0.8s ease-out;
+  pointer-events: none;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.28) 35%,
+    rgba(0, 0, 0, 0.28) 65%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
 }
+
 .vh-content {
   position: relative;
   z-index: 20;
@@ -115,9 +122,6 @@ html {
 .vh-btn-secondary:hover {
   background: #f5f5f5;
   color: #000;
-}
-.vh-hero.is-revealed .vh-overlay {
-  opacity: 0;
 }
 .vh-hero.is-revealed .vh-inner {
   opacity: 1;

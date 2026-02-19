@@ -3,6 +3,7 @@ import "../styles/global.css"
 import "plyr/dist/plyr.css"
 import "@fontsource/bebas-neue/400.css"
 import Header from "../components/Header.astro"
+import Footer from "../components/Footer.astro"
 ---
 
 <!doctype html>
@@ -12,8 +13,13 @@ import Header from "../components/Header.astro"
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <slot name="head" />
   </head>
-  <body class="min-h-screen bg-black text-white">
+  <body class="min-h-screen bg-black text-white flex flex-col">
     <Header />
-    <slot />
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <Footer />
   </body>
 </html>
