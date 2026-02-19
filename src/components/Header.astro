@@ -8,7 +8,9 @@ const NAV = [
 ---
 
 <header class="site-header fixed top-0 z-50 w-full" data-header>
-  <div class="flex h-16 items-center justify-between px-6">
+  <div class="header-bg" aria-hidden="true"></div>
+
+  <div class="relative flex h-16 items-center justify-between px-6">
     <a href="/" class="brand font-display text-2xl tracking-widest hover:opacity-80 transition-opacity" data-brand>
       DEMENNIS
     </a>
@@ -77,6 +79,23 @@ const NAV = [
 </div>
 
 <style>
+  .site-header {
+    will-change: transform;
+  }
+
+  .header-bg {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 1);
+    transform: translateY(-100%);
+    transition: transform 240ms ease;
+    will-change: transform;
+  }
+
+  .site-header.is-solid .header-bg {
+    transform: translateY(0);
+  }
+
   .site-header.is-menu-open {
     z-index: 80;
   }
@@ -212,6 +231,7 @@ const NAV = [
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .header-bg,
     .hamburger__bar,
     .mobile-menu__backdrop,
     .mobile-menu__panel,
@@ -233,7 +253,7 @@ const NAV = [
 
     if (!btn || !overlay || !header) return
 
-    const setOpen = open => {
+    const setMenuOpen = open => {
       overlay.classList.toggle("is-open", open)
       overlay.setAttribute("aria-hidden", String(!open))
       btn.setAttribute("aria-expanded", String(open))
@@ -248,16 +268,27 @@ const NAV = [
 
     btn.addEventListener("click", () => {
       const open = !overlay.classList.contains("is-open")
-      setOpen(open)
+      setMenuOpen(open)
     })
 
-    if (backdrop) backdrop.addEventListener("click", () => setOpen(false))
-    if (links) links.forEach(a => a.addEventListener("click", () => setOpen(false)))
+    if (backdrop) backdrop.addEventListener("click", () => setMenuOpen(false))
+    if (links) links.forEach(a => a.addEventListener("click", () => setMenuOpen(false)))
 
     window.addEventListener("keydown", e => {
-      if (e.key === "Escape") setOpen(false)
+      if (e.key === "Escape") setMenuOpen(false)
     })
 
-    window.addEventListener("hashchange", () => setOpen(false))
+    window.addEventListener("hashchange", () => setMenuOpen(false))
+
+    const topThreshold = 8
+
+    const updateHeaderBg = () => {
+      if (overlay.classList.contains("is-open")) return
+      const y = window.scrollY || 0
+      header.classList.toggle("is-solid", y > topThreshold)
+    }
+
+    window.addEventListener("scroll", updateHeaderBg, { passive: true })
+    updateHeaderBg()
   })()
 </script>
