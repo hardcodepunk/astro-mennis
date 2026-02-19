@@ -7,9 +7,11 @@ const NAV = [
 ]
 ---
 
-<header class="fixed top-0 z-50 w-full">
+<header class="site-header fixed top-0 z-50 w-full" data-header>
   <div class="flex h-16 items-center justify-between px-6">
-    <a href="/" class="font-display text-2xl tracking-widest hover:opacity-80 transition-opacity">DEMENNIS</a>
+    <a href="/" class="brand font-display text-2xl tracking-widest hover:opacity-80 transition-opacity" data-brand>
+      DEMENNIS
+    </a>
 
     <nav class="hidden md:flex items-center gap-8 text-sm">
       <a href="/#recent" class="text-white/80 hover:text-white transition-colors">Recent</a>
@@ -41,58 +43,49 @@ const NAV = [
       </span>
     </button>
   </div>
-
-  <div id="mobile-menu" class="mobile-menu hidden" aria-hidden="true" data-menu-overlay>
-    <div class="mobile-menu__backdrop" data-menu-backdrop></div>
-
-    <div class="mobile-menu__panel" role="dialog" aria-modal="true" aria-label="Site menu">
-      <div class="flex h-16 items-center justify-between px-6">
-        <a
-          href="/"
-          class="font-display text-2xl tracking-widest text-white hover:opacity-80 transition-opacity"
-          data-menu-link
-        >
-          DEMENNIS
-        </a>
-
-        <button
-          type="button"
-          class="inline-flex items-center justify-center p-2"
-          aria-label="Close menu"
-          data-menu-close
-        >
-          <span class="hamburger is-open" aria-hidden="true">
-            <span class="hamburger__bar"></span>
-            <span class="hamburger__bar"></span>
-            <span class="hamburger__bar"></span>
-          </span>
-        </button>
-      </div>
-
-      <nav class="mobile-menu__nav px-6">
-        <div class="mobile-menu__stack">
-          {
-            NAV.map(item =>
-              item.external ? (
-                <a href={item.href} target="_blank" rel="noopener noreferrer" class="mobile-link" data-menu-link>
-                  <span class="inline-flex items-center justify-center gap-3">
-                    <img src="/icons/instagram.png" alt="" class="h-6 w-6 invert opacity-90" />
-                  </span>
-                </a>
-              ) : (
-                <a href={item.href} class="mobile-link" data-menu-link>
-                  {item.label}
-                </a>
-              ),
-            )
-          }
-        </div>
-      </nav>
-    </div>
-  </div>
 </header>
 
+<div id="mobile-menu" class="mobile-menu" aria-hidden="true" data-menu-overlay>
+  <div class="mobile-menu__backdrop" data-menu-backdrop></div>
+
+  <div class="mobile-menu__panel" role="dialog" aria-modal="true" aria-label="Site menu">
+    <nav class="mobile-menu__nav px-6">
+      <div class="mobile-menu__stack font-display text-2xl tracking-widest">
+        {
+          NAV.map(item =>
+            item.external ? (
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mobile-link"
+                data-menu-link
+                aria-label="Instagram"
+              >
+                <img src="/icons/instagram.png" alt="" class="mobile-icon" />
+              </a>
+            ) : (
+              <a href={item.href} class="mobile-link" data-menu-link>
+                {item.label}
+              </a>
+            ),
+          )
+        }
+      </div>
+    </nav>
+  </div>
+</div>
+
 <style>
+  .site-header.is-menu-open {
+    z-index: 80;
+  }
+
+  .site-header.is-menu-open .brand {
+    opacity: 0;
+    pointer-events: none;
+  }
+
   .hamburger {
     width: 28px;
     height: 20px;
@@ -127,31 +120,28 @@ const NAV = [
   .mobile-menu {
     position: fixed;
     inset: 0;
-    z-index: 60;
-  }
-
-  .mobile-menu.hidden {
-    display: none;
+    z-index: 70;
+    pointer-events: none;
   }
 
   .mobile-menu__backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.95);
-    opacity: 0;
-    transition: opacity 200ms ease;
+    background: rgba(0, 0, 0, 1);
+    transform: translateX(100%);
+    transition: transform 240ms ease;
   }
 
   .mobile-menu__panel {
     position: relative;
     height: 100%;
     width: 100%;
-    transform: translateY(-8px);
-    transition: transform 200ms ease;
+    transform: translateX(100%);
+    transition: transform 240ms ease;
   }
 
   .mobile-menu__nav {
-    height: calc(100vh - 64px);
+    height: 100vh;
     display: grid;
     place-items: center;
     text-align: center;
@@ -171,18 +161,36 @@ const NAV = [
       opacity 200ms ease;
     opacity: 0;
     transform: translateY(6px);
+    display: flex;
+    justify-content: center;
   }
 
   .mobile-link:hover {
     color: rgba(255, 255, 255, 1);
   }
 
-  .mobile-menu.is-open .mobile-menu__backdrop {
+  .mobile-icon {
+    width: 26px;
+    height: 26px;
+    filter: invert(1);
+    opacity: 0.9;
+    transition: opacity 150ms ease;
+  }
+
+  .mobile-icon:hover {
     opacity: 1;
   }
 
+  .mobile-menu.is-open {
+    pointer-events: auto;
+  }
+
+  .mobile-menu.is-open .mobile-menu__backdrop {
+    transform: translateX(0);
+  }
+
   .mobile-menu.is-open .mobile-menu__panel {
-    transform: translateY(0);
+    transform: translateX(0);
   }
 
   .mobile-menu.is-open .mobile-link {
@@ -215,34 +223,35 @@ const NAV = [
 
 <script is:inline>
   ;(() => {
+    const header = document.querySelector("[data-header]")
+    const brand = document.querySelector("[data-brand]")
     const btn = document.querySelector("[data-menu-button]")
     const overlay = document.querySelector("[data-menu-overlay]")
     const backdrop = document.querySelector("[data-menu-backdrop]")
-    const closeBtn = document.querySelector("[data-menu-close]")
     const links = overlay ? overlay.querySelectorAll("[data-menu-link]") : null
     const icon = btn ? btn.querySelector(".hamburger") : null
 
-    if (!btn || !overlay) return
+    if (!btn || !overlay || !header) return
 
     const setOpen = open => {
-      overlay.classList.toggle("hidden", !open)
       overlay.classList.toggle("is-open", open)
       overlay.setAttribute("aria-hidden", String(!open))
       btn.setAttribute("aria-expanded", String(open))
       if (icon) icon.classList.toggle("is-open", open)
+
+      header.classList.toggle("is-menu-open", open)
+      if (brand) brand.setAttribute("aria-hidden", String(open))
 
       document.documentElement.classList.toggle("overflow-hidden", open)
       document.body.classList.toggle("overflow-hidden", open)
     }
 
     btn.addEventListener("click", () => {
-      const open = overlay.classList.contains("hidden")
+      const open = !overlay.classList.contains("is-open")
       setOpen(open)
     })
 
-    if (closeBtn) closeBtn.addEventListener("click", () => setOpen(false))
     if (backdrop) backdrop.addEventListener("click", () => setOpen(false))
-
     if (links) links.forEach(a => a.addEventListener("click", () => setOpen(false)))
 
     window.addEventListener("keydown", e => {
