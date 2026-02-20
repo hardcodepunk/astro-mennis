@@ -35,8 +35,9 @@ export type Category = {
   title: string
   tagline: string
   preview: { poster: string; webm?: string; mp4?: string }
+  overviewTitle?: string
   overviewLead?: string
-  overviewBody?: string
+  body?: unknown
 }
 
 export type WorkItem = {
@@ -47,8 +48,10 @@ export type WorkItem = {
   client: string
   tagline: string
   preview: { poster: string; webm?: string; mp4?: string }
+  year?: string
+  overviewTitle?: string
   overviewLead?: string
-  overviewBody?: string
+  body?: unknown
 }
 
 export async function getCategories() {
@@ -57,8 +60,8 @@ export async function getCategories() {
     title,
     tagline,
     preview{ poster, webm, mp4 },
-    overviewLead,
-    overviewBody
+    overviewTitle,
+    overviewLead
   }`
   return sanity.fetch<Category[]>(q)
 }
@@ -69,6 +72,7 @@ export async function getCategoryBySlug(slug: string) {
     title,
     tagline,
     preview{ poster, webm, mp4 },
+    overviewTitle,
     overviewLead,
     body[]{
       ...,
@@ -78,7 +82,7 @@ export async function getCategoryBySlug(slug: string) {
       }
     }
   }`
-  return sanity.fetch<any>(q, { slug })
+  return sanity.fetch<Category | null>(q, { slug })
 }
 
 export async function getWorks() {
@@ -90,8 +94,8 @@ export async function getWorks() {
     client,
     tagline,
     preview{ poster, webm, mp4 },
-    overviewLead,
-    overviewBody
+    overviewTitle,
+    overviewLead
   }`
   return sanity.fetch<WorkItem[]>(q)
 }
@@ -106,8 +110,8 @@ export async function getWorksByCategorySlug(slug: string) {
     client,
     tagline,
     preview{ poster, webm, mp4 },
-    overviewLead,
-    overviewBody
+    overviewTitle,
+    overviewLead
   }`
   return sanity.fetch<WorkItem[]>(q, { slug })
 }
@@ -122,6 +126,8 @@ export async function getWorkBySlug(slug: string) {
     tagline,
     year,
     preview{ poster, webm, mp4 },
+    overviewTitle,
+    overviewLead,
     body[]{
       ...,
       _type == "inlineImage" => {
@@ -130,7 +136,7 @@ export async function getWorkBySlug(slug: string) {
       }
     }
   }`
-  return sanity.fetch<any>(q, { slug })
+  return sanity.fetch<WorkItem | null>(q, { slug })
 }
 
 export async function getRecentWorks(limit = 2) {

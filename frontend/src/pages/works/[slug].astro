@@ -34,9 +34,11 @@ const bodyHtml = portableTextToHtml(work.body)
       </div>
 
       {
-        work.overviewLead ? (
+        work.overviewTitle || work.overviewLead ? (
           <section class="page-overview">
-            <p class="page-lead">{work.overviewLead}</p>
+            {work.overviewTitle ? <h2 class="page-overview-title">{work.overviewTitle}</h2> : null}
+
+            {work.overviewLead ? <p class="page-lead">{work.overviewLead}</p> : null}
           </section>
         ) : null
       }
@@ -93,6 +95,16 @@ const bodyHtml = portableTextToHtml(work.body)
     .page-overview {
       margin-top: 72px;
       max-width: 64rem;
+    }
+
+    .page-overview-title {
+      margin: 0 0 18px 0;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      font-size: clamp(2rem, 3.2vw, 3rem);
+      line-height: 0.95;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.95);
     }
 
     .page-lead {

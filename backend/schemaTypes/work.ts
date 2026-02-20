@@ -83,6 +83,12 @@ export const work = defineType({
     }),
 
     defineField({
+      name: 'overviewTitle',
+      title: 'Overview title',
+      type: 'string',
+    }),
+
+    defineField({
       name: 'body',
       title: 'Body',
       type: 'array',

@@ -44,11 +44,16 @@ export const category = defineType({
     }),
 
     defineField({
+      name: 'overviewTitle',
+      title: 'Overview title',
+      type: 'string',
+    }),
+
+    defineField({
       name: 'overviewLead',
       title: 'Overview lead',
       type: 'text',
       rows: 3,
-      validation: (r) => r.required(),
     }),
 
     defineField({
@@ -63,16 +68,8 @@ export const category = defineType({
           type: 'image',
           options: {hotspot: true},
           fields: [
-            defineField({
-              name: 'alt',
-              title: 'Alt text',
-              type: 'string',
-            }),
-            defineField({
-              name: 'caption',
-              title: 'Caption',
-              type: 'string',
-            }),
+            defineField({name: 'alt', title: 'Alt text', type: 'string'}),
+            defineField({name: 'caption', title: 'Caption', type: 'string'}),
           ],
         }),
       ],

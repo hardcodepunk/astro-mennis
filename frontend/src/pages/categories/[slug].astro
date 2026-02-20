@@ -3,12 +3,11 @@ import Layout from "../../layouts/Layout.astro"
 import PlyrPreview from "../../components/PlyrPreview.astro"
 import RecentWorks from "../../components/RecentWorks.astro"
 import { getCategories, getCategoryBySlug, getWorksByCategorySlug } from "../../lib/sanity.queries"
+import { portableTextToHtml } from "../../lib/portableText"
 
 export async function getStaticPaths() {
   const cats = await getCategories()
-  return cats.map(c => ({
-    params: { slug: c.slug },
-  }))
+  return cats.map(c => ({ params: { slug: c.slug } }))
 }
 
 const { slug } = Astro.params
@@ -16,6 +15,7 @@ const category = await getCategoryBySlug(slug)
 if (!category) throw new Error(`Category not found: ${slug}`)
 
 const related = await getWorksByCategorySlug(slug)
+const bodyHtml = portableTextToHtml(category.body)
 ---
 
 <Layout>
@@ -27,10 +27,16 @@ const related = await getWorksByCategorySlug(slug)
         <PlyrPreview mp4={category.preview.mp4} webm={category.preview.webm} poster={category.preview.poster} />
       </div>
 
-      <section class="page-overview">
-        {category.overviewLead ? <p class="page-lead">{category.overviewLead}</p> : null}
-        {category.overviewBody ? <p class="page-body">{category.overviewBody}</p> : null}
-      </section>
+      {
+        category.overviewTitle || category.overviewLead ? (
+          <section class="page-overview">
+            {category.overviewTitle ? <h2 class="page-overview-title">{category.overviewTitle}</h2> : null}
+            {category.overviewLead ? <p class="page-lead">{category.overviewLead}</p> : null}
+          </section>
+        ) : null
+      }
+
+      {bodyHtml ? <section class="page-body-rt" set:html={bodyHtml} /> : null}
     </div>
   </main>
 
@@ -62,28 +68,32 @@ const related = await getWorksByCategorySlug(slug)
       margin-top: 28px;
     }
 
-    .page-img {
-      display: block;
-      width: 100%;
-      height: auto;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-    }
-
     .page-overview {
       margin-top: 72px;
       max-width: 64rem;
     }
 
+    .page-overview-title {
+      margin: 0 0 18px 0;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      font-size: clamp(2rem, 3.2vw, 3rem);
+      line-height: 0.95;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.95);
+      font-weight: 400;
+    }
+
     .page-lead {
-      margin: 16px 0 0 0;
+      margin: 0;
       font-size: clamp(1.6rem, 2.4vw, 2.1rem);
       line-height: 1.3;
       max-width: 48ch;
     }
 
-    .page-body {
-      margin: 20px 0 0 0;
+    .page-body-rt {
+      margin-top: 20px;
+      max-width: 70ch;
       font-family:
         ui-sans-serif,
         system-ui,
@@ -91,17 +101,105 @@ const related = await getWorksByCategorySlug(slug)
         BlinkMacSystemFont,
         sans-serif;
       line-height: 1.75;
-      max-width: 70ch;
       font-size: 1rem;
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .page-body-rt > :first-child {
+      margin-top: 0;
+    }
+
+    .page-body-rt p {
+      margin: 20px 0 0 0;
+    }
+
+    .page-body-rt h2,
+    .page-body-rt h3,
+    .page-body-rt h4 {
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: rgba(255, 255, 255, 0.95);
+      margin: 42px 0 0 0;
+      line-height: 0.95;
+      font-weight: 400;
+    }
+
+    .page-body-rt h2 {
+      font-size: clamp(2rem, 3.4vw, 3.2rem);
+    }
+
+    .page-body-rt h3 {
+      font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+    }
+
+    .page-body-rt h4 {
+      font-size: 1.25rem;
+    }
+
+    .page-body-rt a {
+      color: rgba(255, 255, 255, 0.92);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
+      text-decoration-color: rgba(255, 255, 255, 0.35);
+      transition:
+        text-decoration-color 160ms ease,
+        opacity 160ms ease;
+    }
+
+    .page-body-rt a:hover {
+      text-decoration-color: rgba(255, 255, 255, 0.75);
+      opacity: 1;
+    }
+
+    .page-body-rt ul,
+    .page-body-rt ol {
+      margin: 18px 0 0 1.25rem;
+      padding: 0;
+    }
+
+    .page-body-rt li {
+      margin: 10px 0 0 0;
+    }
+
+    .page-body-rt blockquote {
+      margin: 32px 0 0 0;
+      padding: 18px 18px 18px 16px;
+      border-left: 2px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .page-body-rt hr {
+      border: 0;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.12);
+      margin: 44px 0;
+    }
+
+    .page-body-rt figure {
+      margin: 32px 0 0 0;
+    }
+
+    .page-body-rt img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 2px;
+    }
+
+    .page-body-rt figcaption {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      opacity: 0.7;
     }
 
     @media (max-width: 1000px) {
-      .page-overview {
+      .page-overview,
+      .page-body-rt {
         max-width: none;
-      }
-
-      .page-body {
-        max-width: 65ch;
       }
     }
   </style>
