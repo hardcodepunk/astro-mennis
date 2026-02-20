@@ -5,7 +5,13 @@ export const category = defineType({
   title: 'Category',
   type: 'document',
   fields: [
-    defineField({name: 'title', title: 'Title', type: 'string', validation: (r) => r.required()}),
+    defineField({
+      name: 'title',
+      title: 'Title',
+      type: 'string',
+      validation: (r) => r.required(),
+    }),
+
     defineField({
       name: 'slug',
       title: 'Slug',
@@ -13,12 +19,14 @@ export const category = defineType({
       options: {source: 'title'},
       validation: (r) => r.required(),
     }),
+
     defineField({
       name: 'tagline',
       title: 'Tagline',
       type: 'string',
       validation: (r) => r.required(),
     }),
+
     defineField({
       name: 'preview',
       title: 'Preview',
@@ -34,10 +42,48 @@ export const category = defineType({
         defineField({name: 'mp4', title: 'MP4 URL', type: 'url'}),
       ],
     }),
-    defineField({name: 'overviewLead', title: 'Overview lead', type: 'text', rows: 3}),
-    defineField({name: 'overviewBody', title: 'Overview body', type: 'text', rows: 6}),
+
+    defineField({
+      name: 'overviewLead',
+      title: 'Overview lead',
+      type: 'text',
+      rows: 3,
+      validation: (r) => r.required(),
+    }),
+
+    defineField({
+      name: 'body',
+      title: 'Body',
+      type: 'array',
+      of: [
+        {type: 'block'},
+        defineField({
+          name: 'inlineImage',
+          title: 'Image',
+          type: 'image',
+          options: {hotspot: true},
+          fields: [
+            defineField({
+              name: 'alt',
+              title: 'Alt text',
+              type: 'string',
+            }),
+            defineField({
+              name: 'caption',
+              title: 'Caption',
+              type: 'string',
+            }),
+          ],
+        }),
+      ],
+    }),
   ],
+
   preview: {
-    select: {title: 'title', subtitle: 'tagline'},
+    select: {
+      title: 'title',
+      subtitle: 'tagline',
+      media: 'preview.poster',
+    },
   },
 })

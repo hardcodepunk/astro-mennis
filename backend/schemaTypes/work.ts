@@ -79,13 +79,34 @@ export const work = defineType({
       title: 'Overview lead',
       type: 'text',
       rows: 3,
+      validation: (r) => r.required(),
     }),
 
     defineField({
-      name: 'overviewBody',
-      title: 'Overview body',
-      type: 'text',
-      rows: 6,
+      name: 'body',
+      title: 'Body',
+      type: 'array',
+      of: [
+        {type: 'block'},
+        defineField({
+          name: 'inlineImage',
+          title: 'Image',
+          type: 'image',
+          options: {hotspot: true},
+          fields: [
+            defineField({
+              name: 'alt',
+              title: 'Alt text',
+              type: 'string',
+            }),
+            defineField({
+              name: 'caption',
+              title: 'Caption',
+              type: 'string',
+            }),
+          ],
+        }),
+      ],
     }),
 
     defineField({

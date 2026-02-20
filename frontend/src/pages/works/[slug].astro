@@ -33,6 +33,14 @@ const bodyHtml = portableTextToHtml(work.body)
         <PlyrPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />
       </div>
 
+      {
+        work.overviewLead ? (
+          <section class="page-overview">
+            <p class="page-lead">{work.overviewLead}</p>
+          </section>
+        ) : null
+      }
+
       {bodyHtml ? <section class="page-body-rt" set:html={bodyHtml} /> : null}
     </div>
   </main>
@@ -88,14 +96,15 @@ const bodyHtml = portableTextToHtml(work.body)
     }
 
     .page-lead {
-      margin: 16px 0 0 0;
+      margin: 0;
       font-size: clamp(1.6rem, 2.4vw, 2.1rem);
       line-height: 1.3;
       max-width: 48ch;
     }
 
-    .page-body {
-      margin: 20px 0 0 0;
+    .page-body-rt {
+      margin-top: 20px;
+      max-width: 70ch;
       font-family:
         ui-sans-serif,
         system-ui,
@@ -103,17 +112,159 @@ const bodyHtml = portableTextToHtml(work.body)
         BlinkMacSystemFont,
         sans-serif;
       line-height: 1.75;
-      max-width: 70ch;
       font-size: 1rem;
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .page-body-rt > :first-child {
+      margin-top: 0;
+    }
+
+    .page-body-rt p {
+      margin: 20px 0 0 0;
+    }
+
+    .page-body-rt h2,
+    .page-body-rt h3,
+    .page-body-rt h4 {
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: rgba(255, 255, 255, 0.95);
+      margin: 42px 0 0 0;
+      line-height: 0.95;
+    }
+
+    .page-body-rt h2 {
+      font-size: clamp(2rem, 3.4vw, 3.2rem);
+    }
+
+    .page-body-rt h3 {
+      font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+    }
+
+    .page-body-rt h4 {
+      font-size: 1.25rem;
+    }
+
+    .page-body-rt a {
+      color: rgba(255, 255, 255, 0.92);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
+      text-decoration-color: rgba(255, 255, 255, 0.35);
+      transition:
+        text-decoration-color 160ms ease,
+        opacity 160ms ease;
+    }
+
+    .page-body-rt a:hover {
+      text-decoration-color: rgba(255, 255, 255, 0.75);
+      opacity: 1;
+    }
+
+    .page-body-rt strong {
+      color: rgba(255, 255, 255, 0.95);
+      font-weight: 700;
+    }
+
+    .page-body-rt em {
+      font-style: italic;
+      opacity: 0.95;
+    }
+
+    .page-body-rt ul,
+    .page-body-rt ol {
+      margin: 18px 0 0 1.25rem;
+      padding: 0;
+    }
+
+    .page-body-rt li {
+      margin: 10px 0 0 0;
+    }
+
+    .page-body-rt blockquote {
+      margin: 32px 0 0 0;
+      padding: 18px 18px 18px 16px;
+      border-left: 2px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .page-body-rt blockquote p {
+      margin-top: 0;
+    }
+
+    .page-body-rt hr {
+      border: 0;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.12);
+      margin: 44px 0;
+    }
+
+    .page-body-rt figure {
+      margin: 32px 0 0 0;
+    }
+
+    .page-body-rt img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 2px;
+    }
+
+    .page-body-rt figcaption {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      opacity: 0.7;
+    }
+
+    .page-body-rt pre {
+      margin: 28px 0 0 0;
+      padding: 16px 16px;
+      overflow: auto;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .page-body-rt code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.95em;
+    }
+
+    .page-body-rt pre code {
+      font-size: 0.92rem;
+    }
+
+    .page-body-rt table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 28px 0 0 0;
+      font-size: 0.98rem;
+    }
+
+    .page-body-rt th,
+    .page-body-rt td {
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      vertical-align: top;
+    }
+
+    .page-body-rt th {
+      text-align: left;
+      color: rgba(255, 255, 255, 0.9);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
     }
 
     @media (max-width: 1000px) {
-      .page-overview {
+      .page-overview,
+      .page-body-rt {
         max-width: none;
-      }
-
-      .page-body {
-        max-width: 65ch;
       }
     }
   </style>

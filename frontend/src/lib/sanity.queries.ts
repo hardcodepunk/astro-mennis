@@ -70,9 +70,15 @@ export async function getCategoryBySlug(slug: string) {
     tagline,
     preview{ poster, webm, mp4 },
     overviewLead,
-    overviewBody
+    body[]{
+      ...,
+      _type == "inlineImage" => {
+        ...,
+        "asset": asset->{ url }
+      }
+    }
   }`
-  return sanity.fetch<Category | null>(q, { slug })
+  return sanity.fetch<any>(q, { slug })
 }
 
 export async function getWorks() {
