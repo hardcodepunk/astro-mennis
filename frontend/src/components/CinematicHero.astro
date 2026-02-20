@@ -1,8 +1,19 @@
 ---
+import { getVideoHeroSettings } from "../lib/sanity.queries"
+
+const settings = await getVideoHeroSettings()
+
+const DEFAULT_MP4 =
+  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4"
+const DEFAULT_WEBM =
+  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm"
+const DEFAULT_POSTER =
+  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg"
+
 const {
-  mp4 = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4",
-  webm = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm",
-  poster = "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg",
+  mp4 = settings?.mp4 ?? DEFAULT_MP4,
+  webm = settings?.webm ?? DEFAULT_WEBM,
+  poster = settings?.poster ?? DEFAULT_POSTER,
   minRevealMs = 600,
 } = Astro.props
 ---
