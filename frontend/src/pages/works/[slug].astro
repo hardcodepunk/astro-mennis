@@ -1,18 +1,21 @@
 ---
 import PlyrPreview from "../../components/PlyrPreview.astro"
 import Layout from "../../layouts/Layout.astro"
-import { works } from "../../content/works.js"
 import RecentWorks from "../../components/RecentWorks.astro"
+import { getWorks, getWorkBySlug, getRecentWorks } from "../../lib/sanity.queries"
 
-export function getStaticPaths() {
+export async function getStaticPaths() {
+  const works = await getWorks()
   return works.map(w => ({
     params: { slug: w.slug },
-    props: { work: w },
   }))
 }
 
-const { work } = Astro.props
-const recent = works.slice(0, 2)
+const { slug } = Astro.params
+const work = await getWorkBySlug(slug)
+if (!work) throw new Error(`Work not found: ${slug}`)
+
+const recent = await getRecentWorks(2)
 ---
 
 <Layout>
@@ -21,7 +24,6 @@ const recent = works.slice(0, 2)
       <h1 class="page-title">{work.title}</h1>
 
       <div class="page-meta">
-        <div class="page-meta-val">{work.year}</div>
         <div class="page-meta-val">{work.category}</div>
         <div class="page-meta-val">{work.client}</div>
       </div>
@@ -31,8 +33,8 @@ const recent = works.slice(0, 2)
       </div>
 
       <section class="page-overview">
-        <p class="page-lead">{work.overviewLead}</p>
-        <p class="page-body">{work.overviewBody}</p>
+        {work.overviewLead ? <p class="page-lead">{work.overviewLead}</p> : null}
+        {work.overviewBody ? <p class="page-body">{work.overviewBody}</p> : null}
       </section>
     </div>
   </main>

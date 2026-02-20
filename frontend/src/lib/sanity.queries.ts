@@ -29,3 +29,107 @@ export async function getBioWithPreview() {
   }`
   return sanity.fetch<BioWithPreviewDoc | null>(q)
 }
+
+export type Category = {
+  slug: string
+  title: string
+  tagline: string
+  preview: { poster: string; webm?: string; mp4?: string }
+  overviewLead?: string
+  overviewBody?: string
+}
+
+export type WorkItem = {
+  slug: string
+  title: string
+  category: string
+  categorySlug: string
+  client: string
+  tagline: string
+  preview: { poster: string; webm?: string; mp4?: string }
+  overviewLead?: string
+  overviewBody?: string
+}
+
+export async function getCategories() {
+  const q = `*[_type == "category"] | order(title asc){
+    "slug": slug.current,
+    title,
+    tagline,
+    preview{ poster, webm, mp4 },
+    overviewLead,
+    overviewBody
+  }`
+  return sanity.fetch<Category[]>(q)
+}
+
+export async function getCategoryBySlug(slug: string) {
+  const q = `*[_type == "category" && slug.current == $slug][0]{
+    "slug": slug.current,
+    title,
+    tagline,
+    preview{ poster, webm, mp4 },
+    overviewLead,
+    overviewBody
+  }`
+  return sanity.fetch<Category | null>(q, { slug })
+}
+
+export async function getWorks() {
+  const q = `*[_type == "work"] | order(publishedAt desc, _createdAt desc){
+    "slug": slug.current,
+    title,
+    "category": category->title,
+    "categorySlug": category->slug.current,
+    client,
+    tagline,
+    preview{ poster, webm, mp4 },
+    overviewLead,
+    overviewBody
+  }`
+  return sanity.fetch<WorkItem[]>(q)
+}
+
+export async function getWorksByCategorySlug(slug: string) {
+  const q = `*[_type == "work" && category->slug.current == $slug]
+  | order(publishedAt desc, _createdAt desc){
+    "slug": slug.current,
+    title,
+    "category": category->title,
+    "categorySlug": category->slug.current,
+    client,
+    tagline,
+    preview{ poster, webm, mp4 },
+    overviewLead,
+    overviewBody
+  }`
+  return sanity.fetch<WorkItem[]>(q, { slug })
+}
+
+export async function getWorkBySlug(slug: string) {
+  const q = `*[_type == "work" && slug.current == $slug][0]{
+    "slug": slug.current,
+    title,
+    "category": category->title,
+    "categorySlug": category->slug.current,
+    client,
+    tagline,
+    preview{ poster, webm, mp4 },
+    overviewLead,
+    overviewBody
+  }`
+  return sanity.fetch<WorkItem | null>(q, { slug })
+}
+
+export async function getRecentWorks(limit = 2) {
+  const q = `*[_type == "work"] | order(publishedAt desc, _createdAt desc)[0...$limit]{
+    "slug": slug.current,
+    title,
+    "category": category->title,
+    "categorySlug": category->slug.current,
+    client,
+    tagline,
+    preview{ poster, webm, mp4 }
+  }`
+  return sanity.fetch<WorkItem[]>(q, { limit })
+}

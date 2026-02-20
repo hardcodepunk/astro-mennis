@@ -2,18 +2,20 @@
 import Layout from "../../layouts/Layout.astro"
 import PlyrPreview from "../../components/PlyrPreview.astro"
 import RecentWorks from "../../components/RecentWorks.astro"
-import { categories } from "../../content/categories.js"
-import { works } from "../../content/works.js"
+import { getCategories, getCategoryBySlug, getWorksByCategorySlug } from "../../lib/sanity.queries"
 
-export function getStaticPaths() {
-  return categories.map(c => ({
+export async function getStaticPaths() {
+  const cats = await getCategories()
+  return cats.map(c => ({
     params: { slug: c.slug },
-    props: { category: c },
   }))
 }
 
-const { category } = Astro.props
-const related = works.filter(w => (w.category || "").toLowerCase() === category.title.toLowerCase())
+const { slug } = Astro.params
+const category = await getCategoryBySlug(slug)
+if (!category) throw new Error(`Category not found: ${slug}`)
+
+const related = await getWorksByCategorySlug(slug)
 ---
 
 <Layout>
@@ -26,8 +28,8 @@ const related = works.filter(w => (w.category || "").toLowerCase() === category.
       </div>
 
       <section class="page-overview">
-        <p class="page-lead">{category.overviewLead}</p>
-        <p class="page-body">{category.overviewBody}</p>
+        {category.overviewLead ? <p class="page-lead">{category.overviewLead}</p> : null}
+        {category.overviewBody ? <p class="page-body">{category.overviewBody}</p> : null}
       </section>
     </div>
   </main>

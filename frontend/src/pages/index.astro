@@ -4,11 +4,11 @@ import Videohero from "../components/CinematicHero.astro"
 import LogosMarquee from "../components/LogosMarquee.astro"
 import BioWithPreview from "../components/BioWithPreview.astro"
 import RecentWorks from "../components/RecentWorks.astro"
-import { works } from "../content/works.js"
 import CategoriesSection from "../components/CategoriesSection.astro"
-import { categories } from "../content/categories"
+import { getRecentWorks, getCategories } from "../lib/sanity.queries"
 
-const recent = works.slice(0, 2)
+const recent = await getRecentWorks(2)
+const categories = await getCategories()
 ---
 
 <Layout>
