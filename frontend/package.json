@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@fontsource/bebas-neue": "^5.2.7",
+    "@portabletext/to-html": "^5.0.1",
     "@sanity/client": "^7.15.0",
     "@sanity/image-url": "^2.0.3",
     "@tailwindcss/vite": "^4.1.18",

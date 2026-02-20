@@ -1,14 +1,13 @@
 ---
-import PlyrPreview from "../../components/PlyrPreview.astro"
 import Layout from "../../layouts/Layout.astro"
+import PlyrPreview from "../../components/PlyrPreview.astro"
+import { getWorkBySlug, getWorks, getRecentWorks } from "../../lib/sanity.queries"
+import { portableTextToHtml } from "../../lib/portableText"
 import RecentWorks from "../../components/RecentWorks.astro"
-import { getWorks, getWorkBySlug, getRecentWorks } from "../../lib/sanity.queries"
 
 export async function getStaticPaths() {
   const works = await getWorks()
-  return works.map(w => ({
-    params: { slug: w.slug },
-  }))
+  return works.map(w => ({ params: { slug: w.slug } }))
 }
 
 const { slug } = Astro.params
@@ -16,6 +15,7 @@ const work = await getWorkBySlug(slug)
 if (!work) throw new Error(`Work not found: ${slug}`)
 
 const recent = await getRecentWorks(2)
+const bodyHtml = portableTextToHtml(work.body)
 ---
 
 <Layout>
@@ -24,6 +24,7 @@ const recent = await getRecentWorks(2)
       <h1 class="page-title">{work.title}</h1>
 
       <div class="page-meta">
+        <div class="page-meta-val">{work.year}</div>
         <div class="page-meta-val">{work.category}</div>
         <div class="page-meta-val">{work.client}</div>
       </div>
@@ -32,10 +33,7 @@ const recent = await getRecentWorks(2)
         <PlyrPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />
       </div>
 
-      <section class="page-overview">
-        {work.overviewLead ? <p class="page-lead">{work.overviewLead}</p> : null}
-        {work.overviewBody ? <p class="page-body">{work.overviewBody}</p> : null}
-      </section>
+      {bodyHtml ? <section class="page-body-rt" set:html={bodyHtml} /> : null}
     </div>
   </main>
 
