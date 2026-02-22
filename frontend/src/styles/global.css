@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-primary: #b8a7e2;
+}
+
 body {
   margin: 0;
   padding: 0;
