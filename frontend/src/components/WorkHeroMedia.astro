@@ -47,35 +47,37 @@ const init = hasYouTube || hasSlider
     )
   }
 </div>
+<script define:vars={{ init }}>
+  ;(() => {
+    if (!init) return
 
-<script type="module" define:vars={{ init }}>
-  if (init) {
+    const root = document.querySelector("[data-work-hero]")
+    if (!(root instanceof HTMLElement)) return
+
+    const embeds = Array.from(root.querySelectorAll("[data-yt-embed]"))
+
     import("plyr").then(({ default: Plyr }) => {
-      const root = document.querySelector("[data-work-hero]")
-      if (!(root instanceof HTMLElement)) return
-
-      const embeds = Array.from(root.querySelectorAll("[data-yt-embed]"))
       const players = embeds.map(el => new Plyr(el))
 
       const rail = root.querySelector("[data-yt-rail]")
-      if (rail instanceof HTMLElement) {
-        const slides = Array.from(root.querySelectorAll("[data-yt-slide]"))
+      if (!(rail instanceof HTMLElement)) return
 
-        const io = new IntersectionObserver(
-          entries => {
-            for (const entry of entries) {
-              const idx = slides.indexOf(entry.target)
-              if (idx === -1) continue
-              if (!entry.isIntersecting) players[idx]?.pause()
-            }
-          },
-          { root: rail, threshold: 0.7 },
-        )
+      const slides = Array.from(root.querySelectorAll("[data-yt-slide]"))
 
-        slides.forEach(s => io.observe(s))
-      }
+      const io = new IntersectionObserver(
+        entries => {
+          for (const entry of entries) {
+            const idx = slides.indexOf(entry.target)
+            if (idx === -1) continue
+            if (!entry.isIntersecting) players[idx]?.pause()
+          }
+        },
+        { root: rail, threshold: 0.7 },
+      )
+
+      slides.forEach(s => io.observe(s))
     })
-  }
+  })()
 </script>
 
 <style>
