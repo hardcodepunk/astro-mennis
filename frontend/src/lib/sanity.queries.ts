@@ -44,6 +44,7 @@ export type WorkMedia =
   | { mode: "preview" }
   | { mode: "single"; youtubeUrl?: string }
   | { mode: "slider"; reels?: string[] }
+
 export type WorkItem = {
   slug: string
   title: string
