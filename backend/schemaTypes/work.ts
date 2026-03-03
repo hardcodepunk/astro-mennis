@@ -1,5 +1,7 @@
 import {defineField, defineType} from 'sanity'
 
+type HeroMediaParent = {mode?: 'preview' | 'single' | 'slider'}
+
 export const work = defineType({
   name: 'work',
   title: 'Work',
@@ -72,6 +74,60 @@ export const work = defineType({
         }),
       ],
       validation: (r) => r.required(),
+    }),
+
+    defineField({
+      name: 'media',
+      title: 'Hero media',
+      type: 'object',
+      options: {collapsible: true, collapsed: true},
+      initialValue: {mode: 'preview'},
+      fields: [
+        defineField({
+          name: 'mode',
+          title: 'Type',
+          type: 'string',
+          options: {
+            list: [
+              {title: 'Default preview video (mp4/webm)', value: 'preview'},
+              {title: 'Single YouTube video', value: 'single'},
+              {title: 'Reels slider (up to 4)', value: 'slider'},
+            ],
+            layout: 'radio',
+          },
+          initialValue: 'preview',
+          validation: (r) => r.required(),
+        }),
+
+        defineField({
+          name: 'youtubeUrl',
+          title: 'YouTube URL',
+          type: 'url',
+          hidden: ({parent}) => (parent as HeroMediaParent)?.mode !== 'single',
+          validation: (r) =>
+            r.custom((val, ctx) => {
+              const mode = (ctx.parent as HeroMediaParent | undefined)?.mode
+              if (mode !== 'single') return true
+              return val ? true : 'Required for single YouTube video'
+            }),
+        }),
+
+        defineField({
+          name: 'reels',
+          title: 'Reels URLs',
+          type: 'array',
+          of: [{type: 'url'}],
+          hidden: ({parent}) => (parent as HeroMediaParent)?.mode !== 'slider',
+          validation: (r) =>
+            r.custom((val, ctx) => {
+              const mode = (ctx.parent as HeroMediaParent | undefined)?.mode
+              if (mode !== 'slider') return true
+              if (!Array.isArray(val) || val.length < 1) return 'Add at least 1 URL'
+              if (val.length > 4) return 'Max 4 URLs'
+              return true
+            }),
+        }),
+      ],
     }),
 
     defineField({

@@ -4,6 +4,7 @@ import PlyrPreview from "../../components/PlyrPreview.astro"
 import { getWorkBySlug, getWorks, getRecentWorks } from "../../lib/sanity.queries"
 import { portableTextToHtml } from "../../lib/portableText"
 import RecentWorks from "../../components/RecentWorks.astro"
+import WorkHeroMedia from "../../components/WorkHeroMedia.astro"
 
 export async function getStaticPaths() {
   const works = await getWorks()
@@ -30,7 +31,7 @@ const bodyHtml = portableTextToHtml(work.body)
       </div>
 
       <div class="page-hero">
-        <PlyrPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />
+        <WorkHeroMedia work={work} />
       </div>
 
       {
