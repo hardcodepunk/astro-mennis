@@ -3,6 +3,8 @@ import * as PlyrModule from "plyr"
 const Plyr: any = (PlyrModule as any).default ?? PlyrModule
 
 function initHero(root: HTMLElement) {
+  console.log("workHeroMedia loaded")
+
   if (root.dataset.workHeroInited === "1") return
   root.dataset.workHeroInited = "1"
 
