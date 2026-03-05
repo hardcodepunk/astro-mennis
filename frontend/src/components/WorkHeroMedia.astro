@@ -2,7 +2,7 @@
 // frontend/src/components/WorkHeroMedia.astro
 import "plyr/dist/plyr.css"
 import PlyrPreview from "./PlyrPreview.astro"
-import initUrl from "../scripts/WorkHeroMedia.ts?url"
+import initUrl from "../scripts/workHeroMedia.ts?url"
 
 type WorkMedia = { mode: "preview" } | { mode: "single"; youtubeUrl?: string } | { mode: "slider"; reels?: string[] }
 
