@@ -1,7 +1,8 @@
 ---
+// frontend/src/components/WorkHeroMedia.astro
 import "plyr/dist/plyr.css"
 import PlyrPreview from "./PlyrPreview.astro"
-import initUrl from "../scripts/workHeroMedia.ts?url"
+import initUrl from "../scripts/WorkHeroMedia.ts?url"
 
 type WorkMedia = { mode: "preview" } | { mode: "single"; youtubeUrl?: string } | { mode: "slider"; reels?: string[] }
 
@@ -35,6 +36,7 @@ function getYouTubeId(input?: string | null): string | null {
 
 const media = work.media
 const youtubeId = media && media.mode === "single" ? getYouTubeId(media.youtubeUrl ?? null) : null
+
 const reelIds =
   media && media.mode === "slider"
     ? (media.reels ?? [])
@@ -50,7 +52,6 @@ const init = hasYouTube || hasSlider
 function ytPoster(id: string) {
   return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
 }
-
 function ytPosterFallback(id: string) {
   return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
 }
@@ -135,45 +136,22 @@ function ytPosterFallback(id: string) {
     position: relative;
   }
 
-  .yt-gallery__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 6px 0 8px;
-  }
-
-  .yt-gallery__title {
-    font-weight: 600;
-    letter-spacing: 0.04em;
-  }
-
-  .yt-gallery__actions {
-    display: flex;
-    gap: 8px;
-  }
-
   .yt-nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     width: 44px;
     height: 44px;
-
     border-radius: 12px;
     border: none;
-
     background: var(--color-brand-primary);
     color: white;
-
     font-size: 22px;
     font-weight: bold;
-
     display: grid;
     place-items: center;
-
     cursor: pointer;
-    z-index: 30;
+    z-index: 40;
   }
 
   .yt-nav--prev {
@@ -192,10 +170,7 @@ function ytPosterFallback(id: string) {
     touch-action: pan-x;
     overscroll-behavior-x: contain;
     padding: 10px 0 16px;
-  }
-
-  .yt-rail.is-grabbing {
-    cursor: grabbing;
+    scroll-behavior: smooth;
   }
 
   .yt-slide {
@@ -232,10 +207,20 @@ function ytPosterFallback(id: string) {
   .yt-frame :global(iframe) {
     width: 100%;
     height: 100%;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
   }
 
   .yt-frame :global(.plyr__poster) {
     display: none;
+  }
+
+  .yt-frame:not(.is-playing) :global(.plyr),
+  .yt-frame:not(.is-playing) :global(.plyr__video-wrapper),
+  .yt-frame:not(.is-playing) :global(.plyr__video-embed),
+  .yt-frame:not(.is-playing) :global(iframe) {
+    pointer-events: none;
   }
 
   .yt-overlay {
@@ -245,7 +230,7 @@ function ytPosterFallback(id: string) {
     padding: 0;
     background: transparent;
     cursor: pointer;
-    z-index: 5;
+    z-index: 20;
   }
 
   .yt-overlay__img {
@@ -254,6 +239,7 @@ function ytPosterFallback(id: string) {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
   }
 
   .yt-overlay__play {
@@ -273,6 +259,8 @@ function ytPosterFallback(id: string) {
     top: 50%;
     left: 50%;
     transform: translate(-42%, -50%);
+    width: 0;
+    height: 0;
     border-left: 18px solid rgba(255, 255, 255, 0.9);
     border-top: 12px solid transparent;
     border-bottom: 12px solid transparent;
