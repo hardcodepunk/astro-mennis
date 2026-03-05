@@ -35,13 +35,12 @@ function getYouTubeId(input?: string | null): string | null {
 
 const media = work.media
 const youtubeId = media && media.mode === "single" ? getYouTubeId(media.youtubeUrl ?? null) : null
-
 const reelIds =
   media && media.mode === "slider"
     ? (media.reels ?? [])
         .map(u => getYouTubeId(u))
         .filter((x): x is string => Boolean(x))
-        .slice(0, 4)
+        .slice(0, 8)
     : []
 
 const hasYouTube = Boolean(youtubeId)
@@ -84,6 +83,10 @@ function ytPosterFallback(id: string) {
       </div>
     ) : hasSlider ? (
       <section class="yt-gallery" aria-label="Reels">
+        <button class="yt-nav yt-nav--prev" type="button" aria-label="Previous" data-yt-prev>
+          ‹
+        </button>
+
         <div class="yt-rail" data-yt-rail>
           {reelIds.map(id => (
             <article class="yt-slide" data-yt-slide>
@@ -110,6 +113,10 @@ function ytPosterFallback(id: string) {
             </article>
           ))}
         </div>
+
+        <button class="yt-nav yt-nav--next" type="button" aria-label="Next" data-yt-next>
+          ›
+        </button>
       </section>
     ) : (
       <PlyrPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />
@@ -124,20 +131,75 @@ function ytPosterFallback(id: string) {
     margin: 0 auto;
   }
 
+  .yt-gallery {
+    position: relative;
+  }
+
+  .yt-gallery__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0 8px;
+  }
+
+  .yt-gallery__title {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .yt-gallery__actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .yt-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+
+    border-radius: 12px;
+    border: none;
+
+    background: var(--color-brand-primary);
+    color: white;
+
+    font-size: 22px;
+    font-weight: bold;
+
+    display: grid;
+    place-items: center;
+
+    cursor: pointer;
+    z-index: 30;
+  }
+
+  .yt-nav--prev {
+    left: -12px;
+  }
+
+  .yt-nav--next {
+    right: -12px;
+  }
+
   .yt-rail {
     display: flex;
     gap: 18px;
     overflow-x: auto;
-    scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    padding: 10px 0 16px;
     touch-action: pan-x;
     overscroll-behavior-x: contain;
+    padding: 10px 0 16px;
+  }
+
+  .yt-rail.is-grabbing {
+    cursor: grabbing;
   }
 
   .yt-slide {
     flex: 0 0 auto;
-    scroll-snap-align: start;
     display: flex;
     justify-content: center;
   }
