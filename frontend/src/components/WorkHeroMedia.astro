@@ -84,44 +84,32 @@ function ytPosterFallback(id: string) {
       </div>
     ) : hasSlider ? (
       <section class="yt-gallery" aria-label="Reels">
-        <div class="yt-gallery__viewport">
-          <button class="yt-nav yt-nav--prev" type="button" aria-label="Previous" data-yt-prev>
-            <span aria-hidden="true">‹</span>
-          </button>
-
-          <div class="yt-rail" data-yt-rail>
-            {reelIds.map(id => (
-              <article class="yt-slide" data-yt-slide>
-                <div class="yt-frame yt-frame--9x16" data-yt-frame>
-                  <div
-                    class="plyr__video-embed yt-embed"
-                    data-yt-embed
-                    data-yt-ratio="9:16"
-                    data-plyr-provider="youtube"
-                    data-plyr-embed-id={id}
+        <div class="yt-rail" data-yt-rail>
+          {reelIds.map(id => (
+            <article class="yt-slide" data-yt-slide>
+              <div class="yt-frame yt-frame--9x16" data-yt-frame>
+                <div
+                  class="plyr__video-embed yt-embed"
+                  data-yt-embed
+                  data-yt-ratio="9:16"
+                  data-plyr-provider="youtube"
+                  data-plyr-embed-id={id}
+                />
+                <button class="yt-overlay" type="button" aria-label="Play reel" data-yt-overlay>
+                  <img
+                    class="yt-overlay__img"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    src={ytPoster(id)}
+                    onerror={`this.onerror=null;this.src='${ytPosterFallback(id)}'`}
                   />
-                  <button class="yt-overlay" type="button" aria-label="Play reel" data-yt-overlay>
-                    <img
-                      class="yt-overlay__img"
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      src={ytPoster(id)}
-                      onerror={`this.onerror=null;this.src='${ytPosterFallback(id)}'`}
-                    />
-                    <span class="yt-overlay__play" aria-hidden="true" />
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <button class="yt-nav yt-nav--next" type="button" aria-label="Next" data-yt-next>
-            <span aria-hidden="true">›</span>
-          </button>
+                  <span class="yt-overlay__play" aria-hidden="true" />
+                </button>
+              </div>
+            </article>
+          ))}
         </div>
-
-        <div class="yt-dots" data-yt-dots aria-label="Reel navigation" />
       </section>
     ) : (
       <PlyrPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />
@@ -136,10 +124,6 @@ function ytPosterFallback(id: string) {
     margin: 0 auto;
   }
 
-  .yt-gallery__viewport {
-    position: relative;
-  }
-
   .yt-rail {
     display: flex;
     gap: 18px;
@@ -149,7 +133,6 @@ function ytPosterFallback(id: string) {
     padding: 10px 0 16px;
     touch-action: pan-x;
     overscroll-behavior-x: contain;
-    scroll-behavior: smooth;
   }
 
   .yt-slide {
@@ -201,7 +184,6 @@ function ytPosterFallback(id: string) {
     background: transparent;
     cursor: pointer;
     z-index: 5;
-    display: block;
   }
 
   .yt-overlay__img {
@@ -210,7 +192,6 @@ function ytPosterFallback(id: string) {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
   }
 
   .yt-overlay__play {
@@ -230,8 +211,6 @@ function ytPosterFallback(id: string) {
     top: 50%;
     left: 50%;
     transform: translate(-42%, -50%);
-    width: 0;
-    height: 0;
     border-left: 18px solid rgba(255, 255, 255, 0.9);
     border-top: 12px solid transparent;
     border-bottom: 12px solid transparent;
@@ -241,56 +220,6 @@ function ytPosterFallback(id: string) {
     opacity: 0;
     pointer-events: none;
     transition: opacity 120ms ease;
-  }
-
-  .yt-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 20;
-    width: 44px;
-    height: 44px;
-    border: 0;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.45);
-    color: #fff;
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-  }
-
-  .yt-nav--prev {
-    left: 10px;
-  }
-
-  .yt-nav--next {
-    right: 10px;
-  }
-
-  .yt-dots {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    padding-top: 10px;
-  }
-
-  .yt-dots [data-yt-dot] {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    border: 0;
-    background: rgba(255, 255, 255, 0.3);
-    cursor: pointer;
-  }
-
-  .yt-dots [data-yt-dot][aria-current="true"] {
-    background: rgba(255, 255, 255, 0.9);
-  }
-
-  @media (hover: none) and (pointer: coarse) {
-    .yt-nav {
-      display: none;
-    }
   }
 
   @media (min-width: 900px) {
