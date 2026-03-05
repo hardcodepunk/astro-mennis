@@ -291,4 +291,4 @@ function ytPosterFallback(id: string) {
   }
 </style>
 
-{init ? <script type="module" src={initSrc} /> : null}
+{init && <script type="module">import "../scripts/workHeroMedia.ts"</script>}
