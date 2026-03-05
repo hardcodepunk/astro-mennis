@@ -1,5 +1,4 @@
 ---
-// frontend/src/components/WorkHeroMedia.astro
 import "plyr/dist/plyr.css"
 import PlyrPreview from "./PlyrPreview.astro"
 import initUrl from "../scripts/workHeroMedia.ts?url"
@@ -36,7 +35,6 @@ function getYouTubeId(input?: string | null): string | null {
 
 const media = work.media
 const youtubeId = media && media.mode === "single" ? getYouTubeId(media.youtubeUrl ?? null) : null
-
 const reelIds =
   media && media.mode === "slider"
     ? (media.reels ?? [])
@@ -52,6 +50,7 @@ const init = hasYouTube || hasSlider
 function ytPoster(id: string) {
   return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
 }
+
 function ytPosterFallback(id: string) {
   return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
 }
@@ -151,7 +150,7 @@ function ytPosterFallback(id: string) {
     display: grid;
     place-items: center;
     cursor: pointer;
-    z-index: 40;
+    z-index: 30;
   }
 
   .yt-nav--prev {
@@ -170,7 +169,11 @@ function ytPosterFallback(id: string) {
     touch-action: pan-x;
     overscroll-behavior-x: contain;
     padding: 10px 0 16px;
-    scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+
+  .yt-rail::-webkit-scrollbar {
+    display: none;
   }
 
   .yt-slide {
@@ -205,15 +208,11 @@ function ytPosterFallback(id: string) {
   .yt-frame :global(.plyr__video-wrapper),
   .yt-frame :global(.plyr__video-embed),
   .yt-frame :global(iframe) {
-    width: 100%;
-    height: 100%;
     position: absolute;
     inset: 0;
+    width: 100%;
+    height: 100%;
     z-index: 1;
-  }
-
-  .yt-frame :global(.plyr__poster) {
-    display: none;
   }
 
   .yt-frame:not(.is-playing) :global(.plyr),
@@ -223,6 +222,10 @@ function ytPosterFallback(id: string) {
     pointer-events: none;
   }
 
+  .yt-frame :global(.plyr__poster) {
+    display: none;
+  }
+
   .yt-overlay {
     position: absolute;
     inset: 0;
@@ -230,7 +233,7 @@ function ytPosterFallback(id: string) {
     padding: 0;
     background: transparent;
     cursor: pointer;
-    z-index: 20;
+    z-index: 10;
   }
 
   .yt-overlay__img {
@@ -239,7 +242,6 @@ function ytPosterFallback(id: string) {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
   }
 
   .yt-overlay__play {
@@ -259,8 +261,6 @@ function ytPosterFallback(id: string) {
     top: 50%;
     left: 50%;
     transform: translate(-42%, -50%);
-    width: 0;
-    height: 0;
     border-left: 18px solid rgba(255, 255, 255, 0.9);
     border-top: 12px solid transparent;
     border-bottom: 12px solid transparent;

@@ -3,6 +3,9 @@ import * as PlyrModule from "plyr"
 const Plyr: any = (PlyrModule as any).default ?? PlyrModule
 
 function initHero(root: HTMLElement) {
+  if (root.dataset.workHeroInited === "1") return
+  root.dataset.workHeroInited = "1"
+
   const embeds = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-embed]"))
   if (!embeds.length) return
 
@@ -36,53 +39,33 @@ function initHero(root: HTMLElement) {
   const prev = root.querySelector<HTMLButtonElement>("[data-yt-prev]")
   const next = root.querySelector<HTMLButtonElement>("[data-yt-next]")
 
-  const scrollByCard = (dir: "left" | "right") => {
+  const getAmount = () => {
     const first = rail.querySelector<HTMLElement>("[data-yt-slide]")
     const cardW = first?.clientWidth ?? 160
     const gap = 18
-    const amount = cardW + gap
+    return cardW + gap
+  }
 
-    rail.scrollBy({
-      left: dir === "left" ? -amount : amount,
-      behavior: "smooth",
-    })
+  const scrollByCard = (dir: "left" | "right") => {
+    const amount = getAmount()
+    rail.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" })
   }
 
   prev?.addEventListener("click", () => scrollByCard("left"))
   next?.addEventListener("click", () => scrollByCard("right"))
 
-  let isDown = false
-  let startX = 0
-  let startLeft = 0
-
-  const onPointerDown = (e: PointerEvent) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return
-    if ((e.target as HTMLElement | null)?.closest?.("[data-yt-overlay]")) return
-    if ((e.target as HTMLElement | null)?.closest?.(".plyr__controls")) return
-
-    isDown = true
-    startX = e.clientX
-    startLeft = rail.scrollLeft
-    rail.classList.add("is-grabbing")
-    rail.setPointerCapture(e.pointerId)
+  const updateNav = () => {
+    const left = rail.scrollLeft
+    const max = Math.max(0, rail.scrollWidth - rail.clientWidth)
+    if (prev) prev.hidden = left <= 2
+    if (next) next.hidden = left >= max - 2
   }
 
-  const onPointerMove = (e: PointerEvent) => {
-    if (!isDown) return
-    rail.scrollLeft = startLeft - (e.clientX - startX)
-  }
+  updateNav()
 
-  const endDrag = () => {
-    if (!isDown) return
-    isDown = false
-    rail.classList.remove("is-grabbing")
-  }
-
-  rail.addEventListener("pointerdown", onPointerDown)
-  rail.addEventListener("pointermove", onPointerMove)
-  rail.addEventListener("pointerup", endDrag)
-  rail.addEventListener("pointercancel", endDrag)
-  rail.addEventListener("pointerleave", endDrag)
+  rail.addEventListener("scroll", updateNav, { passive: true })
+  const ro = new ResizeObserver(updateNav)
+  ro.observe(rail)
 
   const slides = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-slide]"))
   const pauseAt = (idx: number) => {
@@ -105,4 +88,15 @@ function initHero(root: HTMLElement) {
   slides.forEach(s => io.observe(s))
 }
 
-document.querySelectorAll<HTMLElement>("[data-work-hero]").forEach(initHero)
+function boot() {
+  document.querySelectorAll<HTMLElement>("[data-work-hero]").forEach(initHero)
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot)
+} else {
+  boot()
+}
+
+document.addEventListener("astro:page-load", boot as any)
+document.addEventListener("astro:after-swap", boot as any)
