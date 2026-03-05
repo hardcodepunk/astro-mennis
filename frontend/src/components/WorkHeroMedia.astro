@@ -1,7 +1,7 @@
 ---
 import "plyr/dist/plyr.css"
-import Plyr from "plyr"
 import PlyrPreview from "./PlyrPreview.astro"
+import initUrl from "../scripts/workHeroMedia.ts?url"
 
 type WorkMedia = { mode: "preview" } | { mode: "single"; youtubeUrl?: string } | { mode: "slider"; reels?: string[] }
 
@@ -13,72 +13,121 @@ const { work } = Astro.props as {
   }
 }
 
+function getYouTubeId(input?: string | null): string | null {
+  if (!input) return null
+  const s = String(input).trim()
+  if (!s) return null
+
+  const m1 = s.match(/(?:youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/)
+  if (m1?.[1]) return m1[1]
+
+  const m2 = s.match(/(?:youtu\.be\/)([A-Za-z0-9_-]{6,})/)
+  if (m2?.[1]) return m2[1]
+
+  const m3 = s.match(/[?&]v=([A-Za-z0-9_-]{6,})/)
+  if (m3?.[1]) return m3[1]
+
+  const m4 = s.match(/^[A-Za-z0-9_-]{6,}$/)
+  if (m4) return s
+
+  return null
+}
+
 const media = work.media
+const youtubeId = media && media.mode === "single" ? getYouTubeId(media.youtubeUrl ?? null) : null
 
-const youtubeUrl = media && media.mode === "single" ? (media.youtubeUrl ?? null) : null
+const reelIds =
+  media && media.mode === "slider"
+    ? (media.reels ?? [])
+        .map(u => getYouTubeId(u))
+        .filter((x): x is string => Boolean(x))
+        .slice(0, 4)
+    : []
 
-const reels = media && media.mode === "slider" ? (media.reels ?? []).filter(Boolean).slice(0, 4) : []
-
-const hasYouTube = Boolean(youtubeUrl)
-const hasSlider = reels.length > 0
+const hasYouTube = Boolean(youtubeId)
+const hasSlider = reelIds.length > 0
 const init = hasYouTube || hasSlider
+
+function ytPoster(id: string) {
+  return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
+}
+
+function ytPosterFallback(id: string) {
+  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+}
 ---
 
 <div data-work-hero>
   {
     hasYouTube ? (
       <div class="hero-16x9">
-        <div class="plyr__video-embed" data-yt-embed data-youtube-url={youtubeUrl} />
+        <div class="yt-frame yt-frame--16x9" data-yt-frame>
+          <div
+            class="plyr__video-embed yt-embed"
+            data-yt-embed
+            data-yt-ratio="16:9"
+            data-plyr-provider="youtube"
+            data-plyr-embed-id={youtubeId}
+          />
+          <button class="yt-overlay" type="button" aria-label="Play video" data-yt-overlay>
+            <img
+              class="yt-overlay__img"
+              alt=""
+              loading="lazy"
+              decoding="async"
+              src={ytPoster(youtubeId!)}
+              onerror={`this.onerror=null;this.src='${ytPosterFallback(youtubeId!)}'`}
+            />
+            <span class="yt-overlay__play" aria-hidden="true" />
+          </button>
+        </div>
       </div>
     ) : hasSlider ? (
       <section class="yt-gallery" aria-label="Reels">
-        <div class="yt-rail" data-yt-rail>
-          {reels.map(url => (
-            <article class="yt-slide" data-yt-slide>
-              <div class="yt-frame">
-                <div class="plyr__video-embed" data-yt-embed data-youtube-url={url} />
-              </div>
-            </article>
-          ))}
+        <div class="yt-gallery__viewport">
+          <button class="yt-nav yt-nav--prev" type="button" aria-label="Previous" data-yt-prev>
+            <span aria-hidden="true">‹</span>
+          </button>
+
+          <div class="yt-rail" data-yt-rail>
+            {reelIds.map(id => (
+              <article class="yt-slide" data-yt-slide>
+                <div class="yt-frame yt-frame--9x16" data-yt-frame>
+                  <div
+                    class="plyr__video-embed yt-embed"
+                    data-yt-embed
+                    data-yt-ratio="9:16"
+                    data-plyr-provider="youtube"
+                    data-plyr-embed-id={id}
+                  />
+                  <button class="yt-overlay" type="button" aria-label="Play reel" data-yt-overlay>
+                    <img
+                      class="yt-overlay__img"
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      src={ytPoster(id)}
+                      onerror={`this.onerror=null;this.src='${ytPosterFallback(id)}'`}
+                    />
+                    <span class="yt-overlay__play" aria-hidden="true" />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <button class="yt-nav yt-nav--next" type="button" aria-label="Next" data-yt-next>
+            <span aria-hidden="true">›</span>
+          </button>
         </div>
+
+        <div class="yt-dots" data-yt-dots aria-label="Reel navigation" />
       </section>
     ) : (
       <PlyrPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />
     )
   }
 </div>
-<script define:vars={{ init }}>
-  ;(() => {
-    if (!init) return
-
-    const root = document.querySelector("[data-work-hero]")
-    if (!(root instanceof HTMLElement)) return
-
-    const embeds = Array.from(root.querySelectorAll("[data-yt-embed]"))
-
-    import("plyr").then(({ default: Plyr }) => {
-      const players = embeds.map(el => new Plyr(el))
-
-      const rail = root.querySelector("[data-yt-rail]")
-      if (!(rail instanceof HTMLElement)) return
-
-      const slides = Array.from(root.querySelectorAll("[data-yt-slide]"))
-
-      const io = new IntersectionObserver(
-        entries => {
-          for (const entry of entries) {
-            const idx = slides.indexOf(entry.target)
-            if (idx === -1) continue
-            if (!entry.isIntersecting) players[idx]?.pause()
-          }
-        },
-        { root: rail, threshold: 0.7 },
-      )
-
-      slides.forEach(s => io.observe(s))
-    })
-  })()
-</script>
 
 <style>
   .hero-16x9 {
@@ -87,42 +136,168 @@ const init = hasYouTube || hasSlider
     margin: 0 auto;
   }
 
+  .yt-gallery__viewport {
+    position: relative;
+  }
+
   .yt-rail {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 100%;
-    gap: 14px;
+    display: flex;
+    gap: 18px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 10px;
+    padding: 10px 0 16px;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
   }
 
   .yt-slide {
+    flex: 0 0 auto;
     scroll-snap-align: start;
+    display: flex;
+    justify-content: center;
   }
 
   .yt-frame {
-    width: 100%;
-    max-width: 520px;
-    margin: 0 auto;
-    aspect-ratio: 9 / 16;
-    background: #000;
-    border-radius: 12px;
+    position: relative;
     overflow: hidden;
+    border-radius: 12px;
+    background: #000;
   }
 
-  .yt-frame :global(iframe),
+  .yt-frame--16x9 {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  .yt-frame--9x16 {
+    width: min(420px, 86vw);
+    aspect-ratio: 9 / 16;
+  }
+
+  .yt-embed {
+    position: absolute;
+    inset: 0;
+  }
+
   .yt-frame :global(.plyr),
-  .yt-frame :global(.plyr__video-wrapper) {
+  .yt-frame :global(.plyr__video-wrapper),
+  .yt-frame :global(.plyr__video-embed),
+  .yt-frame :global(iframe) {
     width: 100%;
     height: 100%;
   }
 
+  .yt-frame :global(.plyr__poster) {
+    display: none;
+  }
+
+  .yt-overlay {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    z-index: 5;
+    display: block;
+  }
+
+  .yt-overlay__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .yt-overlay__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 76px;
+    height: 76px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .yt-overlay__play::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-42%, -50%);
+    width: 0;
+    height: 0;
+    border-left: 18px solid rgba(255, 255, 255, 0.9);
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+  }
+
+  .yt-frame.is-playing .yt-overlay {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+
+  .yt-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 20;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+
+  .yt-nav--prev {
+    left: 10px;
+  }
+
+  .yt-nav--next {
+    right: 10px;
+  }
+
+  .yt-dots {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    padding-top: 10px;
+  }
+
+  .yt-dots [data-yt-dot] {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    border: 0;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+  }
+
+  .yt-dots [data-yt-dot][aria-current="true"] {
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    .yt-nav {
+      display: none;
+    }
+  }
+
   @media (min-width: 900px) {
-    .yt-rail {
-      grid-auto-columns: minmax(320px, 420px);
-      justify-content: center;
+    .yt-frame--9x16 {
+      width: 380px;
     }
   }
 </style>
+
+{init ? <script type="module" src={initUrl} /> : null}
