@@ -263,4 +263,4 @@ function ytPosterFallback(id: string) {
   }
 </style>
 
-<script type="module" src={initUrl}></script>
+{hasYouTube || hasSlider ? <script type="module" src={initUrl} /> : null}
