@@ -2,9 +2,9 @@ import * as PlyrModule from "plyr"
 
 const Plyr: any = (PlyrModule as any).default ?? PlyrModule
 
-function initHero(root: HTMLElement) {
-  console.log("workMediaDisplayScript loaded")
+console.log("workMediaDisplayScript loaded")
 
+function initHero(root: HTMLElement) {
   if (root.dataset.workHeroInited === "1") return
   root.dataset.workHeroInited = "1"
 
@@ -17,21 +17,56 @@ function initHero(root: HTMLElement) {
       ratio,
       clickToPlay: false,
       controls: ["play", "progress", "current-time", "mute", "volume", "settings", "fullscreen"],
+      youtube: {
+        rel: 0,
+        modestbranding: 1,
+      },
     })
   })
 
   const frames = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-frame]"))
+
   frames.forEach((frame, idx) => {
     const overlay = frame.querySelector<HTMLButtonElement>("[data-yt-overlay]")
     const player = players[idx]
     if (!overlay || !player) return
 
-    player.on("playing", () => frame.classList.add("is-playing"))
-    player.on("play", () => frame.classList.add("is-playing"))
+    let ready = false
+    let playRequested = false
 
-    overlay.addEventListener("click", () => {
+    player.on("ready", () => {
+      ready = true
+      if (playRequested) {
+        player.play()
+        playRequested = false
+      }
+    })
+
+    player.on("playing", () => {
+      frame.classList.add("is-playing")
+    })
+
+    player.on("play", () => {
+      frame.classList.add("is-playing")
+    })
+
+    player.on("pause", () => {
       frame.classList.remove("is-playing")
-      player.play()
+    })
+
+    player.on("ended", () => {
+      frame.classList.remove("is-playing")
+    })
+
+    overlay.addEventListener("click", e => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (ready) {
+        player.play()
+      } else {
+        playRequested = true
+      }
     })
   })
 
@@ -43,22 +78,36 @@ function initHero(root: HTMLElement) {
 
   const getAmount = () => {
     const first = rail.querySelector<HTMLElement>("[data-yt-slide]")
-    const cardW = first?.clientWidth ?? 160
-    const gap = 18
-    return cardW + gap
+    if (!first) return 178
+    const gapValue = getComputedStyle(rail).gap || "18px"
+    const gap = Number.parseFloat(gapValue) || 18
+    return first.getBoundingClientRect().width + gap
   }
 
   const scrollByCard = (dir: "left" | "right") => {
     const amount = getAmount()
-    rail.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" })
+    rail.scrollBy({
+      left: dir === "left" ? -amount : amount,
+      behavior: "smooth",
+    })
   }
 
-  prev?.addEventListener("click", () => scrollByCard("left"))
-  next?.addEventListener("click", () => scrollByCard("right"))
+  prev?.addEventListener("click", e => {
+    e.preventDefault()
+    e.stopPropagation()
+    scrollByCard("left")
+  })
+
+  next?.addEventListener("click", e => {
+    e.preventDefault()
+    e.stopPropagation()
+    scrollByCard("right")
+  })
 
   const updateNav = () => {
     const left = rail.scrollLeft
     const max = Math.max(0, rail.scrollWidth - rail.clientWidth)
+
     if (prev) prev.hidden = left <= 2
     if (next) next.hidden = left >= max - 2
   }
@@ -66,10 +115,14 @@ function initHero(root: HTMLElement) {
   updateNav()
 
   rail.addEventListener("scroll", updateNav, { passive: true })
-  const ro = new ResizeObserver(updateNav)
+
+  const ro = new ResizeObserver(() => {
+    updateNav()
+  })
   ro.observe(rail)
 
   const slides = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-slide]"))
+
   const pauseAt = (idx: number) => {
     players[idx]?.pause()
     const frame = slides[idx]?.querySelector<HTMLElement>("[data-yt-frame]")
@@ -87,7 +140,7 @@ function initHero(root: HTMLElement) {
     { root: rail, threshold: 0.7 },
   )
 
-  slides.forEach(s => io.observe(s))
+  slides.forEach(slide => io.observe(slide))
 }
 
 function boot() {
@@ -95,10 +148,10 @@ function boot() {
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", boot)
+  document.addEventListener("DOMContentLoaded", boot, { once: true })
 } else {
   boot()
 }
 
-document.addEventListener("astro:page-load", boot as any)
-document.addEventListener("astro:after-swap", boot as any)
+document.addEventListener("astro:page-load", boot as EventListener)
+document.addEventListener("astro:after-swap", boot as EventListener)

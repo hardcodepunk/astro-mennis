@@ -1,6 +1,7 @@
 ---
 import "plyr/dist/plyr.css"
 import PlyrPreview from "./PlyrPreview.astro"
+import initUrl from "../scripts/workMediaDisplayScript.ts?url"
 
 type WorkMedia = { mode: "preview" } | { mode: "single"; youtubeUrl?: string } | { mode: "slider"; reels?: string[] }
 
@@ -44,7 +45,6 @@ const reelIds =
 
 const hasYouTube = Boolean(youtubeId)
 const hasSlider = reelIds.length > 0
-const init = hasYouTube || hasSlider
 
 function ytPoster(id: string) {
   return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
@@ -134,43 +134,20 @@ function ytPosterFallback(id: string) {
     position: relative;
   }
 
-  .yt-gallery__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 6px 0 8px;
-  }
-
-  .yt-gallery__title {
-    font-weight: 600;
-    letter-spacing: 0.04em;
-  }
-
-  .yt-gallery__actions {
-    display: flex;
-    gap: 8px;
-  }
-
   .yt-nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     width: 44px;
     height: 44px;
-
     border-radius: 12px;
     border: none;
-
     background: var(--color-brand-primary);
     color: white;
-
     font-size: 22px;
     font-weight: bold;
-
     display: grid;
     place-items: center;
-
     cursor: pointer;
     z-index: 30;
   }
@@ -191,10 +168,6 @@ function ytPosterFallback(id: string) {
     touch-action: pan-x;
     overscroll-behavior-x: contain;
     padding: 10px 0 16px;
-  }
-
-  .yt-rail.is-grabbing {
-    cursor: grabbing;
   }
 
   .yt-slide {
@@ -290,4 +263,4 @@ function ytPosterFallback(id: string) {
   }
 </style>
 
-{init && <script type="module">import "../scripts/workMediaDisplayScript.ts"</script>}
+<script type="module" src={initUrl}></script>
