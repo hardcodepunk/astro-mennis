@@ -4,7 +4,7 @@ import PlyrPreview from "../../components/PlyrPreview.astro"
 import { getWorkBySlug, getWorks, getRecentWorks } from "../../lib/sanity.queries"
 import { portableTextToHtml } from "../../lib/portableText"
 import RecentWorks from "../../components/RecentWorks.astro"
-import WorkHeroMedia from "../../components/WorkHeroMedia.astro"
+import WorkMediaDisplay from "../../components/WorkMediaDisplay.astro"
 
 export async function getStaticPaths() {
   const works = await getWorks()
@@ -31,7 +31,7 @@ const bodyHtml = portableTextToHtml(work.body)
       </div>
 
       <div class="page-hero">
-        <WorkHeroMedia work={work} />
+        <WorkMediaDisplay work={work} />
       </div>
 
       {
