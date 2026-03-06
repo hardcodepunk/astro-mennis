@@ -1,0 +1,293 @@
+---
+import "plyr/dist/plyr.css"
+import PlyrPreview from "./PlyrPreview.astro"
+
+type WorkMedia = { mode: "preview" } | { mode: "single"; youtubeUrl?: string } | { mode: "slider"; reels?: string[] }
+
+const { work } = Astro.props as {
+  work: {
+    title?: string
+    preview: { poster: string; mp4?: string; webm?: string }
+    media?: WorkMedia
+  }
+}
+
+function getYouTubeId(input?: string | null): string | null {
+  if (!input) return null
+  const s = String(input).trim()
+  if (!s) return null
+
+  const m1 = s.match(/(?:youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/)
+  if (m1?.[1]) return m1[1]
+
+  const m2 = s.match(/(?:youtu\.be\/)([A-Za-z0-9_-]{6,})/)
+  if (m2?.[1]) return m2[1]
+
+  const m3 = s.match(/[?&]v=([A-Za-z0-9_-]{6,})/)
+  if (m3?.[1]) return m3[1]
+
+  const m4 = s.match(/^[A-Za-z0-9_-]{6,}$/)
+  if (m4) return s
+
+  return null
+}
+
+const media = work.media
+const youtubeId = media && media.mode === "single" ? getYouTubeId(media.youtubeUrl ?? null) : null
+const reelIds =
+  media && media.mode === "slider"
+    ? (media.reels ?? [])
+        .map(u => getYouTubeId(u))
+        .filter((x): x is string => Boolean(x))
+        .slice(0, 8)
+    : []
+
+const hasYouTube = Boolean(youtubeId)
+const hasSlider = reelIds.length > 0
+const init = hasYouTube || hasSlider
+
+function ytPoster(id: string) {
+  return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
+}
+
+function ytPosterFallback(id: string) {
+  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+}
+---
+
+<div data-work-hero>
+  {
+    hasYouTube ? (
+      <div class="hero-16x9">
+        <div class="yt-frame yt-frame--16x9" data-yt-frame>
+          <div
+            class="plyr__video-embed yt-embed"
+            data-yt-embed
+            data-yt-ratio="16:9"
+            data-plyr-provider="youtube"
+            data-plyr-embed-id={youtubeId}
+          />
+          <button class="yt-overlay" type="button" aria-label="Play video" data-yt-overlay>
+            <img
+              class="yt-overlay__img"
+              alt=""
+              loading="lazy"
+              decoding="async"
+              src={ytPoster(youtubeId!)}
+              onerror={`this.onerror=null;this.src='${ytPosterFallback(youtubeId!)}'`}
+            />
+            <span class="yt-overlay__play" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    ) : hasSlider ? (
+      <section class="yt-gallery" aria-label="Reels">
+        <button class="yt-nav yt-nav--prev" type="button" aria-label="Previous" data-yt-prev>
+          ‹
+        </button>
+
+        <div class="yt-rail" data-yt-rail>
+          {reelIds.map(id => (
+            <article class="yt-slide" data-yt-slide>
+              <div class="yt-frame yt-frame--9x16" data-yt-frame>
+                <div
+                  class="plyr__video-embed yt-embed"
+                  data-yt-embed
+                  data-yt-ratio="9:16"
+                  data-plyr-provider="youtube"
+                  data-plyr-embed-id={id}
+                />
+                <button class="yt-overlay" type="button" aria-label="Play reel" data-yt-overlay>
+                  <img
+                    class="yt-overlay__img"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    src={ytPoster(id)}
+                    onerror={`this.onerror=null;this.src='${ytPosterFallback(id)}'`}
+                  />
+                  <span class="yt-overlay__play" aria-hidden="true" />
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <button class="yt-nav yt-nav--next" type="button" aria-label="Next" data-yt-next>
+          ›
+        </button>
+      </section>
+    ) : (
+      <PlyrPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />
+    )
+  }
+</div>
+
+<style>
+  .hero-16x9 {
+    width: 100%;
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+
+  .yt-gallery {
+    position: relative;
+  }
+
+  .yt-gallery__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0 8px;
+  }
+
+  .yt-gallery__title {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .yt-gallery__actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .yt-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+
+    border-radius: 12px;
+    border: none;
+
+    background: var(--color-brand-primary);
+    color: white;
+
+    font-size: 22px;
+    font-weight: bold;
+
+    display: grid;
+    place-items: center;
+
+    cursor: pointer;
+    z-index: 30;
+  }
+
+  .yt-nav--prev {
+    left: -12px;
+  }
+
+  .yt-nav--next {
+    right: -12px;
+  }
+
+  .yt-rail {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    padding: 10px 0 16px;
+  }
+
+  .yt-rail.is-grabbing {
+    cursor: grabbing;
+  }
+
+  .yt-slide {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+  }
+
+  .yt-frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #000;
+  }
+
+  .yt-frame--16x9 {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  .yt-frame--9x16 {
+    width: min(420px, 86vw);
+    aspect-ratio: 9 / 16;
+  }
+
+  .yt-embed {
+    position: absolute;
+    inset: 0;
+  }
+
+  .yt-frame :global(.plyr),
+  .yt-frame :global(.plyr__video-wrapper),
+  .yt-frame :global(.plyr__video-embed),
+  .yt-frame :global(iframe) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .yt-frame :global(.plyr__poster) {
+    display: none;
+  }
+
+  .yt-overlay {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    z-index: 5;
+  }
+
+  .yt-overlay__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .yt-overlay__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 76px;
+    height: 76px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .yt-overlay__play::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-42%, -50%);
+    border-left: 18px solid rgba(255, 255, 255, 0.9);
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+  }
+
+  .yt-frame.is-playing .yt-overlay {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+
+  @media (min-width: 900px) {
+    .yt-frame--9x16 {
+      width: 380px;
+    }
+  }
+</style>
+
+{init && <script type="module">import "../scripts/workMediaDisplayScript.ts"</script>}
