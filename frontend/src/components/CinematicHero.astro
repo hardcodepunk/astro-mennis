@@ -1,5 +1,6 @@
 ---
 import { getVideoHeroSettings } from "../lib/sanity.queries"
+import "plyr/dist/plyr.css"
 
 const settings = await getVideoHeroSettings()
 
@@ -36,7 +37,7 @@ const {
 
   <div class="vh-overlay" aria-hidden="true"></div>
 
-  <div class="vh-bottom">
+  <div class="vh-bottom-left">
     <a
       href="mailto:hello@demennis.be"
       class="font-display text-2xl tracking-widest text-white/90 hover:text-white transition-colors uppercase opacity-50 hover:opacity-100"
@@ -45,9 +46,26 @@ const {
     </a>
   </div>
 
-  <script is:inline>
-    ;(() => {
-      const root = document.currentScript?.closest(".vh-hero")
+  <div class="vh-bottom-right">
+    <button type="button" class="vh-cta" data-showreel-open aria-haspopup="dialog" aria-controls="showreel-dialog">
+      Watch showreel
+    </button>
+  </div>
+
+  <div class="vh-lightbox" id="showreel-dialog" data-showreel-modal hidden>
+    <div class="vh-lightbox-backdrop" data-showreel-close></div>
+    <button type="button" class="vh-cta vh-cta-close" data-showreel-close>Close showreel</button>
+
+    <div class="vh-lightbox-panel" role="dialog" aria-modal="true" aria-label="Showreel video">
+      <div class="vh-player-wrap">
+        <div id="showreel-player" data-plyr-provider="youtube" data-plyr-embed-id="cIFqyLFVG4g"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    ;(async () => {
+      const root = document.querySelector(".vh-hero")
       if (!(root instanceof HTMLElement)) return
 
       const video = root.querySelector("video")
@@ -79,24 +97,175 @@ const {
 
       window.setTimeout(revealWithMin, 1500)
 
+      const openBtn = root.querySelector("[data-showreel-open]")
+      const modal = root.querySelector("[data-showreel-modal]")
+      const closeButtons = root.querySelectorAll("[data-showreel-close]")
+      const playerTarget = root.querySelector("#showreel-player")
+
+      if (
+        !(openBtn instanceof HTMLButtonElement) ||
+        !(modal instanceof HTMLElement) ||
+        !(playerTarget instanceof HTMLElement)
+      ) {
+        return
+      }
+
+      const { default: Plyr } = await import("plyr")
+
+      const player = new Plyr(playerTarget, {
+        controls: ["play-large", "play", "progress", "current-time", "mute", "volume", "fullscreen"],
+        youtube: {
+          noCookie: true,
+          rel: 0,
+          modestbranding: 1,
+        },
+      })
+
+      const openModal = async () => {
+        modal.hidden = false
+        document.documentElement.classList.add("has-showreel-open")
+        await player.play()
+      }
+
+      const closeModal = () => {
+        player.pause()
+        modal.hidden = true
+        document.documentElement.classList.remove("has-showreel-open")
+      }
+
+      openBtn.addEventListener("click", openModal)
+
+      closeButtons.forEach(btn => {
+        btn.addEventListener("click", closeModal)
+      })
+
+      window.addEventListener("keydown", e => {
+        if (e.key === "Escape" && !modal.hidden) closeModal
+      })
+
       window.addEventListener("beforeunload", () => {
         video.removeEventListener("playing", onPlaying)
         video.removeEventListener("loadeddata", onLoadedData)
+        player.destroy()
       })
     })()
   </script>
 
   <style>
-    .vh-bottom {
+    .vh-bottom-left {
       position: absolute;
       left: 0;
       bottom: 3rem;
       padding: 0 1.5rem;
       z-index: 30;
     }
+
+    .vh-bottom-right {
+      position: absolute;
+      right: 0;
+      bottom: 3rem;
+      padding: 0 1.5rem;
+      z-index: 30;
+    }
+
+    .vh-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      padding: 10px 22px;
+      border: 0;
+      border-radius: 18px;
+      background: var(--color-brand-primary);
+      color: #000;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition:
+        background 180ms ease,
+        color 180ms ease,
+        transform 180ms ease;
+    }
+
+    .vh-cta:hover {
+      background: #fff;
+    }
+
+    .vh-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: grid;
+      place-items: center;
+      padding: 2rem;
+    }
+
+    .vh-lightbox-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(6px);
+    }
+
+    .vh-lightbox-panel {
+      position: relative;
+      z-index: 1;
+      width: min(1100px, 100%);
+    }
+
+    .vh-player-wrap {
+      overflow: hidden;
+      border-radius: 18px;
+      background: #000;
+    }
+
+    .vh-cta-close {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    :global(html.has-showreel-open) {
+      overflow: hidden;
+    }
+
+    :global(.vh-player-wrap .plyr) {
+      border-radius: 18px;
+    }
+
     @media (max-width: 640px) {
-      .vh-bottom {
-        bottom: 2.25rem;
+      .vh-bottom-left {
+        left: 0;
+        right: 0;
+        bottom: 1.5rem;
+        padding: 0 1rem;
+      }
+
+      .vh-bottom-right {
+        left: 0;
+        right: 0;
+        bottom: 5rem;
+        padding: 0 1rem;
+      }
+
+      .vh-cta {
+        width: 100%;
+        font-size: 1.15rem;
+      }
+
+      .vh-lightbox {
+        padding: 1rem;
+      }
+
+      .vh-cta-close {
+        top: 0.75rem;
+        width: auto;
+        max-width: calc(100% - 1.5rem);
       }
     }
   </style>

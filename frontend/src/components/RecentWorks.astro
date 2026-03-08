@@ -177,6 +177,8 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
       align-items: center;
       justify-content: center;
 
+      border-radius: 18px;
+
       margin-top: 18px;
       padding: 10px 22px;
 
@@ -189,9 +191,14 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
 
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
       font-size: 1.4rem;
+
+      transition:
+        background 180ms ease,
+        color 180ms ease,
+        transform 180ms ease;
     }
 
-    .rw-item:hover .rw-cta {
+    .rw-cta:hover {
       background: #fff;
     }
 
