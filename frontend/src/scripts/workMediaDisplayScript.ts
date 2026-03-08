@@ -1,6 +1,4 @@
-import * as PlyrModule from "plyr"
-
-const Plyr: any = (PlyrModule as any).default ?? PlyrModule
+import Plyr from "plyr"
 
 console.log("workMediaDisplayScript loaded")
 

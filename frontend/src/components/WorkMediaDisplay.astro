@@ -1,7 +1,6 @@
 ---
 import "plyr/dist/plyr.css"
 import PlyrPreview from "./PlyrPreview.astro"
-import initUrl from "../scripts/workMediaDisplayScript.ts?url"
 
 type WorkMedia = { mode: "preview" } | { mode: "single"; youtubeUrl?: string } | { mode: "slider"; reels?: string[] }
 
@@ -263,4 +262,4 @@ function ytPosterFallback(id: string) {
   }
 </style>
 
-{hasYouTube || hasSlider ? <script type="module" src={initUrl} /> : null}
+<script src="../scripts/workMediaDisplayScript.ts"></script>
