@@ -240,17 +240,23 @@ const {
 
     @media (max-width: 640px) {
       .vh-bottom-left {
-        left: 0;
-        right: 0;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
         bottom: 1.5rem;
-        padding: 0 1rem;
+        padding: 0;
+        text-align: center;
+        width: calc(100% - 2rem);
       }
 
       .vh-bottom-right {
-        left: 0;
-        right: 0;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
         bottom: 5rem;
-        padding: 0 1rem;
+        padding: 0;
+        width: calc(100% - 2rem);
+        text-align: center;
       }
 
       .vh-cta {
