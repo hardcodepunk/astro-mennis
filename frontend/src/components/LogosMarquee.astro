@@ -9,34 +9,29 @@ const { speed = 28, height = 96 } = Astro.props
 const duration = Math.max(8, Number(speed) || 28)
 const h = Math.max(48, Number(height) || 96)
 const safeItems = items.filter(i => i?.image?.url)
+const repeatedRows = [0, 1, 2, 3]
 ---
 
 {
   safeItems.length > 0 && (
     <section class="lm" style={`--lm-duration:${duration}s;--lm-h:${h}px;`}>
       <div class="lm-mask">
-        <div class="lm-track">
-          <ul class="lm-row">
-            {safeItems.map(item => (
-              <li class="lm-item">
-                <img
-                  class="lm-logo"
-                  src={item.image.url}
-                  alt={item.alt || item.name || "Client logo"}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </li>
-            ))}
-          </ul>
-
-          <ul class="lm-row" aria-hidden="true">
-            {safeItems.map(item => (
-              <li class="lm-item">
-                <img class="lm-logo" src={item.image.url} alt="" loading="lazy" decoding="async" />
-              </li>
-            ))}
-          </ul>
+        <div class="lm-track" aria-label="Client logos">
+          {repeatedRows.map(rowIndex => (
+            <ul class="lm-row" aria-hidden={rowIndex > 0 ? "true" : undefined}>
+              {safeItems.map(item => (
+                <li class="lm-item">
+                  <img
+                    class="lm-logo"
+                    src={item.image.url}
+                    alt={rowIndex === 0 ? item.alt || item.name || "Client logo" : ""}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </li>
+              ))}
+            </ul>
+          ))}
         </div>
       </div>
     </section>
@@ -46,6 +41,7 @@ const safeItems = items.filter(i => i?.image?.url)
 <style>
   .lm {
     width: 100%;
+    padding: 40px 0;
   }
 
   .lm-mask {
@@ -67,27 +63,25 @@ const safeItems = items.filter(i => i?.image?.url)
   .lm-row {
     display: flex;
     align-items: center;
-    gap: 56px;
-    padding-right: 56px;
+    gap: 72px;
+    padding-right: 72px;
     list-style: none;
     margin: 0;
     padding-left: 0;
+    flex: 0 0 auto;
   }
 
   .lm-item {
     display: flex;
     align-items: center;
-    opacity: 0.8;
-    transition: opacity 0.2s ease;
-  }
-
-  .lm-item:hover {
-    opacity: 1;
+    flex: 0 0 auto;
   }
 
   .lm-logo {
-    max-height: calc(var(--lm-h) * 0.5);
+    display: block;
+    height: calc(var(--lm-h) * 0.68);
     width: auto;
+    max-width: 220px;
     object-fit: contain;
     filter: grayscale(1) saturate(0);
   }
@@ -97,12 +91,8 @@ const safeItems = items.filter(i => i?.image?.url)
       transform: translateX(0);
     }
     to {
-      transform: translateX(-50%);
+      transform: translateX(-25%);
     }
-  }
-
-  .lm-mask:hover .lm-track {
-    animation-play-state: paused;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -110,6 +100,7 @@ const safeItems = items.filter(i => i?.image?.url)
       animation: none;
       transform: none;
     }
+
     .lm-mask {
       mask-image: none;
       -webkit-mask-image: none;
