@@ -6,6 +6,13 @@ export const logoMarquee = defineType({
   type: 'document',
   fields: [
     defineField({
+      name: 'title',
+      title: 'Internal title',
+      type: 'string',
+      initialValue: 'Homepage logos',
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: 'logos',
       title: 'Logos',
       type: 'array',
@@ -14,11 +21,6 @@ export const logoMarquee = defineType({
           type: 'object',
           name: 'logoItem',
           fields: [
-            defineField({
-              name: 'name',
-              title: 'Name',
-              type: 'string',
-            }),
             defineField({
               name: 'alt',
               title: 'Alt text',
@@ -34,7 +36,7 @@ export const logoMarquee = defineType({
           ],
           preview: {
             select: {
-              title: 'name',
+              title: 'alt',
               media: 'image',
             },
           },
@@ -42,4 +44,9 @@ export const logoMarquee = defineType({
       ],
     }),
   ],
+  preview: {
+    select: {
+      title: 'title',
+    },
+  },
 })
