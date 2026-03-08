@@ -10,13 +10,37 @@ const DEFAULT_WEBM =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm"
 const DEFAULT_POSTER =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg"
+const DEFAULT_SHOWREEL_URL = "https://www.youtube.com/watch?v=cIFqyLFVG4g"
 
 const {
   mp4 = settings?.mp4 ?? DEFAULT_MP4,
   webm = settings?.webm ?? DEFAULT_WEBM,
   poster = settings?.poster ?? DEFAULT_POSTER,
+  showreelUrl = settings?.showreelUrl ?? DEFAULT_SHOWREEL_URL,
   minRevealMs = 600,
 } = Astro.props
+
+function getYouTubeId(input?: string | null): string | null {
+  if (!input) return null
+  const s = String(input).trim()
+  if (!s) return null
+
+  const m1 = s.match(/(?:youtube\.com\/watch\?v=)([A-Za-z0-9_-]{6,})/)
+  if (m1?.[1]) return m1[1]
+
+  const m2 = s.match(/(?:youtu\.be\/)([A-Za-z0-9_-]{6,})/)
+  if (m2?.[1]) return m2[1]
+
+  const m3 = s.match(/(?:youtube\.com\/embed\/)([A-Za-z0-9_-]{6,})/)
+  if (m3?.[1]) return m3[1]
+
+  const m4 = s.match(/[?&]v=([A-Za-z0-9_-]{6,})/)
+  if (m4?.[1]) return m4[1]
+
+  return null
+}
+
+const showreelId = getYouTubeId(showreelUrl) ?? "cIFqyLFVG4g"
 ---
 
 <section class="vh-hero" data-min-reveal={minRevealMs}>
@@ -58,7 +82,7 @@ const {
 
     <div class="vh-lightbox-panel" role="dialog" aria-modal="true" aria-label="Showreel video">
       <div class="vh-player-wrap">
-        <div id="showreel-player" data-plyr-provider="youtube" data-plyr-embed-id="cIFqyLFVG4g"></div>
+        <div id="showreel-player" data-plyr-provider="youtube" data-plyr-embed-id={showreelId}></div>
       </div>
     </div>
   </div>

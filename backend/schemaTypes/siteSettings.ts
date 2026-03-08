@@ -13,6 +13,7 @@ export const siteSettings = defineType({
         defineField({name: 'mp4', title: 'MP4 URL', type: 'url'}),
         defineField({name: 'webm', title: 'WEBM URL', type: 'url'}),
         defineField({name: 'poster', title: 'Poster URL', type: 'url'}),
+        defineField({name: 'showreelUrl', title: 'Showreel URL', type: 'url'}),
       ],
     }),
   ],
