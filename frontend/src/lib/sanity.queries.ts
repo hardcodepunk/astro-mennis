@@ -13,6 +13,27 @@ export async function getVideoHeroSettings() {
   } | null>(q)
 }
 
+export type LogoItem = {
+  name?: string
+  alt?: string
+  image: {
+    url: string
+  }
+}
+
+export async function getLogoMarquee() {
+  const q = `*[_type == "logoMarquee"][0]{
+    logos[]{
+      name,
+      alt,
+      "image": {
+        "url": image.asset->url
+      }
+    }
+  }`
+  return sanity.fetch<{ logos: LogoItem[] } | null>(q)
+}
+
 export type BioWithPreviewDoc = {
   bio?: string
   previewVideo?: {

@@ -1,34 +1,47 @@
 ---
-const { items = ["Craftgram", "techtide", "Lum Labs", "swift", "sparkle"], speed = 28, height = 96 } = Astro.props
+import { getLogoMarquee } from "../lib/sanity.queries"
+
+const data = await getLogoMarquee()
+const items = data?.logos ?? []
+
+const { speed = 28, height = 96 } = Astro.props
 
 const duration = Math.max(8, Number(speed) || 28)
 const h = Math.max(48, Number(height) || 96)
+const safeItems = items.filter(i => i?.image?.url)
 ---
 
-<section class="lm" style={`--lm-duration:${duration}s;--lm-h:${h}px;`}>
-  <div class="lm-mask">
-    <div class="lm-track" aria-label="Client logos">
-      <ul class="lm-row">
-        {
-          items.map((label: string) => (
-            <li class="lm-item">
-              <span class="lm-pill">{label}</span>
-            </li>
-          ))
-        }
-      </ul>
-      <ul class="lm-row" aria-hidden="true">
-        {
-          items.map((label: string) => (
-            <li class="lm-item">
-              <span class="lm-pill">{label}</span>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </div>
-</section>
+{
+  safeItems.length > 0 && (
+    <section class="lm" style={`--lm-duration:${duration}s;--lm-h:${h}px;`}>
+      <div class="lm-mask">
+        <div class="lm-track">
+          <ul class="lm-row">
+            {safeItems.map(item => (
+              <li class="lm-item">
+                <img
+                  class="lm-logo"
+                  src={item.image.url}
+                  alt={item.alt || item.name || "Client logo"}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </li>
+            ))}
+          </ul>
+
+          <ul class="lm-row" aria-hidden="true">
+            {safeItems.map(item => (
+              <li class="lm-item">
+                <img class="lm-logo" src={item.image.url} alt="" loading="lazy" decoding="async" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 <style>
   .lm {
@@ -72,16 +85,11 @@ const h = Math.max(48, Number(height) || 96)
     opacity: 1;
   }
 
-  .lm-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    letter-spacing: 0.02em;
-    color: rgba(255, 255, 255, 0.8);
-    white-space: nowrap;
-    text-transform: none;
-    font-weight: 600;
+  .lm-logo {
+    max-height: calc(var(--lm-h) * 0.5);
+    width: auto;
+    object-fit: contain;
+    filter: grayscale(1) saturate(0);
   }
 
   @keyframes lm-marquee {
