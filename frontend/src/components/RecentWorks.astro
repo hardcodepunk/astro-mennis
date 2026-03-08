@@ -25,11 +25,15 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
           <a class="rw-item" href={`/works/${w.slug}`} aria-label={`Open ${w.title}`}>
             <div class="rw-left">
               <div class="rw-name">{w.title}</div>
+
               <div class="rw-meta">
                 <span>{w.category}</span>
                 <span>{w.client}</span>
               </div>
+
               <div class="rw-tag">{w.tagline}</div>
+
+              <div class="rw-cta">Check it out</div>
             </div>
 
             <div class="rw-right">
@@ -166,6 +170,29 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         BlinkMacSystemFont,
         sans-serif;
       text-transform: none;
+    }
+
+    .rw-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      margin-top: 18px;
+      padding: 10px 22px;
+
+      background: var(--color-brand-primary);
+
+      color: #000;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      font-size: 1.4rem;
+    }
+
+    .rw-item:hover .rw-cta {
+      background: #fff;
     }
 
     .rw-meta {
