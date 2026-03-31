@@ -20,10 +20,10 @@ const NAV = [
     </a>
 
     <nav class="desktop-nav hidden md:flex items-center gap-8 text-sm">
-      <a href="/#recent" class="desktop-link transition-colors">Recent</a>
-      <a href="/#services" class="desktop-link transition-colors">Services</a>
+      <a href="/#projects" class="desktop-link transition-colors">Projects</a>
+      <a href="/about" class="desktop-link transition-colors">About</a>
       <a href="/#contact" class="desktop-link transition-colors">Contact</a>
-      <a
+      <!-- <a
         href="https://www.instagram.com/demennis_/"
         target="_blank"
         rel="noopener noreferrer"
@@ -31,7 +31,7 @@ const NAV = [
         aria-label="Instagram"
       >
         <img src="/icons/instagram.png" alt="" class="desktop-icon h-4 w-4 transition-opacity" />
-      </a>
+      </a> -->
     </nav>
 
     <button
@@ -117,17 +117,9 @@ const NAV = [
     color: var(--color-brand-secondary);
   }
 
-  .desktop-link {
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .desktop-link:hover {
-    color: rgba(255, 255, 255, 1);
-  }
-
+  .desktop-link,
   .desktop-icon {
-    filter: invert(1);
-    opacity: 0.8;
+    color: var(--color-brand-primary);
   }
 
   .desktop-link:hover .desktop-icon {

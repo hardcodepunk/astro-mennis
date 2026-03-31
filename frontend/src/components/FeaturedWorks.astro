@@ -17,7 +17,7 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
 ---
 
 {items.length ? (
-  <section class="fw">
+  <section id="projects" class="fw">
     <div class="fw-inner">
       <div class="fw-grid">
         {items.map((work) => (
