@@ -1,0 +1,260 @@
+---
+interface CategoryItem {
+  slug: string
+  title: string
+}
+
+interface WorkItem {
+  slug: string
+  title: string
+  category: string
+  categorySlug: string
+  client: string
+  tagline: string
+  preview: {
+    poster: string
+    webm?: string
+    mp4?: string
+  }
+}
+
+const {
+  items = [],
+  categories = [],
+  activeSlug = "all",
+} = Astro.props as {
+  items: WorkItem[]
+  categories: CategoryItem[]
+  activeSlug?: string
+}
+
+const filterHref = (slug: string) => (slug === "all" ? "/projects-grid" : `/projects-grid/${slug}`)
+---
+
+<section class="pg">
+  <div class="pg-inner">
+    <div class="pg-filters">
+      <a class:list={["pg-pill", activeSlug === "all" && "is-active"]} href={filterHref("all")}> All </a>
+
+      {
+        categories.map(cat => (
+          <a class:list={["pg-pill", activeSlug === cat.slug && "is-active"]} href={filterHref(cat.slug)}>
+            {cat.title}
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="pg-grid">
+      {
+        items.map(work => (
+          <a class="pg-card" href={`/works/${work.slug}`} aria-label={`Open ${work.title}`}>
+            <div class="pg-media" data-hover-video>
+              <img class="pg-img" src={work.preview.poster} alt={work.title} loading="lazy" />
+              <video class="pg-vid" muted loop playsinline preload="none" aria-hidden="true">
+                {work.preview.webm ? <source data-src={work.preview.webm} type="video/webm" /> : null}
+                {work.preview.mp4 ? <source data-src={work.preview.mp4} type="video/mp4" /> : null}
+              </video>
+            </div>
+
+            <div class="pg-overlay">
+              <div class="pg-kicker">{work.category}</div>
+              <h2 class="pg-title">{work.title}</h2>
+              {work.client ? <div class="pg-client">{work.client}</div> : null}
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+
+  <script>
+    ;(() => {
+      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)")
+      if (!finePointer.matches) return
+
+      const items = document.querySelectorAll(".pg-card")
+      items.forEach(item => {
+        if (!(item instanceof HTMLElement)) return
+
+        const block = item.querySelector("[data-hover-video]")
+        if (!(block instanceof HTMLElement)) return
+
+        const video = block.querySelector("video")
+        if (!(video instanceof HTMLVideoElement)) return
+
+        const sources = Array.from(video.querySelectorAll("source"))
+        let hydrated = false
+        let playing = false
+
+        const hydrate = () => {
+          if (hydrated) return
+          hydrated = true
+          sources.forEach(s => {
+            const src = s.getAttribute("data-src")
+            if (src) s.setAttribute("src", src)
+          })
+          video.load()
+        }
+
+        const start = async () => {
+          if (playing) return
+          hydrate()
+          try {
+            await video.play()
+            playing = true
+            block.classList.add("is-playing")
+          } catch {
+            playing = false
+            block.classList.remove("is-playing")
+          }
+        }
+
+        const stop = () => {
+          playing = false
+          video.pause()
+          video.currentTime = 0
+          block.classList.remove("is-playing")
+        }
+
+        item.addEventListener("pointerenter", start)
+        item.addEventListener("pointerleave", stop)
+        item.addEventListener("focusin", start)
+        item.addEventListener("focusout", stop)
+      })
+    })()
+  </script>
+
+  <style>
+    .pg {
+      padding: 48px 0 96px;
+      background: #f5f5f3;
+      color: #000;
+    }
+
+    .pg-inner {
+      max-width: 96rem;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    .pg-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-bottom: 3rem;
+    }
+
+    .pg-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0.65rem 1.25rem;
+      border: 1px solid #000;
+      border-radius: 999px;
+      color: #000;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.95rem;
+      transition:
+        background 160ms ease,
+        color 160ms ease;
+    }
+
+    .pg-pill.is-active {
+      background: #000;
+      color: #fff;
+    }
+
+    .pg-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+
+    .pg-card {
+      position: relative;
+      display: block;
+      overflow: hidden;
+      border-radius: 20px;
+      text-decoration: none;
+      color: inherit;
+      background: #111;
+    }
+
+    .pg-media {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+    }
+
+    .pg-img,
+    .pg-vid {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .pg-vid {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 180ms ease;
+      pointer-events: none;
+    }
+
+    .pg-media.is-playing .pg-vid {
+      opacity: 1;
+    }
+
+    .pg-overlay {
+      position: absolute;
+      inset: auto 0 0 0;
+      padding: 1.25rem;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0));
+      color: #fff;
+    }
+
+    .pg-kicker {
+      font-size: 0.85rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .pg-title {
+      margin: 0.35rem 0 0;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      font-size: clamp(1.6rem, 2.4vw, 2.5rem);
+      line-height: 0.95;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .pg-client {
+      margin-top: 0.35rem;
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    @media (max-width: 1000px) {
+      .pg-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .pg-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pg {
+        padding-top: 32px;
+      }
+    }
+  </style>
+</section>

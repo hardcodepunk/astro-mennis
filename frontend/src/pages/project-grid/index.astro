@@ -1,0 +1,14 @@
+---
+import Layout from "../../layouts/Layout.astro"
+import ProjectGrid from "../../components/ProjectGrid.astro"
+import { getAllWorksForGrid, getCategories } from "../../lib/sanity.queries"
+
+const works = await getAllWorksForGrid()
+const categories = await getCategories()
+---
+
+<Layout>
+  <main>
+    <ProjectGrid items={works} categories={categories} activeSlug="all" />
+  </main>
+</Layout>

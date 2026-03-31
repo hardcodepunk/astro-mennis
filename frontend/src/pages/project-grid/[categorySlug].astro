@@ -1,0 +1,22 @@
+---
+import Layout from "../../layouts/Layout.astro"
+import ProjectGrid from "../../components/ProjectGrid.astro"
+import { getCategories, getWorksByCategorySlug } from "../../lib/sanity.queries"
+
+export async function getStaticPaths() {
+  const categories = await getCategories()
+  return categories.map(category => ({
+    params: { categorySlug: category.slug },
+  }))
+}
+
+const { categorySlug } = Astro.params
+const categories = await getCategories()
+const works = await getWorksByCategorySlug(categorySlug!)
+---
+
+<Layout>
+  <main>
+    <ProjectGrid items={works} categories={categories} activeSlug={categorySlug} />
+  </main>
+</Layout>

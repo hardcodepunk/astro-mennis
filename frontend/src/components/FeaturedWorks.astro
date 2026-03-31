@@ -1,0 +1,226 @@
+---
+interface WorkItem {
+  slug: string
+  title: string
+  category: string
+  categorySlug: string
+  client: string
+  tagline: string
+  preview: {
+    poster: string
+    webm?: string
+    mp4?: string
+  }
+}
+
+const { items = [] } = Astro.props as { items: WorkItem[] }
+---
+
+{items.length ? (
+  <section class="fw">
+    <div class="fw-inner">
+      <div class="fw-head">
+        <h2 class="fw-title">Selected Work</h2>
+        <a class="fw-link" href="/projects-grid">View all projects</a>
+      </div>
+
+      <div class="fw-grid">
+        {items.map((work) => (
+          <a class="fw-card" href={`/works/${work.slug}`} aria-label={`Open ${work.title}`}>
+            <div class="fw-media" data-hover-video>
+              <img class="fw-img" src={work.preview.poster} alt={work.title} loading="lazy" />
+              <video class="fw-vid" muted loop playsinline preload="none" aria-hidden="true">
+                {work.preview.webm ? <source data-src={work.preview.webm} type="video/webm" /> : null}
+                {work.preview.mp4 ? <source data-src={work.preview.mp4} type="video/mp4" /> : null}
+              </video>
+            </div>
+
+            <div class="fw-overlay">
+              <div class="fw-kicker">{work.category}</div>
+              <h3 class="fw-name">{work.title}</h3>
+              {work.client ? <div class="fw-client">{work.client}</div> : null}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <script>
+      ;(() => {
+        const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)")
+        if (!finePointer.matches) return
+
+        const items = document.querySelectorAll(".fw-card")
+        items.forEach(item => {
+          if (!(item instanceof HTMLElement)) return
+
+          const block = item.querySelector("[data-hover-video]")
+          if (!(block instanceof HTMLElement)) return
+
+          const video = block.querySelector("video")
+          if (!(video instanceof HTMLVideoElement)) return
+
+          const sources = Array.from(video.querySelectorAll("source"))
+          let hydrated = false
+          let playing = false
+
+          const hydrate = () => {
+            if (hydrated) return
+            hydrated = true
+            sources.forEach(s => {
+              const src = s.getAttribute("data-src")
+              if (src) s.setAttribute("src", src)
+            })
+            video.load()
+          }
+
+          const start = async () => {
+            if (playing) return
+            hydrate()
+            try {
+              await video.play()
+              playing = true
+              block.classList.add("is-playing")
+            } catch {
+              playing = false
+              block.classList.remove("is-playing")
+            }
+          }
+
+          const stop = () => {
+            playing = false
+            video.pause()
+            video.currentTime = 0
+            block.classList.remove("is-playing")
+          }
+
+          item.addEventListener("pointerenter", start)
+          item.addEventListener("pointerleave", stop)
+          item.addEventListener("focusin", start)
+          item.addEventListener("focusout", stop)
+        })
+      })()
+    </script>
+
+    <style>
+      .fw {
+        padding: 96px 0;
+        background: #000;
+        color: #fff;
+      }
+
+      .fw-inner {
+        max-width: 90rem;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+
+      .fw-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .fw-title {
+        margin: 0;
+        font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+        font-size: clamp(2.8rem, 6vw, 5rem);
+        line-height: 0.9;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .fw-link {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        font-size: 0.95rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .fw-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.25rem;
+      }
+
+      .fw-card {
+        position: relative;
+        display: block;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        background: #111;
+        border-radius: 20px;
+      }
+
+      .fw-media {
+        position: relative;
+        aspect-ratio: 4 / 5;
+        overflow: hidden;
+      }
+
+      .fw-img,
+      .fw-vid {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .fw-vid {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 180ms ease;
+        pointer-events: none;
+      }
+
+      .fw-media.is-playing .fw-vid {
+        opacity: 1;
+      }
+
+      .fw-overlay {
+        position: absolute;
+        inset: auto 0 0 0;
+        padding: 1.25rem;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0));
+      }
+
+      .fw-kicker {
+        font-size: 0.85rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .fw-name {
+        margin: 0.35rem 0 0;
+        font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+        font-size: clamp(1.5rem, 2.6vw, 2.4rem);
+        line-height: 0.95;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .fw-client {
+        margin-top: 0.35rem;
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      @media (max-width: 900px) {
+        .fw-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .fw-head {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </section>
+) : null}

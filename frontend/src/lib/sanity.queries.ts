@@ -81,6 +81,37 @@ export type WorkItem = {
   overviewLead?: string
   body?: unknown
   media?: WorkMedia
+  featuredOnHome?: boolean
+  featuredOrder?: number
+}
+
+export async function getFeaturedWorks(limit = 3) {
+  const q = `*[_type == "work" && featuredOnHome == true]
+    | order(featuredOrder asc, publishedAt desc, _createdAt desc)[0...$limit]{
+      "slug": slug.current,
+      title,
+      "category": category->title,
+      "categorySlug": category->slug.current,
+      client,
+      tagline,
+      preview{ poster, webm, mp4 },
+      featuredOnHome,
+      featuredOrder
+    }`
+  return sanity.fetch<WorkItem[]>(q, { limit })
+}
+
+export async function getAllWorksForGrid() {
+  const q = `*[_type == "work"] | order(publishedAt desc, _createdAt desc){
+    "slug": slug.current,
+    title,
+    "category": category->title,
+    "categorySlug": category->slug.current,
+    client,
+    tagline,
+    preview{ poster, webm, mp4 }
+  }`
+  return sanity.fetch<WorkItem[]>(q)
 }
 
 export async function getCategories() {
