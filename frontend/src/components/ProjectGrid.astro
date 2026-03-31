@@ -128,8 +128,6 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects-grid" : `/proj
   <style>
     .pg {
       padding: 48px 0 96px;
-      background: #f5f5f3;
-      color: #000;
     }
 
     .pg-inner {
@@ -152,9 +150,9 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects-grid" : `/proj
       justify-content: center;
       min-height: 48px;
       padding: 0.65rem 1.25rem;
-      border: 1px solid #000;
+      border: 1px solid var(--color-brand-secondary);
       border-radius: 999px;
-      color: #000;
+      color: var(--color-brand-secondary);
       text-decoration: none;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -165,8 +163,8 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects-grid" : `/proj
     }
 
     .pg-pill.is-active {
-      background: var(--color-brand-primary);
-      color: #fff;
+      background: var(--color-brand-secondary);
+      color: var(--color-brand-primary);
     }
 
     .pg-grid {
