@@ -22,7 +22,7 @@ const bodyHtml = portableTextToHtml(work.body)
 <Layout>
   <main class="page">
     <div class="page-inner">
-      <h1 class="page-title text-brand-primary">{work.title}</h1>
+      <h1 class="page-title text-brand-secondary">{work.title}</h1>
 
       <div class="page-meta">
         <div class="page-meta-val">{work.year}</div>
@@ -51,7 +51,7 @@ const bodyHtml = portableTextToHtml(work.body)
   <style>
     .page {
       padding: 28px 0 96px;
-      background: #000;
+      background: var(--color-brand-primary);
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
     }
 

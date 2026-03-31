@@ -94,7 +94,7 @@ const { items = [] } = Astro.props as { items: Category[] }
   <style>
     .cs {
       padding: 88px 0;
-      background: #000;
+      background: var(--color-brand-primary);
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
     }
 
@@ -128,7 +128,7 @@ const { items = [] } = Astro.props as { items: Category[] }
     .cs-media {
       position: relative;
       overflow: hidden;
-      background: #000;
+      background: var(--color-brand-primary);
     }
 
     .cs-img,

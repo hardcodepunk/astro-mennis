@@ -2,7 +2,7 @@
 import Layout from "../layouts/Layout.astro"
 import Videohero from "../components/CinematicHero.astro"
 import LogosMarquee from "../components/LogosMarquee.astro"
-import { getRecentWorks, getCategories, getFeaturedWorks } from "../lib/sanity.queries"
+import { getFeaturedWorks } from "../lib/sanity.queries"
 import FeaturedWorks from "../components/FeaturedWorks.astro"
 
 const featuredWorks = await getFeaturedWorks(3)

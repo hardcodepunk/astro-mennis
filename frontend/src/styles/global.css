@@ -2,11 +2,17 @@
 
 @theme {
   --color-brand-primary: #b8a7e2;
+  --color-brand-secondary: #303e1c;
 }
 
 body {
   margin: 0;
   padding: 0;
+  color: var(--color-brand-secondary);
+  background: var(--color-brand-primary);
+}
+
+footer {  background: var(--color-brand-secondary);
 }
 
 html {
@@ -33,7 +39,7 @@ html {
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  background: #000;
+  background: var(--color-brand-primary)
 }
 .vh-video {
   position: absolute;
