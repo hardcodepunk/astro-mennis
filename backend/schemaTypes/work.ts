@@ -52,6 +52,21 @@ export const work = defineType({
     }),
 
     defineField({
+      name: 'featuredOnHome',
+      title: 'Show on homepage project grid',
+      type: 'boolean',
+      initialValue: false,
+    }),
+
+    defineField({
+      name: 'featuredOrder',
+      title: 'Homepage project order',
+      type: 'number',
+      hidden: ({document}) => !document?.featuredOnHome,
+      validation: (r) => r.min(1).max(3),
+    }),
+
+    defineField({
       name: 'preview',
       title: 'Preview',
       type: 'object',

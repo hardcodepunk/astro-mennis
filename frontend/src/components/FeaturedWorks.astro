@@ -19,11 +19,6 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
 {items.length ? (
   <section class="fw">
     <div class="fw-inner">
-      <div class="fw-head">
-        <h2 class="fw-title">Selected Work</h2>
-        <a class="fw-link" href="/projects-grid">View all projects</a>
-      </div>
-
       <div class="fw-grid">
         {items.map((work) => (
           <a class="fw-card" href={`/works/${work.slug}`} aria-label={`Open ${work.title}`}>
@@ -42,6 +37,10 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
             </div>
           </a>
         ))}
+      </div>
+
+      <div class="fw-actions">
+        <a class="fw-cta" href="/projects-grid">View all projects</a>
       </div>
     </div>
 
@@ -115,34 +114,9 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         padding: 0 1rem;
       }
 
-      .fw-head {
-        display: flex;
-        align-items: end;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: 2rem;
-      }
-
-      .fw-title {
-        margin: 0;
-        font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-        font-size: clamp(2.8rem, 6vw, 5rem);
-        line-height: 0.9;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-      }
-
-      .fw-link {
-        color: rgba(255, 255, 255, 0.8);
-        text-decoration: none;
-        font-size: 0.95rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
       .fw-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 1.25rem;
       }
 
@@ -156,10 +130,22 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         border-radius: 20px;
       }
 
+      .fw-card:nth-child(1) {
+        grid-column: 1 / -1;
+      }
+
       .fw-media {
         position: relative;
-        aspect-ratio: 4 / 5;
         overflow: hidden;
+      }
+
+      .fw-card:nth-child(1) .fw-media {
+        aspect-ratio: 16 / 9;
+      }
+
+      .fw-card:nth-child(2) .fw-media,
+      .fw-card:nth-child(3) .fw-media {
+        aspect-ratio: 1 / 1;
       }
 
       .fw-img,
@@ -189,6 +175,10 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         background: linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0));
       }
 
+      .fw-card:nth-child(1) .fw-overlay {
+        padding: 2rem;
+      }
+
       .fw-kicker {
         font-size: 0.85rem;
         letter-spacing: 0.12em;
@@ -205,10 +195,47 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         text-transform: uppercase;
       }
 
+      .fw-card:nth-child(1) .fw-name {
+        font-size: clamp(2.5rem, 4vw, 4rem);
+      }
+
       .fw-client {
         margin-top: 0.35rem;
         font-size: 0.95rem;
         color: rgba(255, 255, 255, 0.8);
+      }
+
+      .fw-actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+      }
+
+      .fw-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 52px;
+        padding: 10px 22px;
+        border: 0;
+        border-radius: 18px;
+        background: var(--color-brand-primary);
+        color: #000;
+        font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-decoration: none;
+        cursor: pointer;
+        transition:
+          background 180ms ease,
+          color 180ms ease,
+          transform 180ms ease;
+      }
+
+      .fw-cta:hover {
+        background: #fff;
       }
 
       @media (max-width: 900px) {
@@ -216,9 +243,20 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
           grid-template-columns: 1fr;
         }
 
-        .fw-head {
-          flex-direction: column;
-          align-items: flex-start;
+        .fw-card:nth-child(1) {
+          grid-column: auto;
+        }
+
+        .fw-card .fw-media {
+          aspect-ratio: 4 / 5;
+        }
+
+        .fw-card:nth-child(1) .fw-overlay {
+          padding: 1.25rem;
+        }
+
+        .fw-card:nth-child(1) .fw-name {
+          font-size: clamp(1.5rem, 2.6vw, 2.4rem);
         }
       }
     </style>
