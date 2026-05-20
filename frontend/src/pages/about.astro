@@ -1,0 +1,141 @@
+---
+import Layout from "../layouts/Layout.astro"
+import BioWithPreview from "../components/BioWithPreview.astro"
+---
+
+<Layout>
+  <main class="about-page">
+    <section class="about-page__hero">
+      <div class="about-page__inner">
+        <p class="about-page__eyebrow">About</p>
+        <h1 class="about-page__title text-brand-secondary">Filmmaking with clarity, rhythm and feel.</h1>
+      </div>
+    </section>
+
+    <BioWithPreview />
+
+    <section class="about-page__section">
+      <div class="about-page__inner about-page__grid">
+        <div class="about-page__col">
+          <p class="about-page__kicker">Approach</p>
+          <h2 class="about-page__section-title">Clean frames. Strong pacing. Calm process.</h2>
+        </div>
+
+        <div class="about-page__copy">
+          <p>
+            I make visual work that feels sharp, deliberate and human. The focus is on tone, movement and structure,
+            with a process that stays clear from first idea to final delivery.
+          </p>
+
+          <p>
+            That can mean branded content, campaign visuals, portraits, event films or short-form edits. The output
+            changes depending on the project, but the standard stays the same.
+          </p>
+
+          <p>
+            I care about images that carry weight without feeling overworked. Clean direction, strong editing and the
+            right energy on set matter just as much as the final look.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <style>
+    .about-page {
+      padding: 88px 0 96px;
+      background: var(--color-brand-primary);
+    }
+
+    .about-page__hero {
+      padding-top: 0;
+    }
+
+    .about-page__inner {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    .about-page__eyebrow {
+      margin: 0 0 12px 0;
+      color: rgba(255, 255, 255, 0.58);
+      font-size: 0.95rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .about-page__title {
+      margin: 0;
+      max-width: 11ch;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      font-size: clamp(3.4rem, 9vw, 7.2rem);
+      line-height: 0.9;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .about-page__section {
+      padding-top: 32px;
+    }
+
+    .about-page__grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    .about-page__kicker {
+      margin: 0 0 10px 0;
+      color: rgba(255, 255, 255, 0.58);
+      font-size: 0.95rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .about-page__section-title {
+      margin: 0;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 0.92;
+      font-weight: 400;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .about-page__copy {
+      max-width: 42rem;
+      font-family:
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+      font-size: 1rem;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.84);
+    }
+
+    .about-page__copy p {
+      margin: 0;
+    }
+
+    .about-page__copy p + p {
+      margin-top: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .about-page__grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .about-page__title {
+        max-width: 12ch;
+      }
+    }
+  </style>
+</Layout>

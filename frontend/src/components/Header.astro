@@ -4,9 +4,11 @@ const NAV = [
   { label: "About", href: "/about" },
   { label: "Contact", href: "/#contact" },
 ]
+
+const { transparentOnTop = false } = Astro.props
 ---
 
-<header class="site-header fixed top-0 z-50 w-full" data-header>
+<header class:list={["site-header fixed top-0 z-50 w-full", !transparentOnTop && "is-solid"]} data-header>
   <div class="header-bg" aria-hidden="true"></div>
 
   <div class="relative flex h-16 items-center justify-between px-6">
@@ -292,7 +294,7 @@ const NAV = [
   }
 </style>
 
-<script is:inline>
+<script define:vars={{ transparentOnTop }}>
   ;(() => {
     const header = document.querySelector("[data-header]")
     const btn = document.querySelector("[data-menu-button]")
@@ -333,6 +335,12 @@ const NAV = [
 
     const updateHeaderBg = () => {
       if (overlay.classList.contains("is-open")) return
+
+      if (!transparentOnTop) {
+        header.classList.add("is-solid")
+        return
+      }
+
       const y = window.scrollY || 0
       header.classList.toggle("is-solid", y > topThreshold)
     }
