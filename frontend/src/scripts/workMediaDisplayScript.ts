@@ -1,7 +1,5 @@
 import Plyr from "plyr"
 
-console.log("workMediaDisplayScript loaded")
-
 function initHero(root: HTMLElement) {
   if (root.dataset.workHeroInited === "1") return
   root.dataset.workHeroInited = "1"

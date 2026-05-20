@@ -164,7 +164,7 @@ const showreelId = getYouTubeId(showreelUrl) ?? "cIFqyLFVG4g"
       })
 
       window.addEventListener("keydown", e => {
-        if (e.key === "Escape" && !modal.hidden) closeModal
+        if (e.key === "Escape" && !modal.hidden) closeModal()
       })
 
       window.addEventListener("beforeunload", () => {
