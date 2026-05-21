@@ -8,7 +8,6 @@ import LogosMarquee from "../components/LogosMarquee.astro"
   <main class="about-page">
     <section class="about-page__hero">
       <div class="about-page__inner">
-        <p class="about-page__eyebrow">About</p>
         <h1 class="about-page__title text-brand-secondary">Filmmaking with clarity, rhythm and feel.</h1>
       </div>
     </section>
@@ -60,14 +59,6 @@ import LogosMarquee from "../components/LogosMarquee.astro"
       padding: 0 1rem;
     }
 
-    .about-page__eyebrow {
-      margin: 0 0 12px 0;
-      color: rgba(255, 255, 255, 0.58);
-      font-size: 0.95rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
     .about-page__title {
       margin: 0;
       max-width: 11ch;
@@ -86,13 +77,16 @@ import LogosMarquee from "../components/LogosMarquee.astro"
     .about-page__grid {
       display: grid;
       grid-template-columns: 0.9fr 1.1fr;
-      gap: 48px;
+      gap: 0;
       align-items: start;
+      background: var(--color-brand-secondary);
+      color: #fff;
+      padding: clamp(1.5rem, 4vw, 3rem);
     }
 
     .about-page__kicker {
       margin: 0 0 10px 0;
-      color: rgba(255, 255, 255, 0.58);
+      color: rgba(255, 255, 255, 0.68);
       font-size: 0.95rem;
       letter-spacing: 0.14em;
       text-transform: uppercase;
@@ -106,7 +100,7 @@ import LogosMarquee from "../components/LogosMarquee.astro"
       font-weight: 400;
       letter-spacing: 0.03em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.95);
+      color: #fff;
     }
 
     .about-page__copy {
@@ -119,7 +113,8 @@ import LogosMarquee from "../components/LogosMarquee.astro"
         sans-serif;
       font-size: 1rem;
       line-height: 1.8;
-      color: rgba(255, 255, 255, 0.84);
+      font-weight: 400;
+      color: #fff;
     }
 
     .about-page__copy p {

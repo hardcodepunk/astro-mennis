@@ -114,8 +114,17 @@ const { transparentOnTop = false } = Astro.props
     color: var(--color-brand-primary);
   }
 
+  .brand:hover {
+    color: #fff;
+    opacity: 1;
+  }
+
   .site-header.is-solid .brand {
     color: var(--color-brand-secondary);
+  }
+
+  .site-header.is-solid .brand:hover {
+    color: #fff;
   }
 
   .desktop-link,
