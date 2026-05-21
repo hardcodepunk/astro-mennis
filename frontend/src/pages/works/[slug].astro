@@ -46,15 +46,15 @@ const bodyHtml = portableTextToHtml(work.body)
         </aside>
 
         <article class="page-article">
-          {
-            work.overviewTitle ? (
-              <section class="page-overview">
+          <div class="page-article-card">
+            {
+              work.overviewTitle ? (
                 <h2 class="page-overview-title">{work.overviewTitle}</h2>
-              </section>
-            ) : null
-          }
+              ) : null
+            }
 
-          {bodyHtml ? <section class="page-body-rt" set:html={bodyHtml} /> : null}
+            {bodyHtml ? <section class="page-body-rt" set:html={bodyHtml} /> : null}
+          </div>
         </article>
       </div>
     </div>
@@ -96,6 +96,12 @@ const bodyHtml = portableTextToHtml(work.body)
       grid-column: 1;
       grid-row: 1;
       min-width: 0;
+    }
+
+    .page-article-card {
+      padding: clamp(1.5rem, 4vw, 3rem);
+      background: var(--color-brand-secondary);
+      color: #fff;
     }
 
     .page-meta {
@@ -146,11 +152,6 @@ const bodyHtml = portableTextToHtml(work.body)
       margin-top: 36px;
     }
 
-    .page-overview {
-      margin-top: 0;
-      max-width: 64rem;
-    }
-
     .page-overview-title {
       margin: 0 0 18px 0;
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
@@ -162,7 +163,7 @@ const bodyHtml = portableTextToHtml(work.body)
     }
 
     .page-body-rt {
-      margin-top: 20px;
+      margin-top: 0;
       max-width: 70ch;
       font-family:
         ui-sans-serif,
@@ -173,7 +174,7 @@ const bodyHtml = portableTextToHtml(work.body)
       line-height: 1.75;
       font-size: 1rem;
       color: #fff;
-      font-weight: 700;
+      font-weight: 400;
     }
 
     .page-body-rt > :first-child {
@@ -190,7 +191,7 @@ const bodyHtml = portableTextToHtml(work.body)
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: var(--color-brand-secondary);
+      color: #fff;
       margin: 42px 0 0 0;
       line-height: 0.95;
     }
@@ -208,23 +209,23 @@ const bodyHtml = portableTextToHtml(work.body)
     }
 
     .page-body-rt a {
-      color: var(--color-brand-secondary);
+      color: #fff;
       text-decoration: underline;
       text-underline-offset: 3px;
       text-decoration-thickness: 1px;
-      text-decoration-color: color-mix(in srgb, var(--color-brand-secondary) 35%, transparent);
+      text-decoration-color: color-mix(in srgb, #fff 35%, transparent);
       transition:
         text-decoration-color 160ms ease,
         opacity 160ms ease;
     }
 
     .page-body-rt a:hover {
-      text-decoration-color: color-mix(in srgb, var(--color-brand-secondary) 75%, transparent);
+      text-decoration-color: color-mix(in srgb, #fff 75%, transparent);
       opacity: 1;
     }
 
     .page-body-rt strong {
-      color: var(--color-brand-secondary);
+      color: #fff;
       font-weight: 700;
     }
 
@@ -246,9 +247,9 @@ const bodyHtml = portableTextToHtml(work.body)
     .page-body-rt blockquote {
       margin: 32px 0 0 0;
       padding: 18px 18px 18px 16px;
-      border-left: 2px solid color-mix(in srgb, var(--color-brand-secondary) 28%, transparent);
-      background: color-mix(in srgb, var(--color-brand-secondary) 8%, transparent);
-      color: var(--color-brand-secondary);
+      border-left: 2px solid color-mix(in srgb, #fff 28%, transparent);
+      background: color-mix(in srgb, #fff 8%, transparent);
+      color: #fff;
     }
 
     .page-body-rt blockquote p {
@@ -258,7 +259,7 @@ const bodyHtml = portableTextToHtml(work.body)
     .page-body-rt hr {
       border: 0;
       height: 1px;
-      background: color-mix(in srgb, var(--color-brand-secondary) 18%, transparent);
+      background: color-mix(in srgb, #fff 18%, transparent);
       margin: 44px 0;
     }
 
@@ -284,8 +285,8 @@ const bodyHtml = portableTextToHtml(work.body)
       margin: 28px 0 0 0;
       padding: 16px 16px;
       overflow: auto;
-      border: 1px solid color-mix(in srgb, var(--color-brand-secondary) 18%, transparent);
-      background: color-mix(in srgb, var(--color-brand-secondary) 8%, transparent);
+      border: 1px solid color-mix(in srgb, #fff 18%, transparent);
+      background: color-mix(in srgb, #fff 8%, transparent);
       font-size: 0.92rem;
       line-height: 1.6;
     }
@@ -309,13 +310,13 @@ const bodyHtml = portableTextToHtml(work.body)
     .page-body-rt th,
     .page-body-rt td {
       padding: 12px 12px;
-      border-bottom: 1px solid color-mix(in srgb, var(--color-brand-secondary) 18%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, #fff 18%, transparent);
       vertical-align: top;
     }
 
     .page-body-rt th {
       text-align: left;
-      color: var(--color-brand-secondary);
+      color: #fff;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
@@ -345,7 +346,7 @@ const bodyHtml = portableTextToHtml(work.body)
         order: 2;
       }
 
-      .page-overview,
+      .page-article-card,
       .page-body-rt {
         max-width: none;
       }
