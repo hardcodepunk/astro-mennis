@@ -32,8 +32,6 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
               </div>
 
               <div class="rw-tag">{w.tagline}</div>
-
-              <div class="rw-cta">Check it out</div>
             </div>
 
             <div class="rw-right">
@@ -169,37 +167,6 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         BlinkMacSystemFont,
         sans-serif;
       text-transform: none;
-    }
-
-    .rw-cta {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-
-      border-radius: 18px;
-
-      margin-top: 18px;
-      padding: 10px 22px;
-
-      background: var(--color-brand-secondary);
-
-      color: var(--color-brand-primary);
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-
-      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-      font-size: 1.4rem;
-
-      transition:
-        background 180ms ease,
-        color 180ms ease,
-        transform 180ms ease;
-    }
-
-    .rw-cta:hover {
-      background: #fff;
-      color: var(--color-brand-secondary);
     }
 
     .rw-meta {

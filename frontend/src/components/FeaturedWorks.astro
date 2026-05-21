@@ -33,7 +33,6 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
             <div class="fw-overlay">
               <div class="fw-kicker">{work.category}</div>
               <h3 class="fw-name">{work.title}</h3>
-              {work.client ? <div class="fw-client">{work.client}</div> : null}
             </div>
           </a>
         ))}
@@ -125,7 +124,7 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         text-decoration: none;
         color: inherit;
         background: #111;
-        border-radius: 20px;
+        border-radius: 0;
       }
 
       .fw-card:nth-child(1) {
@@ -198,12 +197,6 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         font-size: clamp(2.5rem, 4vw, 4rem);
       }
 
-      .fw-client {
-        margin-top: 0.35rem;
-        font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.8);
-      }
-
       .fw-actions {
         display: flex;
         justify-content: center;
@@ -217,8 +210,8 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         min-height: 52px;
         padding: 10px 22px;
         border: 0;
-        border-radius: 18px;
-        color: var(--color-brand-primary);
+        border-radius: 0;
+        color: #fff;
         background: var(--color-brand-secondary);
         font-family: var(--font-bebas, "Bebas Neue", sans-serif);
         font-size: 1.4rem;

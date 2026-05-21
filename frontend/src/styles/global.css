@@ -2,7 +2,7 @@
 
 @theme {
   --color-brand-primary: #b8a7e2;
-  --color-brand-secondary: #303e1c;
+  --color-brand-secondary: #353f36;
 }
 
 body {
@@ -12,7 +12,8 @@ body {
   background: var(--color-brand-primary);
 }
 
-footer {  background: var(--color-brand-secondary);
+footer {
+  background: var(--color-brand-secondary);
 }
 
 html {

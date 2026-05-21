@@ -4,14 +4,21 @@
 
 <footer id="contact" class="w-full py-20">
   <div class="flex flex-col items-center justify-center px-6 text-center gap-4">
-    <a href="https://www.instagram.com/demennis_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-      <img src="/icons/instagram.png" alt="" class="w-6 h-6 object-contain invert brightness-200" />
-    </a>
+    <img src="/logo.png" alt="De Mennis logo" class="w-20 md:w-24 opacity-70" />
 
     <a href="mailto:hello@demennis.be" class="font-display text-2xl tracking-widest text-brand-primary">
       HELLO@DEMENNIS.BE
     </a>
 
-    <img src="/logo.png" alt="De Mennis logo" class="mt-4 w-20 md:w-24 opacity-70" />
+    <a href="https://www.instagram.com/demennis_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+      <img src="/icons/instagram.png" alt="" class="w-6 h-6 object-contain footer-instagram" />
+    </a>
   </div>
+
+  <style>
+    .footer-instagram {
+      filter: brightness(0) saturate(100%) invert(76%) sepia(20%) saturate(814%) hue-rotate(211deg) brightness(93%)
+        contrast(91%);
+    }
+  </style>
 </footer>
