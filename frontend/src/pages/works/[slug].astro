@@ -23,25 +23,40 @@ const bodyHtml = portableTextToHtml(work.body)
     <div class="page-inner">
       <h1 class="page-title text-brand-secondary">{work.title}</h1>
 
-      <div class="page-meta">
-        <div class="page-meta-val">{work.year}</div>
-        <a class="page-meta-val page-meta-link" href={`/projects/${work.categorySlug}`}>{work.category}</a>
-        <div class="page-meta-val">{work.client}</div>
-      </div>
-
       <div class="page-hero">
         <WorkMediaDisplay work={work} />
       </div>
 
-      {
-        work.overviewTitle ? (
-          <section class="page-overview">
-            <h2 class="page-overview-title">{work.overviewTitle}</h2>
-          </section>
-        ) : null
-      }
+      <div class="page-content">
+        <aside class="page-meta" aria-label="Project details">
+          <div class="page-meta-item">
+            <div class="page-meta-label">Year</div>
+            <div class="page-meta-val">{work.year}</div>
+          </div>
 
-      {bodyHtml ? <section class="page-body-rt" set:html={bodyHtml} /> : null}
+          <div class="page-meta-item">
+            <div class="page-meta-label">Category</div>
+            <a class="page-meta-val page-meta-link" href={`/projects/${work.categorySlug}`}>{work.category}</a>
+          </div>
+
+          <div class="page-meta-item">
+            <div class="page-meta-label">Client</div>
+            <div class="page-meta-val">{work.client}</div>
+          </div>
+        </aside>
+
+        <article class="page-article">
+          {
+            work.overviewTitle ? (
+              <section class="page-overview">
+                <h2 class="page-overview-title">{work.overviewTitle}</h2>
+              </section>
+            ) : null
+          }
+
+          {bodyHtml ? <section class="page-body-rt" set:html={bodyHtml} /> : null}
+        </article>
+      </div>
     </div>
   </main>
 
@@ -69,20 +84,53 @@ const bodyHtml = portableTextToHtml(work.body)
       text-transform: uppercase;
     }
 
-    .page-meta {
+    .page-content {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 28px;
-      margin-top: 28px;
-      margin-bottom: 44px;
-      max-width: 52rem;
+      grid-template-columns: minmax(0, 1fr) minmax(10rem, 14rem);
+      gap: clamp(2rem, 5vw, 5rem);
+      align-items: start;
+      margin-top: 72px;
+    }
+
+    .page-article {
+      grid-column: 1;
+      grid-row: 1;
+      min-width: 0;
+    }
+
+    .page-meta {
+      grid-column: 2;
+      grid-row: 1;
+      display: grid;
+      gap: 20px;
+      position: sticky;
+      top: 96px;
     }
 
     .page-meta-val {
-      margin-top: 8px;
+      display: block;
+      margin-top: 5px;
       color: var(--color-brand-secondary);
-      font-size: 1.55rem;
-      letter-spacing: 0.08em;
+      font-size: 1.08rem;
+      line-height: 1.05;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .page-meta-label {
+      color: #fff;
+      font-family:
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      line-height: 1;
+      text-transform: uppercase;
+      opacity: 0.72;
     }
 
     .page-meta-link {
@@ -95,11 +143,11 @@ const bodyHtml = portableTextToHtml(work.body)
     }
 
     .page-hero {
-      margin-top: 10px;
+      margin-top: 36px;
     }
 
     .page-overview {
-      margin-top: 72px;
+      margin-top: 0;
       max-width: 64rem;
     }
 
@@ -274,6 +322,29 @@ const bodyHtml = portableTextToHtml(work.body)
     }
 
     @media (max-width: 1000px) {
+      .page-content {
+        grid-template-columns: 1fr;
+        gap: 34px;
+        margin-top: 42px;
+      }
+
+      .page-article,
+      .page-meta {
+        grid-column: auto;
+        grid-row: auto;
+      }
+
+      .page-meta {
+        order: 1;
+        position: static;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .page-article {
+        order: 2;
+      }
+
       .page-overview,
       .page-body-rt {
         max-width: none;
@@ -282,13 +353,12 @@ const bodyHtml = portableTextToHtml(work.body)
 
     @media (max-width: 700px) {
       .page-meta {
-        gap: 16px;
-        margin-top: 12px;
-        margin-bottom: 32px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
       }
 
       .page-meta-val {
-        font-size: 1.05rem;
+        font-size: 1rem;
         letter-spacing: 0.06em;
       }
     }
