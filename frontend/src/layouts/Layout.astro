@@ -8,6 +8,10 @@ import Footer from "../components/Footer.astro"
 
 const transparentHeaderPaths = ["/", "/about"]
 const hasTransparentHeader = transparentHeaderPaths.includes(Astro.url.pathname)
+const {
+  title = "De Mennis",
+  description = "Cinematic video work by De Mennis.",
+} = Astro.props
 ---
 
 <!doctype html>
@@ -15,6 +19,8 @@ const hasTransparentHeader = transparentHeaderPaths.includes(Astro.url.pathname)
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
 
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

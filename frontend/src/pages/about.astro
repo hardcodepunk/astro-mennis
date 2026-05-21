@@ -13,13 +13,13 @@ const DEFAULT_HERO_WEBM =
 const DEFAULT_HERO_POSTER =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg"
 
-const heroTitle = aboutDoc?.heroTitle ?? "Filmmaking with clarity, rhythm and feel."
+const heroTitle = aboutDoc?.heroTitle ?? aboutDoc?.seoH1 ?? "Filmmaking with clarity, rhythm and feel."
 const heroMp4 = aboutDoc?.heroVideo?.mp4 ?? DEFAULT_HERO_MP4
 const heroWebm = aboutDoc?.heroVideo?.webm ?? DEFAULT_HERO_WEBM
 const heroPoster = aboutDoc?.heroVideo?.poster ?? DEFAULT_HERO_POSTER
 ---
 
-<Layout>
+<Layout title="About | De Mennis">
   <main class="about-page">
     <section class="about-page__hero">
       <div class="about-page__inner about-page__hero-inner">

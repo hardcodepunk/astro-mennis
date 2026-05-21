@@ -1,16 +1,44 @@
 import { sanity } from "./sanity"
 
-export async function getVideoHeroSettings() {
-  const q = `*[_type == "siteSettings"][0].videoHero{
-    mp4,
-    webm,
-    poster
-  }`
-  return sanity.fetch<{
+export type SiteSettings = {
+  homeSeoH1?: string
+  projectsSeoH1?: string
+  videoHero?: {
     mp4?: string
     webm?: string
     poster?: string
-  } | null>(q)
+  }
+}
+
+export async function getSiteSettings() {
+  const q = `*[_type == "siteSettings"][0]{
+    homeSeoH1,
+    projectsSeoH1,
+    videoHero{
+      mp4,
+      webm,
+      poster
+    }
+  }`
+  return sanity.fetch<SiteSettings | null>(q)
+}
+
+export type SeoSettings = {
+  homeH1?: string
+  projectsH1?: string
+}
+
+export async function getSeoSettings() {
+  const q = `*[_type == "seo"][0]{
+    homeH1,
+    projectsH1
+  }`
+  return sanity.fetch<SeoSettings | null>(q)
+}
+
+export async function getVideoHeroSettings() {
+  const settings = await getSiteSettings()
+  return settings?.videoHero ?? null
 }
 
 export type LogoItem = {
@@ -36,6 +64,7 @@ export async function getLogoMarquee() {
 
 export type BioWithPreviewDoc = {
   heroTitle?: string
+  seoH1?: string
   heroVideo?: {
     mp4?: string
     webm?: string
@@ -54,6 +83,7 @@ export type BioWithPreviewDoc = {
 export async function getBioWithPreview() {
   const q = `*[_type == "bioWithPreview"] | order(_updatedAt desc)[0]{
     heroTitle,
+    seoH1,
     heroVideo{ mp4, webm, poster },
     bio,
     mirrorLayout,
@@ -186,8 +216,9 @@ export async function getWorkBySlug(slug: string) {
   return sanity.fetch<WorkItem | null>(q, { slug })
 }
 
-export async function getRecentWorks(limit = 2) {
-  const q = `*[_type == "work"] | order(publishedAt desc, _createdAt desc)[0...$limit]{
+export async function getRecentWorks(limit = 2, excludeSlug?: string) {
+  const q = `*[_type == "work" && (!defined($excludeSlug) || slug.current != $excludeSlug)]
+  | order(publishedAt desc, _createdAt desc)[0...$limit]{
     "slug": slug.current,
     title,
     "category": category->title,
@@ -196,5 +227,5 @@ export async function getRecentWorks(limit = 2) {
     preview{ poster, webm, mp4 },
     thumbnailAutoplay
   }`
-  return sanity.fetch<WorkItem[]>(q, { limit })
+  return sanity.fetch<WorkItem[]>(q, { limit, excludeSlug })
 }

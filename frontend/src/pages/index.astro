@@ -1,14 +1,23 @@
 ---
 import Layout from "../layouts/Layout.astro"
 import Videohero from "../components/CinematicHero.astro"
-import { getFeaturedWorks } from "../lib/sanity.queries"
+import { getFeaturedWorks, getSeoSettings, getSiteSettings } from "../lib/sanity.queries"
 import FeaturedWorks from "../components/FeaturedWorks.astro"
 
 const featuredWorks = await getFeaturedWorks(3)
+const siteSettings = await getSiteSettings()
+const seoSettings = await getSeoSettings()
+const seoH1 = seoSettings?.homeH1 ?? siteSettings?.homeSeoH1 ?? "De Mennis"
+const heroSettings = siteSettings?.videoHero
 ---
 
-<Layout>
+<Layout title="De Mennis">
+  <h1 class="sr-only">{seoH1}</h1>
+
   <Videohero
+    mp4={heroSettings?.mp4}
+    webm={heroSettings?.webm}
+    poster={heroSettings?.poster}
     minRevealMs={600}
   />
 

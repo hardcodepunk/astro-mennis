@@ -13,10 +13,14 @@ export async function getStaticPaths() {
 const { categorySlug } = Astro.params
 const categories = await getCategories()
 const works = await getWorksByCategorySlug(categorySlug!)
+const activeCategory = categories.find(category => category.slug === categorySlug)
+const pageTitle = `${activeCategory?.title ?? "Projects"} | De Mennis`
+const seoH1 = `${activeCategory?.title ?? "Projects"} projects`
 ---
 
-<Layout>
+<Layout title={pageTitle}>
   <main>
+    <h1 class="sr-only">{seoH1}</h1>
     <ProjectGrid items={works} categories={categories} activeSlug={categorySlug} />
   </main>
 </Layout>

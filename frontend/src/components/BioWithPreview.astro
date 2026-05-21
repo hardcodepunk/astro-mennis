@@ -2,8 +2,6 @@
 import PlyrPreview from "./PlyrPreview.astro"
 import { getBioWithPreview } from "../lib/sanity.queries"
 
-const doc = await getBioWithPreview()
-
 const DEFAULT_BIO = `I SHOOT CLEAN, CINEMATIC VIDEO FOR BRANDS AND PEOPLE WHO CARE ABOUT CRAFT.
 FAST TURNAROUND, CALM SETS, SHARP EDITS. COMMERCIALS, SOCIAL CUTS, EVENT RECAPS,
 AND STORY-DRIVEN PIECES — DONE PROPERLY.`
@@ -23,6 +21,11 @@ const props = Astro.props as {
   mirrorLayout?: boolean
   bioTextScale?: number
 }
+
+const hasProvidedProps = ["bio", "mp4", "webm", "poster", "mirrorLayout", "bioTextScale"].some(key =>
+  Object.prototype.hasOwnProperty.call(props, key),
+)
+const doc = hasProvidedProps ? null : await getBioWithPreview()
 
 const bio = props.bio ?? doc?.bio ?? DEFAULT_BIO
 const mp4 = props.mp4 ?? doc?.previewVideo?.mp4 ?? DEFAULT_MP4

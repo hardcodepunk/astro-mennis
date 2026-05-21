@@ -14,7 +14,7 @@ const { transparentOnTop = false } = Astro.props
   <div class="relative flex h-16 items-center justify-between px-6">
     <a
       href="/"
-      class="brand text-brand-primary font-display text-2xl tracking-widest hover:opacity-80 transition-colors"
+      class="brand font-display text-2xl tracking-widest transition-colors"
       data-brand
     >
       DE MENNIS
@@ -24,15 +24,6 @@ const { transparentOnTop = false } = Astro.props
       <a href="/projects" class="desktop-link transition-colors">Projects</a>
       <a href="/about" class="desktop-link transition-colors">About</a>
       <a href="/#contact" class="desktop-link transition-colors">Contact</a>
-      <!-- <a
-        href="https://www.instagram.com/demennis_/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="desktop-link transition-colors flex items-center"
-        aria-label="Instagram"
-      >
-        <img src="/icons/instagram.png" alt="" class="desktop-icon h-4 w-4 transition-opacity" />
-      </a> -->
     </nav>
 
     <button
@@ -59,24 +50,11 @@ const { transparentOnTop = false } = Astro.props
     <nav class="mobile-menu__nav px-6">
       <div class="mobile-menu__stack font-display text-2xl tracking-widest">
         {
-          NAV.map(item =>
-            item.external ? (
-              <a
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="mobile-link"
-                data-menu-link
-                aria-label="Instagram"
-              >
-                <img src="/icons/instagram.png" alt="" class="mobile-icon" />
-              </a>
-            ) : (
-              <a href={item.href} class="mobile-link" data-menu-link>
-                {item.label}
-              </a>
-            ),
-          )
+          NAV.map(item => (
+            <a href={item.href} class="mobile-link" data-menu-link>
+              {item.label}
+            </a>
+          ))
         }
       </div>
     </nav>
@@ -127,13 +105,8 @@ const { transparentOnTop = false } = Astro.props
     color: #fff;
   }
 
-  .desktop-link,
-  .desktop-icon {
+  .desktop-link {
     color: #fff;
-  }
-
-  .desktop-link:hover .desktop-icon {
-    opacity: 1;
   }
 
   .site-header.is-solid .desktop-link {
@@ -146,15 +119,6 @@ const { transparentOnTop = false } = Astro.props
 
   .desktop-link:hover {
     color: #fff;
-  }
-
-  .site-header.is-solid .desktop-icon {
-    filter: none;
-    opacity: 1;
-  }
-
-  .site-header.is-solid .desktop-link:hover .desktop-icon {
-    opacity: 0.8;
   }
 
   .hamburger {
@@ -247,18 +211,6 @@ const { transparentOnTop = false } = Astro.props
     opacity: 0.8;
   }
 
-  .mobile-icon {
-    width: 26px;
-    height: 26px;
-    opacity: 1;
-    transition: opacity 150ms ease;
-    filter: none;
-  }
-
-  .mobile-icon:hover {
-    opacity: 0.8;
-  }
-
   .mobile-menu.is-open {
     pointer-events: auto;
   }
@@ -299,8 +251,7 @@ const { transparentOnTop = false } = Astro.props
     .mobile-menu__panel,
     .mobile-link,
     .brand,
-    .desktop-link,
-    .desktop-icon {
+    .desktop-link {
       transition: none !important;
     }
   }

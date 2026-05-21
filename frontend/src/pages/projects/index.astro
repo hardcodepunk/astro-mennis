@@ -1,14 +1,18 @@
 ---
 import Layout from "../../layouts/Layout.astro"
 import ProjectGrid from "../../components/ProjectGrid.astro"
-import { getAllWorksForGrid, getCategories } from "../../lib/sanity.queries"
+import { getAllWorksForGrid, getCategories, getSeoSettings, getSiteSettings } from "../../lib/sanity.queries"
 
 const works = await getAllWorksForGrid()
 const categories = await getCategories()
+const siteSettings = await getSiteSettings()
+const seoSettings = await getSeoSettings()
+const seoH1 = seoSettings?.projectsH1 ?? siteSettings?.projectsSeoH1 ?? "Projects"
 ---
 
-<Layout>
+<Layout title="Projects | De Mennis">
   <main>
+    <h1 class="sr-only">{seoH1}</h1>
     <ProjectGrid items={works} categories={categories} activeSlug="all" />
   </main>
 </Layout>

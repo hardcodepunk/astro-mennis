@@ -14,11 +14,11 @@ const { slug } = Astro.params
 const work = await getWorkBySlug(slug)
 if (!work) throw new Error(`Work not found: ${slug}`)
 
-const recent = await getRecentWorks(3)
+const recent = await getRecentWorks(3, slug)
 const bodyHtml = portableTextToHtml(work.body)
 ---
 
-<Layout>
+<Layout title={`${work.title} | De Mennis`}>
   <main class="page">
     <div class="page-inner">
       <h1 class="page-title text-brand-secondary">{work.title}</h1>

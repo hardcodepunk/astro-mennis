@@ -1,8 +1,6 @@
 ---
 import { getVideoHeroSettings } from "../lib/sanity.queries"
 
-const settings = await getVideoHeroSettings()
-
 const DEFAULT_MP4 =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4"
 const DEFAULT_WEBM =
@@ -10,12 +8,16 @@ const DEFAULT_WEBM =
 const DEFAULT_POSTER =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg"
 
+const props = Astro.props
+const needsSettings = !props.mp4 || !props.webm || !props.poster
+const settings = needsSettings ? await getVideoHeroSettings() : null
+
 const {
   mp4 = settings?.mp4 ?? DEFAULT_MP4,
   webm = settings?.webm ?? DEFAULT_WEBM,
   poster = settings?.poster ?? DEFAULT_POSTER,
   minRevealMs = 600,
-} = Astro.props
+} = props
 ---
 
 <section class="vh-hero" data-min-reveal={minRevealMs}>

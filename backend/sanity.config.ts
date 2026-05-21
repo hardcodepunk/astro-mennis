@@ -7,8 +7,8 @@ export default defineConfig({
   name: 'default',
   title: 'Mennis',
 
-  projectId: '454gxa26',
-  dataset: 'production',
+  projectId: process.env.SANITY_STUDIO_PROJECT_ID || '454gxa26',
+  dataset: process.env.SANITY_STUDIO_DATASET || 'production',
 
   plugins: [structureTool(), visionTool()],
 
