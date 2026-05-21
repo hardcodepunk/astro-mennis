@@ -88,13 +88,15 @@ const showreelId = getYouTubeId(showreelUrl) ?? "cIFqyLFVG4g"
   </div>
 
   <script>
-    ;(async () => {
-      const root = document.querySelector(".vh-hero")
-      if (!(root instanceof HTMLElement)) return
+    async function initCinematicHero(root) {
+      if (!(root instanceof HTMLElement) || root.dataset.vhHeroInited === "1") return
+      root.dataset.vhHeroInited = "1"
 
       const video = root.querySelector("video")
       if (!(video instanceof HTMLVideoElement)) return
 
+      const controller = new AbortController()
+      const { signal } = controller
       const mountedAt = Date.now()
       const minRevealMs = Number(root.getAttribute("data-min-reveal") || "600")
 
@@ -116,8 +118,8 @@ const showreelId = getYouTubeId(showreelUrl) ?? "cIFqyLFVG4g"
       const onPlaying = () => revealWithMin()
       const onLoadedData = () => revealWithMin()
 
-      video.addEventListener("playing", onPlaying)
-      video.addEventListener("loadeddata", onLoadedData)
+      video.addEventListener("playing", onPlaying, { signal })
+      video.addEventListener("loadeddata", onLoadedData, { signal })
 
       window.setTimeout(revealWithMin, 1500)
 
@@ -146,6 +148,7 @@ const showreelId = getYouTubeId(showreelUrl) ?? "cIFqyLFVG4g"
       })
 
       const openModal = async () => {
+        if (signal.aborted) return
         modal.hidden = false
         document.documentElement.classList.add("has-showreel-open")
         await player.play()
@@ -157,22 +160,40 @@ const showreelId = getYouTubeId(showreelUrl) ?? "cIFqyLFVG4g"
         document.documentElement.classList.remove("has-showreel-open")
       }
 
-      openBtn.addEventListener("click", openModal)
+      openBtn.addEventListener("click", openModal, { signal })
 
       closeButtons.forEach(btn => {
-        btn.addEventListener("click", closeModal)
+        btn.addEventListener("click", closeModal, { signal })
       })
 
       window.addEventListener("keydown", e => {
         if (e.key === "Escape" && !modal.hidden) closeModal()
-      })
+      }, { signal })
 
-      window.addEventListener("beforeunload", () => {
-        video.removeEventListener("playing", onPlaying)
-        video.removeEventListener("loadeddata", onLoadedData)
+      let cleanedUp = false
+      const cleanup = () => {
+        if (cleanedUp) return
+        cleanedUp = true
+        closeModal()
+        controller.abort()
         player.destroy()
-      })
-    })()
+      }
+
+      document.addEventListener("astro:before-swap", cleanup, { once: true })
+      window.addEventListener("beforeunload", cleanup, { once: true })
+    }
+
+    function bootCinematicHero() {
+      document.querySelectorAll(".vh-hero").forEach(initCinematicHero)
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", bootCinematicHero, { once: true })
+    } else {
+      bootCinematicHero()
+    }
+
+    document.addEventListener("astro:page-load", bootCinematicHero)
   </script>
 
   <style>
