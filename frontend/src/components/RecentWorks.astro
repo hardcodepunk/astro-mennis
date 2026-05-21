@@ -8,7 +8,7 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
 
 <section class="rw">
   <div class="rw-inner">
-    <h2 class="rw-title">RECENT WORK</h2>
+    <h2 class="rw-title">Keep on watching</h2>
 
     <div class="rw-grid">
       {items.map(work => <WorkThumbnailCard work={work} headingTag="h3" />)}
@@ -31,9 +31,10 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
 
     .rw-title {
       margin: 0 0 44px 0;
-      font-size: clamp(2.4rem, 6vw, 5rem);
+      font-size: clamp(2.1rem, 5vw, 4.2rem);
       line-height: 0.9;
       letter-spacing: 0.02em;
+      text-align: right;
       text-transform: uppercase;
     }
 
