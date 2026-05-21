@@ -2,17 +2,57 @@
 import Layout from "../layouts/Layout.astro"
 import BioWithPreview from "../components/BioWithPreview.astro"
 import LogosMarquee from "../components/LogosMarquee.astro"
+import { getBioWithPreview } from "../lib/sanity.queries"
+
+const aboutDoc = await getBioWithPreview()
+
+const DEFAULT_HERO_MP4 =
+  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4"
+const DEFAULT_HERO_WEBM =
+  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm"
+const DEFAULT_HERO_POSTER =
+  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg"
+
+const heroTitle = aboutDoc?.heroTitle ?? "Filmmaking with clarity, rhythm and feel."
+const heroMp4 = aboutDoc?.heroVideo?.mp4 ?? DEFAULT_HERO_MP4
+const heroWebm = aboutDoc?.heroVideo?.webm ?? DEFAULT_HERO_WEBM
+const heroPoster = aboutDoc?.heroVideo?.poster ?? DEFAULT_HERO_POSTER
 ---
 
 <Layout>
   <main class="about-page">
     <section class="about-page__hero">
-      <div class="about-page__inner">
-        <h1 class="about-page__title text-brand-secondary">Filmmaking with clarity, rhythm and feel.</h1>
+      <div class="about-page__inner about-page__hero-inner">
+        <div class="about-page__hero-frame">
+          <video
+            class="about-page__hero-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            poster={heroPoster}
+            aria-hidden="true"
+          >
+            {heroWebm ? <source src={heroWebm} type="video/webm" /> : null}
+            {heroMp4 ? <source src={heroMp4} type="video/mp4" /> : null}
+          </video>
+          <div class="about-page__hero-shade" aria-hidden="true"></div>
+          <div class="about-page__hero-content">
+            <h1 class="about-page__title">{heroTitle}</h1>
+          </div>
+        </div>
       </div>
     </section>
 
-    <BioWithPreview />
+    <BioWithPreview
+      bio={aboutDoc?.bio}
+      mp4={aboutDoc?.previewVideo?.mp4}
+      webm={aboutDoc?.previewVideo?.webm}
+      poster={aboutDoc?.previewVideo?.poster}
+      mirrorLayout={aboutDoc?.mirrorLayout}
+      bioTextScale={aboutDoc?.bioTextScale}
+    />
 
     <section class="about-page__section">
       <div class="about-page__inner about-page__grid">
@@ -45,12 +85,60 @@ import LogosMarquee from "../components/LogosMarquee.astro"
 
   <style>
     .about-page {
-      padding: 88px 0 96px;
+      padding: 0 0 96px;
       background: var(--color-brand-primary);
     }
 
     .about-page__hero {
       padding-top: 0;
+      width: 100vw;
+      max-width: 100vw;
+      margin-left: calc(50% - 50vw);
+    }
+
+    .about-page__inner.about-page__hero-inner {
+      width: 100vw;
+      max-width: none;
+      padding: 0;
+    }
+
+    .about-page__hero-frame {
+      position: relative;
+      display: grid;
+      align-items: end;
+      width: 100vw;
+      min-height: min(760px, 86svh);
+      overflow: hidden;
+      background: var(--color-brand-secondary);
+      padding: clamp(1.25rem, 4vw, 3rem) 0;
+    }
+
+    .about-page__hero-video,
+    .about-page__hero-shade {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .about-page__hero-video {
+      object-fit: cover;
+    }
+
+    .about-page__hero-shade {
+      pointer-events: none;
+      background:
+        linear-gradient(to top, rgba(0, 0, 0, 0.74), rgba(0, 0, 0, 0.16) 58%, rgba(0, 0, 0, 0.28)),
+        linear-gradient(to right, rgba(0, 0, 0, 0.46), rgba(0, 0, 0, 0));
+    }
+
+    .about-page__hero-content {
+      width: 100%;
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 0 1rem;
+      position: relative;
+      z-index: 1;
     }
 
     .about-page__inner {
@@ -63,11 +151,12 @@ import LogosMarquee from "../components/LogosMarquee.astro"
       margin: 0;
       max-width: 11ch;
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-      font-size: clamp(3.4rem, 9vw, 7.2rem);
+      font-size: clamp(3rem, 7.6vw, 6.2rem);
       line-height: 0.9;
       font-weight: 400;
       letter-spacing: 0.02em;
       text-transform: uppercase;
+      color: #fff;
     }
 
     .about-page__section {
@@ -133,6 +222,10 @@ import LogosMarquee from "../components/LogosMarquee.astro"
 
       .about-page__title {
         max-width: 12ch;
+      }
+
+      .about-page__hero-frame {
+        min-height: 78svh;
       }
     }
   </style>

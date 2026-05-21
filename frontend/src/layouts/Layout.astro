@@ -6,7 +6,8 @@ import { ClientRouter } from "astro:transitions"
 import Header from "../components/Header.astro"
 import Footer from "../components/Footer.astro"
 
-const isHome = Astro.url.pathname === "/"
+const transparentHeaderPaths = ["/", "/about"]
+const hasTransparentHeader = transparentHeaderPaths.includes(Astro.url.pathname)
 ---
 
 <!doctype html>
@@ -26,7 +27,7 @@ const isHome = Astro.url.pathname === "/"
     <slot name="head" />
   </head>
   <body class="min-h-screen flex flex-col">
-    <Header transparentOnTop={isHome} />
+    <Header transparentOnTop={hasTransparentHeader} />
 
     <main class="flex-1">
       <slot />

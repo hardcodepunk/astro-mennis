@@ -35,6 +35,12 @@ export async function getLogoMarquee() {
 }
 
 export type BioWithPreviewDoc = {
+  heroTitle?: string
+  heroVideo?: {
+    mp4?: string
+    webm?: string
+    poster?: string
+  }
   bio?: string
   mirrorLayout?: boolean
   bioTextScale?: number
@@ -47,6 +53,8 @@ export type BioWithPreviewDoc = {
 
 export async function getBioWithPreview() {
   const q = `*[_type == "bioWithPreview"] | order(_updatedAt desc)[0]{
+    heroTitle,
+    heroVideo{ mp4, webm, poster },
     bio,
     mirrorLayout,
     bioTextScale,

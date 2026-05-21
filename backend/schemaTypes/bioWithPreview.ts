@@ -2,9 +2,43 @@ import {defineField, defineType} from 'sanity'
 
 export const bioWithPreview = defineType({
   name: 'bioWithPreview',
-  title: 'About bio preview',
+  title: 'About page',
   type: 'document',
   fields: [
+    defineField({
+      name: 'heroTitle',
+      title: 'Hero title',
+      description: 'Shown over the About page video banner.',
+      type: 'string',
+      validation: (r) => r.required(),
+    }),
+    defineField({
+      name: 'heroVideo',
+      title: 'About hero video',
+      description: 'Autoplaying video banner behind the About page title.',
+      type: 'object',
+      fields: [
+        defineField({
+          name: 'poster',
+          title: 'Poster URL',
+          description: 'Static fallback image shown before the hero video loads.',
+          type: 'url',
+          validation: (r) => r.required(),
+        }),
+        defineField({
+          name: 'webm',
+          title: 'WEBM URL',
+          description: 'Preferred browser video format.',
+          type: 'url',
+        }),
+        defineField({
+          name: 'mp4',
+          title: 'MP4 URL',
+          description: 'Fallback video format.',
+          type: 'url',
+        }),
+      ],
+    }),
     defineField({
       name: 'bio',
       title: 'Bio',
@@ -57,7 +91,7 @@ export const bioWithPreview = defineType({
   preview: {
     prepare() {
       return {
-        title: 'Bio',
+        title: 'About page',
       }
     },
   },
