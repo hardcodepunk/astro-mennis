@@ -26,7 +26,7 @@ const bodyHtml = portableTextToHtml(work.body)
 
       <div class="page-meta">
         <div class="page-meta-val">{work.year}</div>
-        <div class="page-meta-val">{work.category}</div>
+        <a class="page-meta-val page-meta-link" href={`/projects/${work.categorySlug}`}>{work.category}</a>
         <div class="page-meta-val">{work.client}</div>
       </div>
 
@@ -81,9 +81,18 @@ const bodyHtml = portableTextToHtml(work.body)
 
     .page-meta-val {
       margin-top: 8px;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 1.05rem;
+      color: var(--color-brand-secondary);
+      font-size: 1.55rem;
       letter-spacing: 0.08em;
+    }
+
+    .page-meta-link {
+      text-decoration: none;
+      transition: color 160ms ease;
+    }
+
+    .page-meta-link:hover {
+      color: #fff;
     }
 
     .page-hero {
@@ -98,11 +107,11 @@ const bodyHtml = portableTextToHtml(work.body)
     .page-overview-title {
       margin: 0 0 18px 0;
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-      font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+      font-size: clamp(2.05rem, 3.1vw, 2.75rem);
       line-height: 0.95;
       letter-spacing: 0.03em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.95);
+      color: var(--color-brand-secondary);
     }
 
     .page-body-rt {
@@ -116,7 +125,7 @@ const bodyHtml = portableTextToHtml(work.body)
         sans-serif;
       line-height: 1.75;
       font-size: 1rem;
-      color: rgba(255, 255, 255, 0.86);
+      color: color-mix(in srgb, var(--color-brand-secondary) 86%, transparent);
     }
 
     .page-body-rt > :first-child {
@@ -133,7 +142,7 @@ const bodyHtml = portableTextToHtml(work.body)
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: rgba(255, 255, 255, 0.95);
+      color: var(--color-brand-secondary);
       margin: 42px 0 0 0;
       line-height: 0.95;
     }
@@ -151,23 +160,23 @@ const bodyHtml = portableTextToHtml(work.body)
     }
 
     .page-body-rt a {
-      color: rgba(255, 255, 255, 0.92);
+      color: var(--color-brand-secondary);
       text-decoration: underline;
       text-underline-offset: 3px;
       text-decoration-thickness: 1px;
-      text-decoration-color: rgba(255, 255, 255, 0.35);
+      text-decoration-color: color-mix(in srgb, var(--color-brand-secondary) 35%, transparent);
       transition:
         text-decoration-color 160ms ease,
         opacity 160ms ease;
     }
 
     .page-body-rt a:hover {
-      text-decoration-color: rgba(255, 255, 255, 0.75);
+      text-decoration-color: color-mix(in srgb, var(--color-brand-secondary) 75%, transparent);
       opacity: 1;
     }
 
     .page-body-rt strong {
-      color: rgba(255, 255, 255, 0.95);
+      color: var(--color-brand-secondary);
       font-weight: 700;
     }
 
@@ -189,9 +198,9 @@ const bodyHtml = portableTextToHtml(work.body)
     .page-body-rt blockquote {
       margin: 32px 0 0 0;
       padding: 18px 18px 18px 16px;
-      border-left: 2px solid rgba(255, 255, 255, 0.22);
-      background: rgba(255, 255, 255, 0.04);
-      color: rgba(255, 255, 255, 0.9);
+      border-left: 2px solid color-mix(in srgb, var(--color-brand-secondary) 28%, transparent);
+      background: color-mix(in srgb, var(--color-brand-secondary) 8%, transparent);
+      color: var(--color-brand-secondary);
     }
 
     .page-body-rt blockquote p {
@@ -201,7 +210,7 @@ const bodyHtml = portableTextToHtml(work.body)
     .page-body-rt hr {
       border: 0;
       height: 1px;
-      background: rgba(255, 255, 255, 0.12);
+      background: color-mix(in srgb, var(--color-brand-secondary) 18%, transparent);
       margin: 44px 0;
     }
 
@@ -227,8 +236,8 @@ const bodyHtml = portableTextToHtml(work.body)
       margin: 28px 0 0 0;
       padding: 16px 16px;
       overflow: auto;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid color-mix(in srgb, var(--color-brand-secondary) 18%, transparent);
+      background: color-mix(in srgb, var(--color-brand-secondary) 8%, transparent);
       font-size: 0.92rem;
       line-height: 1.6;
     }
@@ -252,13 +261,13 @@ const bodyHtml = portableTextToHtml(work.body)
     .page-body-rt th,
     .page-body-rt td {
       padding: 12px 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      border-bottom: 1px solid color-mix(in srgb, var(--color-brand-secondary) 18%, transparent);
       vertical-align: top;
     }
 
     .page-body-rt th {
       text-align: left;
-      color: rgba(255, 255, 255, 0.9);
+      color: var(--color-brand-secondary);
       letter-spacing: 0.06em;
       text-transform: uppercase;
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
@@ -268,6 +277,19 @@ const bodyHtml = portableTextToHtml(work.body)
       .page-overview,
       .page-body-rt {
         max-width: none;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .page-meta {
+        gap: 16px;
+        margin-top: 12px;
+        margin-bottom: 32px;
+      }
+
+      .page-meta-val {
+        font-size: 1.05rem;
+        letter-spacing: 0.06em;
       }
     }
   </style>

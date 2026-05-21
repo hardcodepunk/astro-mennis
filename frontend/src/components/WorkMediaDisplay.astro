@@ -82,7 +82,7 @@ function ytPosterFallback(id: string) {
     ) : hasSlider ? (
       <section class="yt-gallery" aria-label="Reels">
         <button class="yt-nav yt-nav--prev" type="button" aria-label="Previous" data-yt-prev>
-          ‹
+          <span class="yt-nav__chevron" aria-hidden="true"></span>
         </button>
 
         <div class="yt-rail" data-yt-rail>
@@ -113,7 +113,7 @@ function ytPosterFallback(id: string) {
         </div>
 
         <button class="yt-nav yt-nav--next" type="button" aria-label="Next" data-yt-next>
-          ›
+          <span class="yt-nav__chevron" aria-hidden="true"></span>
         </button>
       </section>
     ) : (
@@ -137,18 +137,30 @@ function ytPosterFallback(id: string) {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    border: none;
-    background: var(--color-brand-primary);
-    color: white;
-    font-size: 22px;
-    font-weight: bold;
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.92);
+    background: var(--color-brand-secondary);
     display: grid;
     place-items: center;
     cursor: pointer;
     z-index: 30;
+  }
+
+  .yt-nav__chevron {
+    width: 13px;
+    height: 13px;
+    border-top: 4px solid #fff;
+    border-right: 4px solid #fff;
+  }
+
+  .yt-nav--prev .yt-nav__chevron {
+    transform: translateX(3px) rotate(-135deg);
+  }
+
+  .yt-nav--next .yt-nav__chevron {
+    transform: translateX(-3px) rotate(45deg);
   }
 
   .yt-nav--prev {
@@ -179,7 +191,7 @@ function ytPosterFallback(id: string) {
     position: relative;
     overflow: hidden;
     border-radius: 12px;
-    background: var(--color-brand-primary);
+    background: var(--color-brand-secondary);
   }
 
   .yt-frame--16x9 {

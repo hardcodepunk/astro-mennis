@@ -20,7 +20,7 @@ const { transparentOnTop = false } = Astro.props
       DE MENNIS
     </a>
 
-    <nav class="desktop-nav hidden md:flex items-center gap-8 text-sm">
+    <nav class="desktop-nav hidden md:flex items-center gap-8 text-sm font-bold">
       <a href="/projects" class="desktop-link transition-colors">Projects</a>
       <a href="/about" class="desktop-link transition-colors">About</a>
       <a href="/#contact" class="desktop-link transition-colors">Contact</a>
@@ -132,8 +132,11 @@ const { transparentOnTop = false } = Astro.props
   }
 
   .site-header.is-solid .desktop-link:hover {
-    color: var(--color-brand-secondary);
-    opacity: 0.8;
+    color: #fff;
+  }
+
+  .desktop-link:hover {
+    color: #fff;
   }
 
   .site-header.is-solid .desktop-icon {

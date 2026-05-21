@@ -34,14 +34,22 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
 <section class="pg">
   <div class="pg-inner">
     <div class="pg-filters">
-      <a class:list={["pg-pill", activeSlug === "all" && "is-active"]} href={filterHref("all")}> All </a>
+      {
+        activeSlug === "all" ? (
+          <span class="pg-pill is-active" aria-current="page">All</span>
+        ) : (
+          <a class="pg-pill" href={filterHref("all")}>All</a>
+        )
+      }
 
       {
-        categories.map(cat => (
-          <a class:list={["pg-pill", activeSlug === cat.slug && "is-active"]} href={filterHref(cat.slug)}>
-            {cat.title}
-          </a>
-        ))
+        categories.map(cat =>
+          activeSlug === cat.slug ? (
+            <span class="pg-pill is-active" aria-current="page">{cat.title}</span>
+          ) : (
+            <a class="pg-pill" href={filterHref(cat.slug)}>{cat.title}</a>
+          ),
+        )
       }
     </div>
 
@@ -165,6 +173,13 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
     .pg-pill.is-active {
       background: var(--color-brand-secondary);
       color: var(--color-brand-primary);
+      cursor: default;
+    }
+
+    .pg-pill:not(.is-active):hover {
+      background: #fff;
+      border-color: #fff;
+      color: var(--color-brand-secondary);
     }
 
     .pg-grid {
@@ -252,6 +267,17 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
 
       .pg {
         padding-top: 88px;
+      }
+
+      .pg-filters {
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .pg-pill {
+        min-height: 40px;
+        padding: 0.5rem 0.9rem;
+        font-size: 0.82rem;
       }
     }
   </style>
