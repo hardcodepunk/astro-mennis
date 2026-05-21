@@ -2,12 +2,13 @@ import {defineField, defineType} from 'sanity'
 
 export const category = defineType({
   name: 'category',
-  title: 'Category',
+  title: 'Project categories',
   type: 'document',
   fields: [
     defineField({
       name: 'title',
       title: 'Title',
+      description: 'Shown in project filters and project cards.',
       type: 'string',
       validation: (r) => r.required(),
     }),
@@ -15,72 +16,32 @@ export const category = defineType({
     defineField({
       name: 'slug',
       title: 'Slug',
+      description: 'Used in the URL, e.g. /projects/creative. Generate after entering title.',
       type: 'slug',
       options: {source: 'title'},
       validation: (r) => r.required(),
     }),
 
     defineField({
-      name: 'tagline',
-      title: 'Tagline',
-      type: 'string',
-      validation: (r) => r.required(),
-    }),
-
-    defineField({
-      name: 'preview',
-      title: 'Preview',
-      type: 'object',
-      fields: [
-        defineField({
-          name: 'poster',
-          title: 'Poster URL',
-          type: 'url',
-          validation: (r) => r.required(),
-        }),
-        defineField({name: 'webm', title: 'WEBM URL', type: 'url'}),
-        defineField({name: 'mp4', title: 'MP4 URL', type: 'url'}),
-      ],
-    }),
-
-    defineField({
-      name: 'overviewTitle',
-      title: 'Overview title',
-      type: 'string',
-    }),
-
-    defineField({
-      name: 'overviewLead',
-      title: 'Overview lead',
-      type: 'text',
-      rows: 3,
-    }),
-
-    defineField({
-      name: 'body',
-      title: 'Body',
-      type: 'array',
-      of: [
-        {type: 'block'},
-        defineField({
-          name: 'inlineImage',
-          title: 'Image',
-          type: 'image',
-          options: {hotspot: true},
-          fields: [
-            defineField({name: 'alt', title: 'Alt text', type: 'string'}),
-            defineField({name: 'caption', title: 'Caption', type: 'string'}),
-          ],
-        }),
-      ],
+      name: 'sortOrder',
+      title: 'Sort order',
+      description: 'Optional. Lower numbers appear first in project filters.',
+      type: 'number',
+      validation: (r) => r.integer().positive(),
     }),
   ],
 
   preview: {
     select: {
       title: 'title',
-      subtitle: 'tagline',
-      media: 'preview.poster',
+      slug: 'slug.current',
+      sortOrder: 'sortOrder',
+    },
+    prepare({title, slug, sortOrder}) {
+      return {
+        title,
+        subtitle: [sortOrder ? `#${sortOrder}` : null, slug].filter(Boolean).join(' · '),
+      }
     },
   },
 })

@@ -1,6 +1,5 @@
 ---
 import Layout from "../../layouts/Layout.astro"
-import PlyrPreview from "../../components/PlyrPreview.astro"
 import { getWorkBySlug, getWorks, getRecentWorks } from "../../lib/sanity.queries"
 import { portableTextToHtml } from "../../lib/portableText"
 import RecentWorks from "../../components/RecentWorks.astro"
@@ -15,7 +14,7 @@ const { slug } = Astro.params
 const work = await getWorkBySlug(slug)
 if (!work) throw new Error(`Work not found: ${slug}`)
 
-const recent = await getRecentWorks(2)
+const recent = await getRecentWorks(3)
 const bodyHtml = portableTextToHtml(work.body)
 ---
 
@@ -35,9 +34,9 @@ const bodyHtml = portableTextToHtml(work.body)
       </div>
 
       {
-        work.overviewTitle || work.overviewLead ? (
+        work.overviewTitle ? (
           <section class="page-overview">
-            {work.overviewTitle ? <h2 class="page-overview-title">{work.overviewTitle}</h2> : null}
+            <h2 class="page-overview-title">{work.overviewTitle}</h2>
           </section>
         ) : null
       }

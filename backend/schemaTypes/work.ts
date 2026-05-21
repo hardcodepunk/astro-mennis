@@ -10,6 +10,7 @@ export const work = defineType({
     defineField({
       name: 'title',
       title: 'Title',
+      description: 'Shown on project cards and as the work page heading.',
       type: 'string',
       validation: (r) => r.required(),
     }),
@@ -17,6 +18,7 @@ export const work = defineType({
     defineField({
       name: 'slug',
       title: 'Slug',
+      description: 'Used in the URL, e.g. /works/way-coffee-roasters. Generate after entering title.',
       type: 'slug',
       options: {source: 'title'},
       validation: (r) => r.required(),
@@ -25,6 +27,7 @@ export const work = defineType({
     defineField({
       name: 'year',
       title: 'Year',
+      description: 'Shown in the project meta on the work page.',
       type: 'string',
       validation: (r) => r.required(),
     }),
@@ -32,59 +35,60 @@ export const work = defineType({
     defineField({
       name: 'client',
       title: 'Client',
+      description: 'Shown in the project meta on the work page.',
       type: 'string',
       validation: (r) => r.required(),
     }),
 
     defineField({
       name: 'category',
-      title: 'Category',
+      title: 'Project category',
+      description: 'Controls where this project appears in /projects filters.',
       type: 'reference',
       to: [{type: 'category'}],
       validation: (r) => r.required(),
     }),
 
     defineField({
-      name: 'tagline',
-      title: 'Tagline',
-      type: 'string',
-      validation: (r) => r.required(),
-    }),
-
-    defineField({
       name: 'featuredOnHome',
       title: 'Show on homepage project grid',
+      description: 'Adds this project to the homepage featured work section.',
       type: 'boolean',
       initialValue: false,
     }),
 
     defineField({
       name: 'featuredOrder',
-      title: 'Homepage project order',
+      title: 'Homepage order',
+      description: 'Optional. Lower numbers appear first on the homepage.',
       type: 'number',
       hidden: ({document}) => !document?.featuredOnHome,
-      validation: (r) => r.min(1).max(3),
+      validation: (r) => r.integer().positive().max(3),
     }),
 
     defineField({
       name: 'preview',
-      title: 'Preview',
+      title: 'Project card thumbnail',
+      description: 'Used by project cards, recent work cards, homepage cards, and as fallback work page video.',
       type: 'object',
       fields: [
         defineField({
           name: 'poster',
-          title: 'Poster URL',
+          title: 'Thumbnail poster URL',
+          description: 'Static image shown before the video plays.',
           type: 'url',
           validation: (r) => r.required(),
         }),
         defineField({
           name: 'webm',
-          title: 'WEBM URL',
+          title: 'Thumbnail WEBM URL',
+          description: 'Optional. Preferred lightweight video format for thumbnail playback.',
           type: 'url',
         }),
         defineField({
           name: 'mp4',
-          title: 'MP4 URL',
+          title: 'Thumbnail MP4 URL',
+          description: 'Optional fallback video format for thumbnail playback.',
           type: 'url',
         }),
       ],
@@ -92,21 +96,30 @@ export const work = defineType({
     }),
 
     defineField({
+      name: 'thumbnailAutoplay',
+      title: 'Autoplay thumbnail',
+      description: 'Autoplay this project thumbnail in project grids, homepage cards, and recent work previews.',
+      type: 'boolean',
+      initialValue: false,
+    }),
+
+    defineField({
       name: 'media',
-      title: 'Hero media',
+      title: 'Work page hero media',
+      description: 'Controls the main media shown at the top of the work page.',
       type: 'object',
       options: {collapsible: true, collapsed: true},
       initialValue: {mode: 'preview'},
       fields: [
         defineField({
           name: 'mode',
-          title: 'Type',
+          title: 'Hero media type',
           type: 'string',
           options: {
             list: [
-              {title: 'Default preview video (mp4/webm)', value: 'preview'},
+              {title: 'Use thumbnail video', value: 'preview'},
               {title: 'Single YouTube video', value: 'single'},
-              {title: 'Reels slider (up to 4)', value: 'slider'},
+              {title: 'YouTube reels slider', value: 'slider'},
             ],
             layout: 'radio',
           },
@@ -117,6 +130,7 @@ export const work = defineType({
         defineField({
           name: 'youtubeUrl',
           title: 'YouTube URL',
+          description: 'Required when hero media type is Single YouTube video.',
           type: 'url',
           hidden: ({parent}) => (parent as HeroMediaParent)?.mode !== 'single',
           validation: (r) =>
@@ -129,7 +143,8 @@ export const work = defineType({
 
         defineField({
           name: 'reels',
-          title: 'Reels URLs',
+          title: 'YouTube reels URLs',
+          description: 'Required when hero media type is YouTube reels slider. Add up to 4 URLs.',
           type: 'array',
           of: [{type: 'url'}],
           hidden: ({parent}) => (parent as HeroMediaParent)?.mode !== 'slider',
@@ -146,22 +161,16 @@ export const work = defineType({
     }),
 
     defineField({
-      name: 'overviewLead',
-      title: 'Overview lead',
-      type: 'text',
-      rows: 3,
-      validation: (r) => r.required(),
-    }),
-
-    defineField({
       name: 'overviewTitle',
       title: 'Overview title',
+      description: 'Optional heading shown above the project body on the work page.',
       type: 'string',
     }),
 
     defineField({
       name: 'body',
       title: 'Body',
+      description: 'Main content shown on the work page.',
       type: 'array',
       of: [
         {type: 'block'},
@@ -189,6 +198,7 @@ export const work = defineType({
     defineField({
       name: 'publishedAt',
       title: 'Published at',
+      description: 'Used to order projects when no manual order applies.',
       type: 'datetime',
       initialValue: () => new Date().toISOString(),
     }),

@@ -54,11 +54,7 @@ export async function getBioWithPreview() {
 export type Category = {
   slug: string
   title: string
-  tagline: string
-  preview: { poster: string; webm?: string; mp4?: string }
-  overviewTitle?: string
-  overviewLead?: string
-  body?: unknown
+  sortOrder?: number
 }
 
 export type WorkMedia =
@@ -72,11 +68,10 @@ export type WorkItem = {
   category: string
   categorySlug: string
   client: string
-  tagline: string
   preview: { poster: string; webm?: string; mp4?: string }
+  thumbnailAutoplay?: boolean
   year?: string
   overviewTitle?: string
-  overviewLead?: string
   body?: unknown
   media?: WorkMedia
   featuredOnHome?: boolean
@@ -91,8 +86,8 @@ export async function getFeaturedWorks(limit = 3) {
       "category": category->title,
       "categorySlug": category->slug.current,
       client,
-      tagline,
       preview{ poster, webm, mp4 },
+      thumbnailAutoplay,
       featuredOnHome,
       featuredOrder
     }`
@@ -106,41 +101,19 @@ export async function getAllWorksForGrid() {
     "category": category->title,
     "categorySlug": category->slug.current,
     client,
-    tagline,
-    preview{ poster, webm, mp4 }
+    preview{ poster, webm, mp4 },
+    thumbnailAutoplay
   }`
   return sanity.fetch<WorkItem[]>(q)
 }
 
 export async function getCategories() {
-  const q = `*[_type == "category"] | order(title asc){
+  const q = `*[_type == "category"] | order(coalesce(sortOrder, 9999) asc, title asc){
     "slug": slug.current,
     title,
-    tagline,
-    preview{ poster, webm, mp4 },
-    overviewTitle,
-    overviewLead
+    sortOrder
   }`
   return sanity.fetch<Category[]>(q)
-}
-
-export async function getCategoryBySlug(slug: string) {
-  const q = `*[_type == "category" && slug.current == $slug][0]{
-    "slug": slug.current,
-    title,
-    tagline,
-    preview{ poster, webm, mp4 },
-    overviewTitle,
-    overviewLead,
-    body[]{
-      ...,
-      _type == "inlineImage" => {
-        ...,
-        "asset": asset->{ url }
-      }
-    }
-  }`
-  return sanity.fetch<Category | null>(q, { slug })
 }
 
 export async function getWorks() {
@@ -150,10 +123,9 @@ export async function getWorks() {
     "category": category->title,
     "categorySlug": category->slug.current,
     client,
-    tagline,
     preview{ poster, webm, mp4 },
-    overviewTitle,
-    overviewLead
+    thumbnailAutoplay,
+    overviewTitle
   }`
   return sanity.fetch<WorkItem[]>(q)
 }
@@ -166,10 +138,9 @@ export async function getWorksByCategorySlug(slug: string) {
     "category": category->title,
     "categorySlug": category->slug.current,
     client,
-    tagline,
     preview{ poster, webm, mp4 },
-    overviewTitle,
-    overviewLead
+    thumbnailAutoplay,
+    overviewTitle
   }`
   return sanity.fetch<WorkItem[]>(q, { slug })
 }
@@ -181,9 +152,9 @@ export async function getWorkBySlug(slug: string) {
     "category": category->title,
     "categorySlug": category->slug.current,
     client,
-    tagline,
     year,
     preview{ poster, webm, mp4 },
+    thumbnailAutoplay,
 
     media{
       mode,
@@ -192,7 +163,6 @@ export async function getWorkBySlug(slug: string) {
     },
 
     overviewTitle,
-    overviewLead,
     body[]{
       ...,
       _type == "inlineImage" => {
@@ -211,8 +181,8 @@ export async function getRecentWorks(limit = 2) {
     "category": category->title,
     "categorySlug": category->slug.current,
     client,
-    tagline,
-    preview{ poster, webm, mp4 }
+    preview{ poster, webm, mp4 },
+    thumbnailAutoplay
   }`
   return sanity.fetch<WorkItem[]>(q, { limit })
 }

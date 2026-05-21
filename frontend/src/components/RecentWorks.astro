@@ -1,16 +1,7 @@
 ---
-interface WorkItem {
-  slug: string
-  title: string
-  category: string
-  client: string
-  tagline: string
-  preview: {
-    poster: string
-    webm?: string
-    mp4?: string
-  }
-}
+import ThumbnailVideoController from "./ThumbnailVideoController.astro"
+import WorkThumbnailCard from "./WorkThumbnailCard.astro"
+import type { WorkItem } from "../lib/sanity.queries"
 
 const { items = [] } = Astro.props as { items: WorkItem[] }
 ---
@@ -19,93 +10,12 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
   <div class="rw-inner">
     <h2 class="rw-title">RECENT WORK</h2>
 
-    <div class="rw-list">
-      {
-        items.map((w: WorkItem) => (
-          <a class="rw-item" href={`/works/${w.slug}`} aria-label={`Open ${w.title}`}>
-            <div class="rw-left">
-              <div class="rw-name">{w.title}</div>
-
-              <div class="rw-meta">
-                <span>{w.category}</span>
-                <span>{w.client}</span>
-              </div>
-
-              <div class="rw-tag">{w.tagline}</div>
-            </div>
-
-            <div class="rw-right">
-              <div class="rw-media" data-hover-video>
-                <img class="rw-img" src={w.preview.poster} alt="" loading="lazy" />
-                <video class="rw-vid" muted loop playsinline preload="none" aria-hidden="true">
-                  {w.preview.webm ? <source data-src={w.preview.webm} type="video/webm" /> : null}
-                  {w.preview.mp4 ? <source data-src={w.preview.mp4} type="video/mp4" /> : null}
-                </video>
-              </div>
-            </div>
-          </a>
-        ))
-      }
+    <div class="rw-grid">
+      {items.map(work => <WorkThumbnailCard work={work} headingTag="h3" />)}
     </div>
   </div>
 
-  <script>
-    ;(() => {
-      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)")
-      if (!finePointer.matches) return
-
-      const items = document.querySelectorAll(".rw-item")
-      items.forEach(item => {
-        if (!(item instanceof HTMLElement)) return
-
-        const block = item.querySelector("[data-hover-video]")
-        if (!(block instanceof HTMLElement)) return
-
-        const video = block.querySelector("video")
-        if (!(video instanceof HTMLVideoElement)) return
-
-        const sources = Array.from(video.querySelectorAll("source"))
-        let hydrated = false
-        let playing = false
-
-        const hydrate = () => {
-          if (hydrated) return
-          hydrated = true
-          sources.forEach(s => {
-            const src = s.getAttribute("data-src")
-            if (src) s.setAttribute("src", src)
-          })
-          video.load()
-        }
-
-        const start = async () => {
-          if (playing) return
-          hydrate()
-          try {
-            await video.play()
-            playing = true
-            block.classList.add("is-playing")
-          } catch {
-            playing = false
-            block.classList.remove("is-playing")
-          }
-        }
-
-        const stop = () => {
-          playing = false
-          video.pause()
-          video.currentTime = 0
-          block.classList.remove("is-playing")
-        }
-
-        item.addEventListener("pointerenter", start)
-        item.addEventListener("pointerleave", stop)
-
-        item.addEventListener("focusin", start)
-        item.addEventListener("focusout", stop)
-      })
-    })()
-  </script>
+  <ThumbnailVideoController />
 
   <style>
     .rw {
@@ -114,7 +24,7 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
     }
 
     .rw-inner {
-      max-width: 72rem;
+      max-width: 96rem;
       margin: 0 auto;
       padding: 0 1rem;
     }
@@ -127,122 +37,21 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
       text-transform: uppercase;
     }
 
-    .rw-list {
-      display: flex;
-      flex-direction: column;
-      gap: 44px;
-    }
-
-    .rw-item {
+    .rw-grid {
       display: grid;
-      grid-template-columns: 0.44fr 0.56fr;
-      gap: 36px;
-      align-items: end;
-      text-decoration: none;
-      color: inherit;
-    }
-
-    .rw-left {
-      padding-bottom: 8px;
-      max-width: 36ch;
-    }
-
-    .rw-name {
-      font-size: 1.7rem;
-      line-height: 1.05;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .rw-tag {
-      margin-top: 10px;
-      max-width: 28ch;
-      font-size: 0.95rem;
-      line-height: 1.45;
-      letter-spacing: 0.02em;
-      font-family:
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        sans-serif;
-      text-transform: none;
-    }
-
-    .rw-meta {
-      margin-top: 14px;
-      display: flex;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 1.25rem;
-      font-size: 1rem;
-      letter-spacing: 0.18em;
-      color: color-mix(in srgb, var(--color-brand-secondary) 72%, transparent);
-      text-transform: uppercase;
     }
 
-    .rw-right {
-      width: 100%;
-    }
-
-    .rw-media {
-      position: relative;
-      overflow: hidden;
-      background: var(--color-brand-secondary);
-    }
-
-    .rw-img,
-    .rw-vid {
-      display: block;
-      width: 100%;
-      height: auto;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-    }
-
-    .rw-vid {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      transition: opacity 180ms ease;
-      pointer-events: none;
-    }
-
-    .rw-media.is-playing .rw-vid {
-      opacity: 1;
-    }
-
-    @media (max-width: 900px) {
-      .rw {
-        padding: 0;
+    @media (max-width: 1000px) {
+      .rw-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
+    }
 
-      .rw-list {
-        flex-direction: column-reverse;
-      }
-
-      .rw-item {
+    @media (max-width: 700px) {
+      .rw-grid {
         grid-template-columns: 1fr;
-        margin-bottom: 2.5rem;
-      }
-
-      .rw-item {
-        grid-template-columns: 1fr;
-      }
-
-      .rw-right {
-        grid-row: 1;
-      }
-
-      .rw-left {
-        grid-row: 2;
-        max-width: none;
-      }
-
-      .rw-tag {
-        max-width: 60ch;
-      }
-
-      .rw-meta {
-        gap: 0.5rem;
       }
     }
   </style>

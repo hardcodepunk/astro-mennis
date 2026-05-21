@@ -1,0 +1,69 @@
+<script>
+  ;(() => {
+    const initThumbnailVideos = () => {
+      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)")
+      const items = document.querySelectorAll("[data-thumbnail-card]")
+
+      items.forEach(item => {
+        if (!(item instanceof HTMLElement) || item.dataset.videoReady === "true") return
+        item.dataset.videoReady = "true"
+
+        const block = item.querySelector("[data-thumbnail-video]")
+        if (!(block instanceof HTMLElement)) return
+
+        const video = block.querySelector("video")
+        if (!(video instanceof HTMLVideoElement)) return
+
+        const sources = Array.from(video.querySelectorAll("source"))
+        const shouldAutoplay = block.dataset.autoplay === "true"
+        let hydrated = shouldAutoplay
+        let playing = false
+
+        const hydrate = () => {
+          if (hydrated) return
+          hydrated = true
+          sources.forEach(s => {
+            const src = s.getAttribute("data-src")
+            if (src) s.setAttribute("src", src)
+          })
+          video.load()
+        }
+
+        const start = async () => {
+          if (playing) return
+          hydrate()
+          try {
+            await video.play()
+            playing = true
+            block.classList.add("is-playing")
+          } catch {
+            playing = false
+            block.classList.remove("is-playing")
+          }
+        }
+
+        const stop = () => {
+          playing = false
+          video.pause()
+          video.currentTime = 0
+          block.classList.remove("is-playing")
+        }
+
+        if (shouldAutoplay) {
+          start()
+          return
+        }
+
+        if (!finePointer.matches) return
+
+        item.addEventListener("pointerenter", start)
+        item.addEventListener("pointerleave", stop)
+        item.addEventListener("focusin", start)
+        item.addEventListener("focusout", stop)
+      })
+    }
+
+    initThumbnailVideos()
+    document.addEventListener("astro:page-load", initThumbnailVideos)
+  })()
+</script>
