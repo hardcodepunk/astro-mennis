@@ -4,14 +4,12 @@ export async function getVideoHeroSettings() {
   const q = `*[_type == "siteSettings"][0].videoHero{
     mp4,
     webm,
-    poster,
-    showreelUrl
+    poster
   }`
   return sanity.fetch<{
     mp4?: string
     webm?: string
     poster?: string
-    showreelUrl?: string
   } | null>(q)
 }
 
