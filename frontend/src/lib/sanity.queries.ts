@@ -36,6 +36,8 @@ export async function getLogoMarquee() {
 
 export type BioWithPreviewDoc = {
   bio?: string
+  mirrorLayout?: boolean
+  bioTextScale?: number
   previewVideo?: {
     mp4?: string
     webm?: string
@@ -46,6 +48,8 @@ export type BioWithPreviewDoc = {
 export async function getBioWithPreview() {
   const q = `*[_type == "bioWithPreview"] | order(_updatedAt desc)[0]{
     bio,
+    mirrorLayout,
+    bioTextScale,
     previewVideo{ mp4, webm, poster }
   }`
   return sanity.fetch<BioWithPreviewDoc | null>(q)
