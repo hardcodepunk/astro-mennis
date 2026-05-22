@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro"
 import ProjectGrid from "../../components/ProjectGrid.astro"
 import { getCategories, getSeoSettings, getWorksByCategorySlug } from "../../lib/sanity.queries"
-import { breadcrumbJsonLd, categorySeoDescription, categorySeoTitle, socialImage } from "../../lib/seo"
+import { breadcrumbJsonLd, categorySeoDescription, categorySeoTitle, collectionPageJsonLd, socialImage } from "../../lib/seo"
 
 export async function getStaticPaths() {
   const categories = await getCategories()
@@ -20,14 +20,25 @@ const categoryTitle = activeCategory?.title ?? "Projects"
 const pageTitle = categorySeoTitle(seoSettings, categoryTitle, activeCategory?.seo?.title)
 const description = categorySeoDescription(seoSettings, categoryTitle, activeCategory?.seo?.description)
 const seoH1 = `${activeCategory?.title ?? "Projects"} projects`
-const jsonLd = breadcrumbJsonLd(
-  [
-    { name: "Home", path: "/" },
-    { name: "Projects", path: "/projects" },
-    { name: categoryTitle, path: `/projects/${categorySlug}` },
-  ],
-  seoSettings?.siteUrl,
-)
+const canonicalPath = activeCategory?.seo?.canonicalUrl ?? `/projects/${categorySlug}`
+const jsonLd = [
+  breadcrumbJsonLd(
+    [
+      { name: "Home", path: "/" },
+      { name: "Projects", path: "/projects" },
+      { name: categoryTitle, path: `/projects/${categorySlug}` },
+    ],
+    seoSettings?.siteUrl,
+  ),
+  collectionPageJsonLd({
+    seo: seoSettings,
+    title: pageTitle,
+    description,
+    path: canonicalPath,
+    works,
+    category: activeCategory,
+  }),
+]
 ---
 
 <Layout

@@ -3,7 +3,7 @@ import Layout from "../layouts/Layout.astro"
 import Videohero from "../components/CinematicHero.astro"
 import { getFeaturedWorks, getSeoSettings, getSiteSettings } from "../lib/sanity.queries"
 import FeaturedWorks from "../components/FeaturedWorks.astro"
-import { formatTitle, metaDescription, organizationJsonLd, socialImage, websiteJsonLd } from "../lib/seo"
+import { formatTitle, metaDescription, organizationJsonLd, personJsonLd, socialImage, websiteJsonLd } from "../lib/seo"
 
 const featuredWorks = await getFeaturedWorks(3)
 const siteSettings = await getSiteSettings()
@@ -13,7 +13,7 @@ const heroSettings = siteSettings?.videoHero
 const title = formatTitle(seoSettings, seoSettings?.homeTitle ?? "De Mennis", true)
 const description = metaDescription(seoSettings, seoSettings?.homeDescription)
 const image = socialImage(seoSettings, seoSettings?.homeSocialImage ?? heroSettings?.poster ?? featuredWorks[0]?.preview.poster)
-const jsonLd = [websiteJsonLd(seoSettings), organizationJsonLd(seoSettings)]
+const jsonLd = [websiteJsonLd(seoSettings), organizationJsonLd(seoSettings), personJsonLd(seoSettings)]
 ---
 
 <Layout

@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro"
 import ProjectGrid from "../../components/ProjectGrid.astro"
 import { getAllWorksForGrid, getCategories, getSeoSettings, getSiteSettings } from "../../lib/sanity.queries"
-import { breadcrumbJsonLd, formatTitle, metaDescription, socialImage } from "../../lib/seo"
+import { breadcrumbJsonLd, collectionPageJsonLd, formatTitle, metaDescription, socialImage } from "../../lib/seo"
 
 const works = await getAllWorksForGrid()
 const categories = await getCategories()
@@ -12,13 +12,22 @@ const seoH1 = seoSettings?.projectsH1 ?? siteSettings?.projectsSeoH1 ?? "Project
 const title = formatTitle(seoSettings, seoSettings?.projectsTitle ?? "Projects")
 const description = metaDescription(seoSettings, seoSettings?.projectsDescription)
 const image = socialImage(seoSettings, seoSettings?.projectsSocialImage ?? works[0]?.preview.poster)
-const jsonLd = breadcrumbJsonLd(
-  [
-    { name: "Home", path: "/" },
-    { name: "Projects", path: "/projects" },
-  ],
-  seoSettings?.siteUrl,
-)
+const jsonLd = [
+  breadcrumbJsonLd(
+    [
+      { name: "Home", path: "/" },
+      { name: "Projects", path: "/projects" },
+    ],
+    seoSettings?.siteUrl,
+  ),
+  collectionPageJsonLd({
+    seo: seoSettings,
+    title,
+    description,
+    path: "/projects",
+    works,
+  }),
+]
 ---
 
 <Layout

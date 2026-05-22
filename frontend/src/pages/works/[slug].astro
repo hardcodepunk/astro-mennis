@@ -4,7 +4,14 @@ import { getWorkBySlug, getWorks, getRecentWorks, getSeoSettings } from "../../l
 import { portableTextToHtml } from "../../lib/portableText"
 import RecentWorks from "../../components/RecentWorks.astro"
 import WorkMediaDisplay from "../../components/WorkMediaDisplay.astro"
-import { breadcrumbJsonLd, socialImage, workSeoDescription, workSeoTitle } from "../../lib/seo"
+import {
+  breadcrumbJsonLd,
+  creativeWorkJsonLd,
+  socialImage,
+  videoObjectJsonLd,
+  workSeoDescription,
+  workSeoTitle,
+} from "../../lib/seo"
 
 export async function getStaticPaths() {
   const works = await getWorks()
@@ -21,15 +28,33 @@ const bodyHtml = portableTextToHtml(work.body)
 const title = workSeoTitle(seoSettings, work)
 const description = workSeoDescription(seoSettings, work)
 const image = socialImage(seoSettings, work.seo?.socialImage ?? work.preview.poster)
-const jsonLd = breadcrumbJsonLd(
-  [
-    { name: "Home", path: "/" },
-    { name: "Projects", path: "/projects" },
-    { name: work.category, path: `/projects/${work.categorySlug}` },
-    { name: work.title, path: `/works/${work.slug}` },
-  ],
-  seoSettings?.siteUrl,
-)
+const canonicalPath = work.seo?.canonicalUrl ?? `/works/${work.slug}`
+const jsonLd = [
+  breadcrumbJsonLd(
+    [
+      { name: "Home", path: "/" },
+      { name: "Projects", path: "/projects" },
+      { name: work.category, path: `/projects/${work.categorySlug}` },
+      { name: work.title, path: `/works/${work.slug}` },
+    ],
+    seoSettings?.siteUrl,
+  ),
+  creativeWorkJsonLd({
+    seo: seoSettings,
+    work,
+    title,
+    description,
+    path: canonicalPath,
+    image,
+  }),
+  ...videoObjectJsonLd({
+    seo: seoSettings,
+    work,
+    title,
+    description,
+    image,
+  }),
+]
 ---
 
 <Layout

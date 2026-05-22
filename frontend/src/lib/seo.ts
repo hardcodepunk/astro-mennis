@@ -1,8 +1,12 @@
-import type { SeoSettings, WorkItem } from "./sanity.queries"
+import type { Category, SeoSettings, WorkItem } from "./sanity.queries"
 
 export const DEFAULT_SITE_URL = "https://www.demennis.be"
 export const DEFAULT_TITLE = "De Mennis"
 export const DEFAULT_DESCRIPTION = "Cinematic video work, brand films, reels and creative direction by De Mennis."
+export const DEFAULT_PERSON_NAME = "Dennis Van Stappen"
+export const DEFAULT_BASE_CITY = "Gent"
+export const DEFAULT_BASE_COUNTRY = "Belgium"
+export const DEFAULT_SAME_AS = ["https://www.instagram.com/demennis_/"]
 
 export type JsonLd = Record<string, unknown> | Record<string, unknown>[]
 
@@ -34,6 +38,42 @@ export function metaDescription(seo: SeoSettings | null | undefined, description
 
 export function socialImage(seo: SeoSettings | null | undefined, image?: string) {
   return image || seo?.defaultSocialImage
+}
+
+function brandName(seo: SeoSettings | null | undefined) {
+  return seo?.brandName || seo?.defaultTitle || DEFAULT_TITLE
+}
+
+function personName(seo: SeoSettings | null | undefined) {
+  return seo?.personName || DEFAULT_PERSON_NAME
+}
+
+function sameAs(seo: SeoSettings | null | undefined) {
+  return seo?.sameAs?.length ? seo.sameAs : DEFAULT_SAME_AS
+}
+
+function addressJsonLd(seo: SeoSettings | null | undefined) {
+  return {
+    "@type": "PostalAddress",
+    addressLocality: seo?.baseCity || DEFAULT_BASE_CITY,
+    addressCountry: seo?.baseCountry || DEFAULT_BASE_COUNTRY,
+  }
+}
+
+function personId(seo: SeoSettings | null | undefined) {
+  return `${normalizeSiteUrl(seo?.siteUrl)}/#person`
+}
+
+function organizationId(seo: SeoSettings | null | undefined) {
+  return `${normalizeSiteUrl(seo?.siteUrl)}/#organization`
+}
+
+function websiteId(seo: SeoSettings | null | undefined) {
+  return `${normalizeSiteUrl(seo?.siteUrl)}/#website`
+}
+
+function pageId(path: string, siteUrl?: string) {
+  return `${absoluteUrl(path, siteUrl)}#webpage`
 }
 
 export function replaceSeoTokens(template: string | undefined, tokens: Record<string, string | undefined>) {
@@ -100,8 +140,10 @@ export function websiteJsonLd(seo: SeoSettings | null | undefined) {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: seo?.defaultTitle || DEFAULT_TITLE,
+    "@id": websiteId(seo),
+    name: brandName(seo),
     url: siteUrl,
+    publisher: { "@id": organizationId(seo) },
   }
 }
 
@@ -111,10 +153,30 @@ export function organizationJsonLd(seo: SeoSettings | null | undefined) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: seo?.defaultTitle || DEFAULT_TITLE,
+    "@id": organizationId(seo),
+    name: brandName(seo),
     url: siteUrl,
     logo,
-    sameAs: ["https://www.instagram.com/demennis_/"],
+    address: addressJsonLd(seo),
+    founder: { "@id": personId(seo) },
+    sameAs: sameAs(seo),
+  }
+}
+
+export function personJsonLd(seo: SeoSettings | null | undefined) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": personId(seo),
+    name: personName(seo),
+    url: normalizeSiteUrl(seo?.siteUrl),
+    homeLocation: {
+      "@type": "Place",
+      name: `${seo?.baseCity || DEFAULT_BASE_CITY}, ${seo?.baseCountry || DEFAULT_BASE_COUNTRY}`,
+      address: addressJsonLd(seo),
+    },
+    worksFor: { "@id": organizationId(seo) },
+    sameAs: sameAs(seo),
   }
 }
 
@@ -129,4 +191,153 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[], siteUr
       item: absoluteUrl(item.path, siteUrl),
     })),
   }
+}
+
+export function collectionPageJsonLd(params: {
+  seo: SeoSettings | null | undefined
+  title: string
+  description: string
+  path: string
+  works: WorkItem[]
+  category?: Category | null
+}) {
+  const { seo, title, description, path, works, category } = params
+  const url = absoluteUrl(path, seo?.siteUrl)
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": pageId(path, seo?.siteUrl),
+    name: title,
+    description,
+    url,
+    isPartOf: { "@id": websiteId(seo) },
+    publisher: { "@id": organizationId(seo) },
+    about: category
+      ? {
+          "@type": "Thing",
+          name: category.title,
+        }
+      : undefined,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: works.map((work, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: absoluteUrl(`/works/${work.slug}`, seo?.siteUrl),
+        name: work.title,
+      })),
+    },
+  }
+}
+
+export function creativeWorkJsonLd(params: {
+  seo: SeoSettings | null | undefined
+  work: WorkItem
+  title: string
+  description: string
+  path: string
+  image?: string
+}) {
+  const { seo, work, title, description, path, image } = params
+  return {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "@id": `${absoluteUrl(path, seo?.siteUrl)}#creative-work`,
+    name: title,
+    headline: work.title,
+    description,
+    url: absoluteUrl(path, seo?.siteUrl),
+    image: absoluteUrl(image ?? work.preview.poster, seo?.siteUrl),
+    datePublished: work.publishedAt,
+    dateModified: work.updatedAt,
+    creator: { "@id": personId(seo) },
+    publisher: { "@id": organizationId(seo) },
+    locationCreated: {
+      "@type": "Place",
+      name: `${seo?.baseCity || DEFAULT_BASE_CITY}, ${seo?.baseCountry || DEFAULT_BASE_COUNTRY}`,
+      address: addressJsonLd(seo),
+    },
+    about: [
+      work.category
+        ? {
+            "@type": "Thing",
+            name: work.category,
+          }
+        : undefined,
+      work.client
+        ? {
+            "@type": "Organization",
+            name: work.client,
+          }
+        : undefined,
+    ].filter(Boolean),
+  }
+}
+
+export function videoObjectJsonLd(params: {
+  seo: SeoSettings | null | undefined
+  work: WorkItem
+  title: string
+  description: string
+  image?: string
+}) {
+  const { seo, work, title, description, image } = params
+  const thumbnailUrl = absoluteUrl(image ?? work.preview.poster, seo?.siteUrl)
+  const base = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: title,
+    description,
+    thumbnailUrl: thumbnailUrl ? [thumbnailUrl] : undefined,
+    uploadDate: work.publishedAt,
+    dateModified: work.updatedAt,
+    creator: { "@id": personId(seo) },
+    publisher: { "@id": organizationId(seo) },
+  }
+
+  if (work.media?.mode === "single") {
+    const embedUrl = youtubeEmbedUrl(work.media.youtubeUrl)
+    if (!embedUrl) return []
+    return [{ ...base, embedUrl }]
+  }
+
+  if (work.media?.mode === "slider") {
+    return (work.media.reels ?? [])
+      .map(url => youtubeEmbedUrl(url))
+      .filter((url): url is string => Boolean(url))
+      .map((embedUrl, index) => ({
+        ...base,
+        name: index === 0 ? title : `${title} reel ${index + 1}`,
+        embedUrl,
+      }))
+  }
+
+  const contentUrl = work.preview.mp4 || work.preview.webm
+  if (!contentUrl) return []
+  return [{ ...base, contentUrl: absoluteUrl(contentUrl, seo?.siteUrl) }]
+}
+
+function youtubeEmbedUrl(input?: string) {
+  const id = youtubeId(input)
+  return id ? `https://www.youtube.com/embed/${id}` : undefined
+}
+
+function youtubeId(input?: string) {
+  if (!input) return undefined
+  const s = input.trim()
+  if (!s) return undefined
+
+  const patterns = [
+    /(?:youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/,
+    /(?:youtu\.be\/)([A-Za-z0-9_-]{6,})/,
+    /[?&]v=([A-Za-z0-9_-]{6,})/,
+    /^([A-Za-z0-9_-]{6,})$/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = s.match(pattern)
+    if (match?.[1]) return match[1]
+  }
+
+  return undefined
 }

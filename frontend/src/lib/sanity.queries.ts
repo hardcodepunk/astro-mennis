@@ -31,6 +31,11 @@ export type SeoSettings = {
   defaultSocialImage?: string
   defaultSocialImageAlt?: string
   twitterHandle?: string
+  brandName?: string
+  personName?: string
+  baseCity?: string
+  baseCountry?: string
+  sameAs?: string[]
   homeH1?: string
   homeTitle?: string
   homeDescription?: string
@@ -70,6 +75,11 @@ export async function getSeoSettings() {
     defaultSocialImage,
     defaultSocialImageAlt,
     twitterHandle,
+    brandName,
+    personName,
+    baseCity,
+    baseCountry,
+    sameAs,
     homeH1,
     homeTitle,
     homeDescription,
@@ -170,6 +180,8 @@ export type WorkItem = {
   preview: { poster: string; webm?: string; mp4?: string }
   thumbnailAutoplay?: boolean
   year?: string
+  publishedAt?: string
+  updatedAt?: string
   overviewTitle?: string
   body?: unknown
   media?: WorkMedia
@@ -196,6 +208,8 @@ export async function getFeaturedWorks(limit = 3) {
       "category": category->title,
       "categorySlug": category->slug.current,
       client,
+      publishedAt,
+      "updatedAt": _updatedAt,
       preview{ poster, webm, mp4 },
       thumbnailAutoplay,
       featuredOnHome,
@@ -211,6 +225,8 @@ export async function getAllWorksForGrid() {
     "category": category->title,
     "categorySlug": category->slug.current,
     client,
+    publishedAt,
+    "updatedAt": _updatedAt,
     preview{ poster, webm, mp4 },
     thumbnailAutoplay
   }`
@@ -266,6 +282,8 @@ export async function getWorkBySlug(slug: string) {
     "categorySlug": category->slug.current,
     client,
     year,
+    publishedAt,
+    "updatedAt": _updatedAt,
     preview{ poster, webm, mp4 },
     thumbnailAutoplay,
     ${seoSelection},
