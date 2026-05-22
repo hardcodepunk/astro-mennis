@@ -3,15 +3,29 @@ import Layout from "../layouts/Layout.astro"
 import Videohero from "../components/CinematicHero.astro"
 import { getFeaturedWorks, getSeoSettings, getSiteSettings } from "../lib/sanity.queries"
 import FeaturedWorks from "../components/FeaturedWorks.astro"
+import { formatTitle, metaDescription, organizationJsonLd, socialImage, websiteJsonLd } from "../lib/seo"
 
 const featuredWorks = await getFeaturedWorks(3)
 const siteSettings = await getSiteSettings()
 const seoSettings = await getSeoSettings()
 const seoH1 = seoSettings?.homeH1 ?? siteSettings?.homeSeoH1 ?? "De Mennis"
 const heroSettings = siteSettings?.videoHero
+const title = formatTitle(seoSettings, seoSettings?.homeTitle ?? "De Mennis", true)
+const description = metaDescription(seoSettings, seoSettings?.homeDescription)
+const image = socialImage(seoSettings, seoSettings?.homeSocialImage ?? heroSettings?.poster ?? featuredWorks[0]?.preview.poster)
+const jsonLd = [websiteJsonLd(seoSettings), organizationJsonLd(seoSettings)]
 ---
 
-<Layout title="De Mennis">
+<Layout
+  title={title}
+  description={description}
+  image={image}
+  imageAlt={seoSettings?.defaultSocialImageAlt}
+  noindex={seoSettings?.homeNoindex}
+  siteUrl={seoSettings?.siteUrl}
+  twitterHandle={seoSettings?.twitterHandle}
+  jsonLd={jsonLd}
+>
   <h1 class="sr-only">{seoH1}</h1>
 
   <Videohero

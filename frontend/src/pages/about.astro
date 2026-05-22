@@ -2,9 +2,11 @@
 import Layout from "../layouts/Layout.astro"
 import BioWithPreview from "../components/BioWithPreview.astro"
 import LogosMarquee from "../components/LogosMarquee.astro"
-import { getBioWithPreview } from "../lib/sanity.queries"
+import { getBioWithPreview, getSeoSettings } from "../lib/sanity.queries"
+import { breadcrumbJsonLd, formatTitle, metaDescription, socialImage } from "../lib/seo"
 
 const aboutDoc = await getBioWithPreview()
+const seoSettings = await getSeoSettings()
 
 const DEFAULT_HERO_MP4 =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4"
@@ -17,9 +19,29 @@ const heroTitle = aboutDoc?.heroTitle ?? aboutDoc?.seoH1 ?? "Filmmaking with cla
 const heroMp4 = aboutDoc?.heroVideo?.mp4 ?? DEFAULT_HERO_MP4
 const heroWebm = aboutDoc?.heroVideo?.webm ?? DEFAULT_HERO_WEBM
 const heroPoster = aboutDoc?.heroVideo?.poster ?? DEFAULT_HERO_POSTER
+const title = formatTitle(seoSettings, seoSettings?.aboutTitle ?? "About")
+const description = metaDescription(seoSettings, seoSettings?.aboutDescription)
+const heroPosterImage = heroPoster.includes("/video/upload/") ? DEFAULT_HERO_POSTER : heroPoster
+const image = socialImage(seoSettings, seoSettings?.aboutSocialImage ?? heroPosterImage)
+const jsonLd = breadcrumbJsonLd(
+  [
+    { name: "Home", path: "/" },
+    { name: "About", path: "/about" },
+  ],
+  seoSettings?.siteUrl,
+)
 ---
 
-<Layout title="About | De Mennis">
+<Layout
+  title={title}
+  description={description}
+  image={image}
+  imageAlt={seoSettings?.defaultSocialImageAlt}
+  noindex={seoSettings?.aboutNoindex}
+  siteUrl={seoSettings?.siteUrl}
+  twitterHandle={seoSettings?.twitterHandle}
+  jsonLd={jsonLd}
+>
   <main class="about-page">
     <section class="about-page__hero">
       <div class="about-page__inner about-page__hero-inner">

@@ -24,14 +24,70 @@ export async function getSiteSettings() {
 }
 
 export type SeoSettings = {
+  siteUrl?: string
+  defaultTitle?: string
+  titleTemplate?: string
+  defaultDescription?: string
+  defaultSocialImage?: string
+  defaultSocialImageAlt?: string
+  twitterHandle?: string
   homeH1?: string
+  homeTitle?: string
+  homeDescription?: string
+  homeSocialImage?: string
+  homeNoindex?: boolean
   projectsH1?: string
+  projectsTitle?: string
+  projectsDescription?: string
+  projectsSocialImage?: string
+  projectsNoindex?: boolean
+  aboutTitle?: string
+  aboutDescription?: string
+  aboutSocialImage?: string
+  aboutNoindex?: boolean
+  categoryTitleTemplate?: string
+  categoryDescriptionTemplate?: string
+  workTitleTemplate?: string
+  workDescriptionTemplate?: string
+}
+
+export type DocumentSeo = {
+  title?: string
+  description?: string
+  socialImage?: string
+  socialImageAlt?: string
+  canonicalUrl?: string
+  noindex?: boolean
+  focusKeyword?: string
 }
 
 export async function getSeoSettings() {
   const q = `*[_type == "seo"][0]{
+    siteUrl,
+    defaultTitle,
+    titleTemplate,
+    defaultDescription,
+    defaultSocialImage,
+    defaultSocialImageAlt,
+    twitterHandle,
     homeH1,
-    projectsH1
+    homeTitle,
+    homeDescription,
+    homeSocialImage,
+    homeNoindex,
+    projectsH1,
+    projectsTitle,
+    projectsDescription,
+    projectsSocialImage,
+    projectsNoindex,
+    aboutTitle,
+    aboutDescription,
+    aboutSocialImage,
+    aboutNoindex,
+    categoryTitleTemplate,
+    categoryDescriptionTemplate,
+    workTitleTemplate,
+    workDescriptionTemplate
   }`
   return sanity.fetch<SeoSettings | null>(q)
 }
@@ -97,6 +153,7 @@ export type Category = {
   slug: string
   title: string
   sortOrder?: number
+  seo?: DocumentSeo
 }
 
 export type WorkMedia =
@@ -118,7 +175,18 @@ export type WorkItem = {
   media?: WorkMedia
   featuredOnHome?: boolean
   featuredOrder?: number
+  seo?: DocumentSeo
 }
+
+const seoSelection = `seo{
+  title,
+  description,
+  socialImage,
+  socialImageAlt,
+  canonicalUrl,
+  noindex,
+  focusKeyword
+}`
 
 export async function getFeaturedWorks(limit = 3) {
   const q = `*[_type == "work" && featuredOnHome == true]
@@ -153,7 +221,8 @@ export async function getCategories() {
   const q = `*[_type == "category"] | order(coalesce(sortOrder, 9999) asc, title asc){
     "slug": slug.current,
     title,
-    sortOrder
+    sortOrder,
+    ${seoSelection}
   }`
   return sanity.fetch<Category[]>(q)
 }
@@ -167,7 +236,8 @@ export async function getWorks() {
     client,
     preview{ poster, webm, mp4 },
     thumbnailAutoplay,
-    overviewTitle
+    overviewTitle,
+    ${seoSelection}
   }`
   return sanity.fetch<WorkItem[]>(q)
 }
@@ -182,7 +252,8 @@ export async function getWorksByCategorySlug(slug: string) {
     client,
     preview{ poster, webm, mp4 },
     thumbnailAutoplay,
-    overviewTitle
+    overviewTitle,
+    ${seoSelection}
   }`
   return sanity.fetch<WorkItem[]>(q, { slug })
 }
@@ -197,6 +268,7 @@ export async function getWorkBySlug(slug: string) {
     year,
     preview{ poster, webm, mp4 },
     thumbnailAutoplay,
+    ${seoSelection},
 
     media{
       mode,

@@ -1,7 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro"
 import ProjectGrid from "../../components/ProjectGrid.astro"
-import { getCategories, getWorksByCategorySlug } from "../../lib/sanity.queries"
+import { getCategories, getSeoSettings, getWorksByCategorySlug } from "../../lib/sanity.queries"
+import { breadcrumbJsonLd, categorySeoDescription, categorySeoTitle, socialImage } from "../../lib/seo"
 
 export async function getStaticPaths() {
   const categories = await getCategories()
@@ -13,12 +14,33 @@ export async function getStaticPaths() {
 const { categorySlug } = Astro.params
 const categories = await getCategories()
 const works = await getWorksByCategorySlug(categorySlug!)
+const seoSettings = await getSeoSettings()
 const activeCategory = categories.find(category => category.slug === categorySlug)
-const pageTitle = `${activeCategory?.title ?? "Projects"} | De Mennis`
+const categoryTitle = activeCategory?.title ?? "Projects"
+const pageTitle = categorySeoTitle(seoSettings, categoryTitle, activeCategory?.seo?.title)
+const description = categorySeoDescription(seoSettings, categoryTitle, activeCategory?.seo?.description)
 const seoH1 = `${activeCategory?.title ?? "Projects"} projects`
+const jsonLd = breadcrumbJsonLd(
+  [
+    { name: "Home", path: "/" },
+    { name: "Projects", path: "/projects" },
+    { name: categoryTitle, path: `/projects/${categorySlug}` },
+  ],
+  seoSettings?.siteUrl,
+)
 ---
 
-<Layout title={pageTitle}>
+<Layout
+  title={pageTitle}
+  description={description}
+  canonical={activeCategory?.seo?.canonicalUrl}
+  image={socialImage(seoSettings, activeCategory?.seo?.socialImage ?? works[0]?.preview.poster)}
+  imageAlt={activeCategory?.seo?.socialImageAlt ?? seoSettings?.defaultSocialImageAlt}
+  noindex={activeCategory?.seo?.noindex}
+  siteUrl={seoSettings?.siteUrl}
+  twitterHandle={seoSettings?.twitterHandle}
+  jsonLd={jsonLd}
+>
   <main>
     <h1 class="sr-only">{seoH1}</h1>
     <ProjectGrid items={works} categories={categories} activeSlug={categorySlug} />

@@ -5,13 +5,33 @@ import "@fontsource/bebas-neue/400.css"
 import { ClientRouter } from "astro:transitions"
 import Header from "../components/Header.astro"
 import Footer from "../components/Footer.astro"
+import { absoluteUrl, DEFAULT_DESCRIPTION, DEFAULT_SITE_URL, DEFAULT_TITLE, normalizeSiteUrl } from "../lib/seo"
 
 const transparentHeaderPaths = ["/", "/about"]
 const hasTransparentHeader = transparentHeaderPaths.includes(Astro.url.pathname)
 const {
-  title = "De Mennis",
-  description = "Cinematic video work by De Mennis.",
+  title = DEFAULT_TITLE,
+  description = DEFAULT_DESCRIPTION,
+  canonical,
+  canonicalPath,
+  image,
+  imageAlt,
+  noindex = false,
+  ogType = "website",
+  twitterCard = "summary_large_image",
+  twitterHandle,
+  siteUrl = Astro.site?.toString() ?? DEFAULT_SITE_URL,
+  jsonLd,
 } = Astro.props
+
+const baseUrl = normalizeSiteUrl(siteUrl)
+const canonicalUrl = absoluteUrl(canonical ?? canonicalPath ?? Astro.url.pathname, baseUrl)
+const socialImageUrl = absoluteUrl(image, baseUrl)
+const jsonLdItems = Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []
+
+function escapeJsonLd(value: unknown) {
+  return JSON.stringify(value).replaceAll("</script", "<\\/script")
+}
 ---
 
 <!doctype html>
@@ -21,6 +41,23 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex, nofollow" /> : null}
+    {canonicalUrl ? <link rel="canonical" href={canonicalUrl} /> : null}
+
+    <meta property="og:site_name" content="De Mennis" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {canonicalUrl ? <meta property="og:url" content={canonicalUrl} /> : null}
+    {socialImageUrl ? <meta property="og:image" content={socialImageUrl} /> : null}
+    {socialImageUrl && imageAlt ? <meta property="og:image:alt" content={imageAlt} /> : null}
+
+    <meta name="twitter:card" content={twitterCard} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {socialImageUrl ? <meta name="twitter:image" content={socialImageUrl} /> : null}
+    {socialImageUrl && imageAlt ? <meta name="twitter:image:alt" content={imageAlt} /> : null}
+    {twitterHandle ? <meta name="twitter:site" content={twitterHandle} /> : null}
 
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -30,6 +67,8 @@ const {
     <meta name="theme-color" content="#b8a7e2" />
     <ClientRouter />
 
+    {jsonLdItems.map(item => <script type="application/ld+json" set:html={escapeJsonLd(item)} />)}
+    <slot name="jsonLd" />
     <slot name="head" />
   </head>
   <body class="min-h-screen flex flex-col">

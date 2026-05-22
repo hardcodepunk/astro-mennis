@@ -1,9 +1,10 @@
 ---
 import Layout from "../../layouts/Layout.astro"
-import { getWorkBySlug, getWorks, getRecentWorks } from "../../lib/sanity.queries"
+import { getWorkBySlug, getWorks, getRecentWorks, getSeoSettings } from "../../lib/sanity.queries"
 import { portableTextToHtml } from "../../lib/portableText"
 import RecentWorks from "../../components/RecentWorks.astro"
 import WorkMediaDisplay from "../../components/WorkMediaDisplay.astro"
+import { breadcrumbJsonLd, socialImage, workSeoDescription, workSeoTitle } from "../../lib/seo"
 
 export async function getStaticPaths() {
   const works = await getWorks()
@@ -14,11 +15,35 @@ const { slug } = Astro.params
 const work = await getWorkBySlug(slug)
 if (!work) throw new Error(`Work not found: ${slug}`)
 
+const seoSettings = await getSeoSettings()
 const recent = await getRecentWorks(3, slug)
 const bodyHtml = portableTextToHtml(work.body)
+const title = workSeoTitle(seoSettings, work)
+const description = workSeoDescription(seoSettings, work)
+const image = socialImage(seoSettings, work.seo?.socialImage ?? work.preview.poster)
+const jsonLd = breadcrumbJsonLd(
+  [
+    { name: "Home", path: "/" },
+    { name: "Projects", path: "/projects" },
+    { name: work.category, path: `/projects/${work.categorySlug}` },
+    { name: work.title, path: `/works/${work.slug}` },
+  ],
+  seoSettings?.siteUrl,
+)
 ---
 
-<Layout title={`${work.title} | De Mennis`}>
+<Layout
+  title={title}
+  description={description}
+  canonical={work.seo?.canonicalUrl}
+  image={image}
+  imageAlt={work.seo?.socialImageAlt ?? work.title}
+  noindex={work.seo?.noindex}
+  ogType="article"
+  siteUrl={seoSettings?.siteUrl}
+  twitterHandle={seoSettings?.twitterHandle}
+  jsonLd={jsonLd}
+>
   <main class="page">
     <div class="page-inner">
       <h1 class="page-title text-brand-secondary">{work.title}</h1>

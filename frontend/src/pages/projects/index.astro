@@ -2,15 +2,35 @@
 import Layout from "../../layouts/Layout.astro"
 import ProjectGrid from "../../components/ProjectGrid.astro"
 import { getAllWorksForGrid, getCategories, getSeoSettings, getSiteSettings } from "../../lib/sanity.queries"
+import { breadcrumbJsonLd, formatTitle, metaDescription, socialImage } from "../../lib/seo"
 
 const works = await getAllWorksForGrid()
 const categories = await getCategories()
 const siteSettings = await getSiteSettings()
 const seoSettings = await getSeoSettings()
 const seoH1 = seoSettings?.projectsH1 ?? siteSettings?.projectsSeoH1 ?? "Projects"
+const title = formatTitle(seoSettings, seoSettings?.projectsTitle ?? "Projects")
+const description = metaDescription(seoSettings, seoSettings?.projectsDescription)
+const image = socialImage(seoSettings, seoSettings?.projectsSocialImage ?? works[0]?.preview.poster)
+const jsonLd = breadcrumbJsonLd(
+  [
+    { name: "Home", path: "/" },
+    { name: "Projects", path: "/projects" },
+  ],
+  seoSettings?.siteUrl,
+)
 ---
 
-<Layout title="Projects | De Mennis">
+<Layout
+  title={title}
+  description={description}
+  image={image}
+  imageAlt={seoSettings?.defaultSocialImageAlt}
+  noindex={seoSettings?.projectsNoindex}
+  siteUrl={seoSettings?.siteUrl}
+  twitterHandle={seoSettings?.twitterHandle}
+  jsonLd={jsonLd}
+>
   <main>
     <h1 class="sr-only">{seoH1}</h1>
     <ProjectGrid items={works} categories={categories} activeSlug="all" />
