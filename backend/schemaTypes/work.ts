@@ -1,4 +1,12 @@
 import {defineField, defineType} from 'sanity'
+import {
+  cloudinaryMp4Url,
+  cloudinaryPosterUrl,
+  cloudinaryWebmUrl,
+  httpsImageUrl,
+  httpsUrl,
+  youtubeUrl,
+} from './validation'
 
 type HeroMediaParent = {mode?: 'preview' | 'single' | 'slider'}
 
@@ -77,19 +85,21 @@ export const work = defineType({
           title: 'Thumbnail poster URL',
           description: 'Static image shown before the video plays.',
           type: 'url',
-          validation: (r) => r.required(),
+          validation: (r) => r.required().uri({scheme: ['https']}).custom(cloudinaryPosterUrl),
         }),
         defineField({
           name: 'webm',
           title: 'Thumbnail WEBM URL',
           description: 'Optional. Preferred lightweight video format for thumbnail playback.',
           type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryWebmUrl),
         }),
         defineField({
           name: 'mp4',
           title: 'Thumbnail MP4 URL',
           description: 'Optional fallback video format for thumbnail playback.',
           type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryMp4Url),
         }),
       ],
       validation: (r) => r.required(),
@@ -134,10 +144,11 @@ export const work = defineType({
           type: 'url',
           hidden: ({parent}) => (parent as HeroMediaParent)?.mode !== 'single',
           validation: (r) =>
-            r.custom((val, ctx) => {
+            r.uri({scheme: ['https']}).custom((val, ctx) => {
               const mode = (ctx.parent as HeroMediaParent | undefined)?.mode
               if (mode !== 'single') return true
-              return val ? true : 'Required for single YouTube video'
+              if (!val) return 'Required for single YouTube video'
+              return youtubeUrl(val)
             }),
         }),
 
@@ -146,7 +157,12 @@ export const work = defineType({
           title: 'YouTube reels URLs',
           description: 'Required when hero media type is YouTube reels slider. Add up to 4 URLs.',
           type: 'array',
-          of: [{type: 'url'}],
+          of: [
+            {
+              type: 'url',
+              validation: (r) => r.uri({scheme: ['https']}).custom(youtubeUrl),
+            },
+          ],
           hidden: ({parent}) => (parent as HeroMediaParent)?.mode !== 'slider',
           validation: (r) =>
             r.custom((val, ctx) => {
@@ -194,6 +210,7 @@ export const work = defineType({
           title: 'Social image URL',
           description: 'Absolute image URL used for Open Graph and Twitter previews.',
           type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(httpsImageUrl),
         }),
         defineField({
           name: 'socialImageAlt',
@@ -205,6 +222,7 @@ export const work = defineType({
           title: 'Canonical URL override',
           description: 'Only use when this work page should canonicalize to a different URL.',
           type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(httpsUrl),
         }),
         defineField({
           name: 'noindex',

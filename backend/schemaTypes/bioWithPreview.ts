@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {cloudinaryMp4Url, cloudinaryPosterUrl, cloudinaryWebmUrl} from './validation'
 
 export const bioWithPreview = defineType({
   name: 'bioWithPreview',
@@ -29,19 +30,21 @@ export const bioWithPreview = defineType({
           title: 'Poster URL',
           description: 'Static fallback image shown before the hero video loads.',
           type: 'url',
-          validation: (r) => r.required(),
+          validation: (r) => r.required().uri({scheme: ['https']}).custom(cloudinaryPosterUrl),
         }),
         defineField({
           name: 'webm',
           title: 'WEBM URL',
           description: 'Preferred browser video format.',
           type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryWebmUrl),
         }),
         defineField({
           name: 'mp4',
           title: 'MP4 URL',
           description: 'Fallback video format.',
           type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryMp4Url),
         }),
       ],
     }),
@@ -77,19 +80,21 @@ export const bioWithPreview = defineType({
           title: 'Poster URL',
           description: 'Static fallback image shown before the video loads.',
           type: 'url',
-          validation: (r) => r.required(),
+          validation: (r) => r.required().uri({scheme: ['https']}).custom(cloudinaryPosterUrl),
         }),
         defineField({
           name: 'webm',
           title: 'WEBM URL',
           description: 'Preferred browser video format.',
           type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryWebmUrl),
         }),
         defineField({
           name: 'mp4',
           title: 'MP4 URL',
           description: 'Fallback video format.',
           type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryMp4Url),
         }),
       ],
     }),

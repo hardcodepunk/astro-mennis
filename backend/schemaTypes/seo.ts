@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {httpsImageUrl, httpsUrl} from './validation'
 
 export const seo = defineType({
   name: 'seo',
@@ -17,7 +18,7 @@ export const seo = defineType({
       type: 'url',
       initialValue: 'https://www.demennis.be',
       group: 'global',
-      validation: (r) => r.required(),
+      validation: (r) => r.required().uri({scheme: ['https']}).custom(httpsUrl),
     }),
     defineField({
       name: 'defaultTitle',
@@ -53,6 +54,7 @@ export const seo = defineType({
       description: 'Absolute image URL used for Open Graph and Twitter previews when a page has no custom image.',
       type: 'url',
       group: 'global',
+      validation: (r) => r.uri({scheme: ['https']}).custom(httpsImageUrl),
     }),
     defineField({
       name: 'defaultSocialImageAlt',
@@ -106,7 +108,12 @@ export const seo = defineType({
       title: 'Same-as profile URLs',
       description: 'Official public profiles used in Person and Organization structured data.',
       type: 'array',
-      of: [{type: 'url'}],
+      of: [
+        {
+          type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(httpsUrl),
+        },
+      ],
       initialValue: ['https://www.instagram.com/demennis_/'],
       group: 'global',
     }),
@@ -140,6 +147,7 @@ export const seo = defineType({
       title: 'Homepage social image URL',
       type: 'url',
       group: 'pages',
+      validation: (r) => r.uri({scheme: ['https']}).custom(httpsImageUrl),
     }),
     defineField({
       name: 'homeNoindex',
@@ -178,6 +186,7 @@ export const seo = defineType({
       title: 'Projects page social image URL',
       type: 'url',
       group: 'pages',
+      validation: (r) => r.uri({scheme: ['https']}).custom(httpsImageUrl),
     }),
     defineField({
       name: 'projectsNoindex',
@@ -207,6 +216,7 @@ export const seo = defineType({
       title: 'About page social image URL',
       type: 'url',
       group: 'pages',
+      validation: (r) => r.uri({scheme: ['https']}).custom(httpsImageUrl),
     }),
     defineField({
       name: 'aboutNoindex',

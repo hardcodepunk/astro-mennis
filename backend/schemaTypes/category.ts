@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {httpsImageUrl, httpsUrl} from './validation'
 
 export const category = defineType({
   name: 'category',
@@ -57,6 +58,7 @@ export const category = defineType({
           title: 'Social image URL',
           description: 'Absolute image URL used for Open Graph and Twitter previews.',
           type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(httpsImageUrl),
         }),
         defineField({
           name: 'socialImageAlt',
@@ -68,6 +70,7 @@ export const category = defineType({
           title: 'Canonical URL override',
           description: 'Only use when this category should canonicalize to a different URL.',
           type: 'url',
+          validation: (r) => r.uri({scheme: ['https']}).custom(httpsUrl),
         }),
         defineField({
           name: 'noindex',
