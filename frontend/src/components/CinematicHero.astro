@@ -1,5 +1,6 @@
 ---
 import { getVideoHeroSettings } from "../lib/sanity.queries"
+import { cloudinaryImage, safePosterUrl } from "../lib/media"
 
 const DEFAULT_MP4 =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4"
@@ -18,6 +19,8 @@ const {
   poster = settings?.poster ?? DEFAULT_POSTER,
   minRevealMs = 600,
 } = props
+const safePoster = safePosterUrl(poster, DEFAULT_POSTER)
+const optimizedPoster = cloudinaryImage(safePoster, 1920)
 ---
 
 <section class="vh-hero" data-min-reveal={minRevealMs}>
@@ -26,9 +29,11 @@ const {
     muted
     playsinline
     preload="metadata"
-    poster={poster}
+    poster={optimizedPoster}
     autoplay
     loop
+    width="1920"
+    height="1080"
     disableRemotePlayback
     aria-hidden="true"
   >

@@ -1,6 +1,6 @@
 ---
-import "plyr/dist/plyr.css"
-import PlyrPreview from "./PlyrPreview.astro"
+import VideoPreview from "./VideoPreview.astro"
+import { youtubeId as parseYouTubeId, youtubePoster } from "../lib/media"
 
 type WorkMedia = { mode: "preview" } | { mode: "single"; youtubeUrl?: string } | { mode: "slider"; reels?: string[] }
 
@@ -13,23 +13,7 @@ const { work } = Astro.props as {
 }
 
 function getYouTubeId(input?: string | null): string | null {
-  if (!input) return null
-  const s = String(input).trim()
-  if (!s) return null
-
-  const m1 = s.match(/(?:youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/)
-  if (m1?.[1]) return m1[1]
-
-  const m2 = s.match(/(?:youtu\.be\/)([A-Za-z0-9_-]{6,})/)
-  if (m2?.[1]) return m2[1]
-
-  const m3 = s.match(/[?&]v=([A-Za-z0-9_-]{6,})/)
-  if (m3?.[1]) return m3[1]
-
-  const m4 = s.match(/^[A-Za-z0-9_-]{6,}$/)
-  if (m4) return s
-
-  return null
+  return parseYouTubeId(input) ?? null
 }
 
 const media = work.media
@@ -46,11 +30,11 @@ const hasYouTube = Boolean(youtubeId)
 const hasSlider = reelIds.length > 0
 
 function ytPoster(id: string) {
-  return `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`
+  return youtubePoster(id, "maxres")!
 }
 
 function ytPosterFallback(id: string) {
-  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+  return youtubePoster(id, "hq")!
 }
 ---
 
@@ -59,19 +43,16 @@ function ytPosterFallback(id: string) {
     hasYouTube ? (
       <div class="hero-16x9">
         <div class="yt-frame yt-frame--16x9" data-yt-frame>
-          <div
-            class="plyr__video-embed yt-embed"
-            data-yt-embed
-            data-yt-ratio="16:9"
-            data-plyr-provider="youtube"
-            data-plyr-embed-id={youtubeId}
-          />
+          <div class="yt-embed" data-yt-embed data-yt-id={youtubeId} />
           <button class="yt-overlay" type="button" aria-label="Play video" data-yt-overlay>
             <img
               class="yt-overlay__img"
               alt=""
-              loading="lazy"
+              loading="eager"
               decoding="async"
+              fetchpriority="high"
+              width="1280"
+              height="720"
               src={ytPoster(youtubeId!)}
               onerror={`this.onerror=null;this.src='${ytPosterFallback(youtubeId!)}'`}
             />
@@ -86,22 +67,19 @@ function ytPosterFallback(id: string) {
         </button>
 
         <div class="yt-rail" data-yt-rail>
-          {reelIds.map(id => (
+          {reelIds.map((id, index) => (
             <article class="yt-slide" data-yt-slide>
               <div class="yt-frame yt-frame--9x16" data-yt-frame>
-                <div
-                  class="plyr__video-embed yt-embed"
-                  data-yt-embed
-                  data-yt-ratio="9:16"
-                  data-plyr-provider="youtube"
-                  data-plyr-embed-id={id}
-                />
+                <div class="yt-embed" data-yt-embed data-yt-id={id} />
                 <button class="yt-overlay" type="button" aria-label="Play reel" data-yt-overlay>
                   <img
                     class="yt-overlay__img"
                     alt=""
-                    loading="lazy"
+                    loading={index === 0 ? "eager" : "lazy"}
                     decoding="async"
+                    fetchpriority={index === 0 ? "high" : undefined}
+                    width="720"
+                    height="1280"
                     src={ytPoster(id)}
                     onerror={`this.onerror=null;this.src='${ytPosterFallback(id)}'`}
                   />
@@ -117,7 +95,7 @@ function ytPosterFallback(id: string) {
         </button>
       </section>
     ) : (
-      <PlyrPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />
+      <VideoPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />
     )
   }
 </div>
@@ -209,16 +187,10 @@ function ytPosterFallback(id: string) {
     inset: 0;
   }
 
-  .yt-frame :global(.plyr),
-  .yt-frame :global(.plyr__video-wrapper),
-  .yt-frame :global(.plyr__video-embed),
   .yt-frame :global(iframe) {
     width: 100%;
     height: 100%;
-  }
-
-  .yt-frame :global(.plyr__poster) {
-    display: none;
+    border: 0;
   }
 
   .yt-overlay {
@@ -274,4 +246,4 @@ function ytPosterFallback(id: string) {
   }
 </style>
 
-<script src="../scripts/workMediaDisplayScript.ts"></script>
+{hasYouTube || hasSlider ? <script src="../scripts/workMediaDisplayScript.ts"></script> : null}

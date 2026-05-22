@@ -1,0 +1,38 @@
+---
+import { cloudinaryImage, safePosterUrl } from "../lib/media"
+
+const { mp4, webm, poster } = Astro.props
+const safePoster = safePosterUrl(poster, "")
+const optimizedPoster = cloudinaryImage(safePoster, 1280)
+---
+
+<div class="pp">
+  <video
+    class="pp-video"
+    playsinline
+    preload="metadata"
+    poster={optimizedPoster}
+    muted
+    autoplay
+    loop
+    width="1280"
+    height="720"
+  >
+    {webm ? <source src={webm} type="video/webm" /> : null}
+    {mp4 ? <source src={mp4} type="video/mp4" /> : null}
+  </video>
+
+  <style>
+    .pp {
+      overflow: hidden;
+      border-radius: 0;
+    }
+    .pp-video {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+  </style>
+</div>

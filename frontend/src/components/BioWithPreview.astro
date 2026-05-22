@@ -1,5 +1,5 @@
 ---
-import PlyrPreview from "./PlyrPreview.astro"
+import VideoPreview from "./VideoPreview.astro"
 import { getBioWithPreview } from "../lib/sanity.queries"
 
 const DEFAULT_BIO = `I SHOOT CLEAN, CINEMATIC VIDEO FOR BRANDS AND PEOPLE WHO CARE ABOUT CRAFT.
@@ -42,7 +42,7 @@ const textScale = Math.min(1.4, Math.max(0.75, (props.bioTextScale ?? doc?.bioTe
     </div>
 
     <div class="bp-right">
-      <PlyrPreview mp4={mp4} webm={webm} poster={poster} />
+      <VideoPreview mp4={mp4} webm={webm} poster={poster} />
     </div>
   </div>
 

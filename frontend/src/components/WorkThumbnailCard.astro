@@ -1,5 +1,6 @@
 ---
 import type { WorkItem } from "../lib/sanity.queries"
+import { imageAttributes } from "../lib/media"
 
 type HeadingTag = "h2" | "h3"
 type CardVariant = "default" | "featuredPrimary" | "featuredSecondary"
@@ -16,6 +17,24 @@ const {
 
 const Heading = headingTag
 const shouldAutoplay = Boolean(work.thumbnailAutoplay && (work.preview.webm || work.preview.mp4))
+const isPrimary = variant === "featuredPrimary"
+const isSecondary = variant === "featuredSecondary"
+const imageSize = isPrimary
+  ? { width: 1600, height: 900 }
+  : isSecondary
+    ? { width: 900, height: 900 }
+    : { width: 900, height: 675 }
+const sizes = isPrimary
+  ? "(max-width: 900px) calc(100vw - 2rem), min(90rem, calc(100vw - 2rem))"
+  : isSecondary
+    ? "(max-width: 900px) calc(100vw - 2rem), calc((min(90rem, 100vw - 2rem) - 1.25rem) / 2)"
+    : "(max-width: 700px) calc(100vw - 2rem), (max-width: 1000px) calc((100vw - 3.25rem) / 2), calc((min(96rem, 100vw - 2rem) - 2.5rem) / 3)"
+const poster = imageAttributes({
+  src: work.preview.poster,
+  widths: isPrimary ? [640, 960, 1280, 1600, 1920] : [360, 540, 720, 900, 1200],
+  fallbackWidth: imageSize.width,
+  sizes,
+})
 ---
 
 <a
@@ -29,7 +48,17 @@ const shouldAutoplay = Boolean(work.thumbnailAutoplay && (work.preview.webm || w
   data-thumbnail-card
 >
   <div class:list={["work-card-media", shouldAutoplay && "is-playing"]} data-thumbnail-video data-autoplay={shouldAutoplay ? "true" : "false"}>
-    <img class="work-card-img" src={work.preview.poster} alt={work.title} loading="lazy" />
+    <img
+      class="work-card-img"
+      src={poster.src}
+      srcset={poster.srcset}
+      sizes={poster.sizes}
+      width={imageSize.width}
+      height={imageSize.height}
+      alt={work.title}
+      loading="lazy"
+      decoding="async"
+    />
     <video class="work-card-vid" muted loop playsinline preload={shouldAutoplay ? "metadata" : "none"} autoplay={shouldAutoplay} aria-hidden="true">
       {work.preview.webm ? <source src={shouldAutoplay ? work.preview.webm : undefined} data-src={work.preview.webm} type="video/webm" /> : null}
       {work.preview.mp4 ? <source src={shouldAutoplay ? work.preview.mp4 : undefined} data-src={work.preview.mp4} type="video/mp4" /> : null}

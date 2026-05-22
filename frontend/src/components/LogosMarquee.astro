@@ -1,5 +1,6 @@
 ---
 import { getLogoMarquee } from "../lib/sanity.queries"
+import { imageAttributes } from "../lib/media"
 
 const data = await getLogoMarquee()
 const items = data?.logos ?? []
@@ -10,6 +11,17 @@ const duration = Math.max(8, Number(speed) || 28)
 const h = Math.max(48, Number(height) || 96)
 const safeItems = items.filter(i => i?.image?.url)
 const repeatedRows = [0, 1, 2, 3]
+const logoImage = (url: string) =>
+  imageAttributes({
+    src: url,
+    widths: [160, 240, 320, 480],
+    fallbackWidth: 320,
+    sizes: "220px",
+  })
+const logoItems = safeItems.map(item => ({
+  ...item,
+  imageAttrs: logoImage(item.image.url),
+}))
 ---
 
 {
@@ -19,11 +31,15 @@ const repeatedRows = [0, 1, 2, 3]
         <div class="lm-track" aria-label="Client logos">
           {repeatedRows.map(rowIndex => (
             <ul class="lm-row" aria-hidden={rowIndex > 0 ? "true" : undefined}>
-              {safeItems.map(item => (
+              {logoItems.map(item => (
                 <li class="lm-item">
                   <img
                     class="lm-logo"
-                    src={item.image.url}
+                    src={item.imageAttrs.src}
+                    srcset={item.imageAttrs.srcset}
+                    sizes={item.imageAttrs.sizes}
+                    width={item.image.dimensions?.width ?? 220}
+                    height={item.image.dimensions?.height ?? Math.round(h * 0.68)}
                     alt={rowIndex === 0 ? item.alt || item.name || "Client logo" : ""}
                     loading="lazy"
                     decoding="async"

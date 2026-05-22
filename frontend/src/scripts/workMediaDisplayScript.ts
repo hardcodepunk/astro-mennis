@@ -1,68 +1,44 @@
-import Plyr from "plyr"
+function createYouTubeIframe(id: string) {
+  const iframe = document.createElement("iframe")
+  iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1`
+  iframe.title = "YouTube video player"
+  iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  iframe.allowFullscreen = true
+  iframe.loading = "lazy"
+  iframe.referrerPolicy = "strict-origin-when-cross-origin"
+  return iframe
+}
+
+function stopFrame(frame: HTMLElement) {
+  const iframe = frame.querySelector("iframe")
+  iframe?.remove()
+  frame.classList.remove("is-playing")
+}
+
+function playFrame(frame: HTMLElement) {
+  const embed = frame.querySelector<HTMLElement>("[data-yt-embed]")
+  if (!embed || embed.querySelector("iframe")) return
+
+  const id = embed.dataset.ytId
+  if (!id) return
+
+  embed.append(createYouTubeIframe(id))
+  frame.classList.add("is-playing")
+}
 
 function initHero(root: HTMLElement) {
   if (root.dataset.workHeroInited === "1") return
   root.dataset.workHeroInited = "1"
 
-  const embeds = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-embed]"))
-  if (!embeds.length) return
-
-  const players = embeds.map(el => {
-    const ratio = el.getAttribute("data-yt-ratio") || "16:9"
-    return new Plyr(el, {
-      ratio,
-      clickToPlay: false,
-      controls: ["play", "progress", "current-time", "mute", "volume", "settings", "fullscreen"],
-      youtube: {
-        rel: 0,
-        modestbranding: 1,
-      },
-    })
-  })
-
   const frames = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-frame]"))
+  if (!frames.length) return
 
-  frames.forEach((frame, idx) => {
+  frames.forEach(frame => {
     const overlay = frame.querySelector<HTMLButtonElement>("[data-yt-overlay]")
-    const player = players[idx]
-    if (!overlay || !player) return
-
-    let ready = false
-    let playRequested = false
-
-    player.on("ready", () => {
-      ready = true
-      if (playRequested) {
-        player.play()
-        playRequested = false
-      }
-    })
-
-    player.on("playing", () => {
-      frame.classList.add("is-playing")
-    })
-
-    player.on("play", () => {
-      frame.classList.add("is-playing")
-    })
-
-    player.on("pause", () => {
-      frame.classList.remove("is-playing")
-    })
-
-    player.on("ended", () => {
-      frame.classList.remove("is-playing")
-    })
-
-    overlay.addEventListener("click", e => {
+    overlay?.addEventListener("click", e => {
       e.preventDefault()
       e.stopPropagation()
-
-      if (ready) {
-        player.play()
-      } else {
-        playRequested = true
-      }
+      playFrame(frame)
     })
   })
 
@@ -119,18 +95,15 @@ function initHero(root: HTMLElement) {
 
   const slides = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-slide]"))
 
-  const pauseAt = (idx: number) => {
-    players[idx]?.pause()
-    const frame = slides[idx]?.querySelector<HTMLElement>("[data-yt-frame]")
-    if (frame) frame.classList.remove("is-playing")
-  }
-
   const io = new IntersectionObserver(
     entries => {
       for (const entry of entries) {
         const idx = slides.indexOf(entry.target as HTMLElement)
         if (idx === -1) continue
-        if (!entry.isIntersecting) pauseAt(idx)
+        if (!entry.isIntersecting) {
+          const frame = slides[idx]?.querySelector<HTMLElement>("[data-yt-frame]")
+          if (frame) stopFrame(frame)
+        }
       }
     },
     { root: rail, threshold: 0.7 },

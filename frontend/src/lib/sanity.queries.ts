@@ -112,6 +112,10 @@ export type LogoItem = {
   alt?: string
   image: {
     url: string
+    dimensions?: {
+      width?: number
+      height?: number
+    }
   }
 }
 
@@ -121,7 +125,8 @@ export async function getLogoMarquee() {
       name,
       alt,
       "image": {
-        "url": image.asset->url
+        "url": image.asset->url,
+        "dimensions": image.asset->metadata.dimensions
       }
     }
   }`
@@ -299,7 +304,10 @@ export async function getWorkBySlug(slug: string) {
       ...,
       _type == "inlineImage" => {
         ...,
-        "asset": asset->{ url }
+        "asset": asset->{
+          url,
+          metadata{ dimensions{ width, height } }
+        }
       }
     }
   }`

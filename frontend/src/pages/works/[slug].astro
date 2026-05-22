@@ -12,6 +12,7 @@ import {
   workSeoDescription,
   workSeoTitle,
 } from "../../lib/seo"
+import { imageAttributes, youtubeId, youtubePoster } from "../../lib/media"
 
 export async function getStaticPaths() {
   const works = await getWorks()
@@ -29,6 +30,19 @@ const title = workSeoTitle(seoSettings, work)
 const description = workSeoDescription(seoSettings, work)
 const image = socialImage(seoSettings, work.seo?.socialImage ?? work.preview.poster)
 const canonicalPath = work.seo?.canonicalUrl ?? `/works/${work.slug}`
+const firstVideoId =
+  work.media?.mode === "single"
+    ? youtubeId(work.media.youtubeUrl)
+    : work.media?.mode === "slider"
+      ? youtubeId(work.media.reels?.[0])
+      : undefined
+const lcpImage = youtubePoster(firstVideoId) ?? work.preview.poster
+const preloadHero = imageAttributes({
+  src: lcpImage,
+  widths: [768, 1024, 1280, 1600],
+  fallbackWidth: 1280,
+  sizes: "(max-width: 72rem) calc(100vw - 2rem), 72rem",
+})
 const jsonLd = [
   breadcrumbJsonLd(
     [
@@ -68,6 +82,9 @@ const jsonLd = [
   siteUrl={seoSettings?.siteUrl}
   twitterHandle={seoSettings?.twitterHandle}
   jsonLd={jsonLd}
+  preloadImage={preloadHero.src}
+  preloadImageSrcset={preloadHero.srcset}
+  preloadImageSizes={preloadHero.sizes}
 >
   <main class="page">
     <div class="page-inner">
