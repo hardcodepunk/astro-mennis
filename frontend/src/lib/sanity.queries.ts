@@ -1,14 +1,25 @@
 import { sanity } from "./sanity"
+import {
+  arrayOf,
+  nullable,
+  validateBioWithPreview,
+  validateCategory,
+  validateLogoMarquee,
+  validateSeoSettings,
+  validateSiteSettings,
+  validateWorkItem,
+} from "./sanity.contract"
 
-export type SiteSettings = {
-  homeSeoH1?: string
-  projectsSeoH1?: string
-  videoHero?: {
-    mp4?: string
-    webm?: string
-    poster?: string
-  }
-}
+export type {
+  BioWithPreviewDoc,
+  Category,
+  DocumentSeo,
+  LogoItem,
+  SeoSettings,
+  SiteSettings,
+  WorkItem,
+  WorkMedia,
+} from "./sanity.contract"
 
 export async function getSiteSettings() {
   const q = `*[_type == "siteSettings"][0]{
@@ -20,50 +31,8 @@ export async function getSiteSettings() {
       poster
     }
   }`
-  return sanity.fetch<SiteSettings | null>(q)
-}
-
-export type SeoSettings = {
-  siteUrl?: string
-  defaultTitle?: string
-  titleTemplate?: string
-  defaultDescription?: string
-  defaultSocialImage?: string
-  defaultSocialImageAlt?: string
-  twitterHandle?: string
-  brandName?: string
-  personName?: string
-  baseCity?: string
-  baseCountry?: string
-  sameAs?: string[]
-  homeH1?: string
-  homeTitle?: string
-  homeDescription?: string
-  homeSocialImage?: string
-  homeNoindex?: boolean
-  projectsH1?: string
-  projectsTitle?: string
-  projectsDescription?: string
-  projectsSocialImage?: string
-  projectsNoindex?: boolean
-  aboutTitle?: string
-  aboutDescription?: string
-  aboutSocialImage?: string
-  aboutNoindex?: boolean
-  categoryTitleTemplate?: string
-  categoryDescriptionTemplate?: string
-  workTitleTemplate?: string
-  workDescriptionTemplate?: string
-}
-
-export type DocumentSeo = {
-  title?: string
-  description?: string
-  socialImage?: string
-  socialImageAlt?: string
-  canonicalUrl?: string
-  noindex?: boolean
-  focusKeyword?: string
+  const data = await sanity.fetch<unknown>(q)
+  return nullable(data, "getSiteSettings", validateSiteSettings)
 }
 
 export async function getSeoSettings() {
@@ -99,24 +68,13 @@ export async function getSeoSettings() {
     workTitleTemplate,
     workDescriptionTemplate
   }`
-  return sanity.fetch<SeoSettings | null>(q)
+  const data = await sanity.fetch<unknown>(q)
+  return nullable(data, "getSeoSettings", validateSeoSettings)
 }
 
 export async function getVideoHeroSettings() {
   const settings = await getSiteSettings()
   return settings?.videoHero ?? null
-}
-
-export type LogoItem = {
-  name?: string
-  alt?: string
-  image: {
-    url: string
-    dimensions?: {
-      width?: number
-      height?: number
-    }
-  }
 }
 
 export async function getLogoMarquee() {
@@ -130,25 +88,8 @@ export async function getLogoMarquee() {
       }
     }
   }`
-  return sanity.fetch<{ logos: LogoItem[] } | null>(q)
-}
-
-export type BioWithPreviewDoc = {
-  heroTitle?: string
-  seoH1?: string
-  heroVideo?: {
-    mp4?: string
-    webm?: string
-    poster?: string
-  }
-  bio?: string
-  mirrorLayout?: boolean
-  bioTextScale?: number
-  previewVideo?: {
-    mp4?: string
-    webm?: string
-    poster?: string
-  }
+  const data = await sanity.fetch<unknown>(q)
+  return nullable(data, "getLogoMarquee", validateLogoMarquee)
 }
 
 export async function getBioWithPreview() {
@@ -161,38 +102,8 @@ export async function getBioWithPreview() {
     bioTextScale,
     previewVideo{ mp4, webm, poster }
   }`
-  return sanity.fetch<BioWithPreviewDoc | null>(q)
-}
-
-export type Category = {
-  slug: string
-  title: string
-  sortOrder?: number
-  seo?: DocumentSeo
-}
-
-export type WorkMedia =
-  | { mode: "preview" }
-  | { mode: "single"; youtubeUrl?: string }
-  | { mode: "slider"; reels?: string[] }
-
-export type WorkItem = {
-  slug: string
-  title: string
-  category: string
-  categorySlug: string
-  client: string
-  preview: { poster: string; webm?: string; mp4?: string }
-  thumbnailAutoplay?: boolean
-  year?: string
-  publishedAt?: string
-  updatedAt?: string
-  overviewTitle?: string
-  body?: unknown
-  media?: WorkMedia
-  featuredOnHome?: boolean
-  featuredOrder?: number
-  seo?: DocumentSeo
+  const data = await sanity.fetch<unknown>(q)
+  return nullable(data, "getBioWithPreview", validateBioWithPreview)
 }
 
 const seoSelection = `seo{
@@ -220,7 +131,8 @@ export async function getFeaturedWorks(limit = 3) {
       featuredOnHome,
       featuredOrder
     }`
-  return sanity.fetch<WorkItem[]>(q, { limit })
+  const data = await sanity.fetch<unknown>(q, { limit })
+  return arrayOf(data, "getFeaturedWorks", validateWorkItem)
 }
 
 export async function getAllWorksForGrid() {
@@ -235,7 +147,8 @@ export async function getAllWorksForGrid() {
     preview{ poster, webm, mp4 },
     thumbnailAutoplay
   }`
-  return sanity.fetch<WorkItem[]>(q)
+  const data = await sanity.fetch<unknown>(q)
+  return arrayOf(data, "getAllWorksForGrid", validateWorkItem)
 }
 
 export async function getCategories() {
@@ -245,7 +158,8 @@ export async function getCategories() {
     sortOrder,
     ${seoSelection}
   }`
-  return sanity.fetch<Category[]>(q)
+  const data = await sanity.fetch<unknown>(q)
+  return arrayOf(data, "getCategories", validateCategory)
 }
 
 export async function getWorks() {
@@ -260,7 +174,8 @@ export async function getWorks() {
     overviewTitle,
     ${seoSelection}
   }`
-  return sanity.fetch<WorkItem[]>(q)
+  const data = await sanity.fetch<unknown>(q)
+  return arrayOf(data, "getWorks", validateWorkItem)
 }
 
 export async function getWorksByCategorySlug(slug: string) {
@@ -276,7 +191,8 @@ export async function getWorksByCategorySlug(slug: string) {
     overviewTitle,
     ${seoSelection}
   }`
-  return sanity.fetch<WorkItem[]>(q, { slug })
+  const data = await sanity.fetch<unknown>(q, { slug })
+  return arrayOf(data, "getWorksByCategorySlug", validateWorkItem)
 }
 
 export async function getWorkBySlug(slug: string) {
@@ -311,7 +227,8 @@ export async function getWorkBySlug(slug: string) {
       }
     }
   }`
-  return sanity.fetch<WorkItem | null>(q, { slug })
+  const data = await sanity.fetch<unknown>(q, { slug })
+  return nullable(data, "getWorkBySlug", validateWorkItem)
 }
 
 export async function getRecentWorks(limit = 2, excludeSlug?: string) {
@@ -325,5 +242,6 @@ export async function getRecentWorks(limit = 2, excludeSlug?: string) {
     preview{ poster, webm, mp4 },
     thumbnailAutoplay
   }`
-  return sanity.fetch<WorkItem[]>(q, { limit, excludeSlug })
+  const data = await sanity.fetch<unknown>(q, { limit, excludeSlug })
+  return arrayOf(data, "getRecentWorks", validateWorkItem)
 }
