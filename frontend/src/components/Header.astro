@@ -257,7 +257,7 @@ const { transparentOnTop = false } = Astro.props
   }
 </style>
 
-<script define:vars={{ transparentOnTop }}>
+<script is:inline define:vars={{ transparentOnTop }}>
   ;(() => {
     const header = document.querySelector("[data-header]")
     const btn = document.querySelector("[data-menu-button]")

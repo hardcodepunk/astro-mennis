@@ -24,8 +24,8 @@ export function isImageUrl(url: string | undefined) {
   return /\.(avif|gif|jpe?g|png|svg|webp)$/.test(cleanUrl)
 }
 
-export function safePosterUrl(url: string | undefined, fallback: string) {
-  return isImageUrl(url) ? url : fallback
+export function safePosterUrl(url: string | undefined, fallback: string): string {
+  return url && isImageUrl(url) ? url : fallback
 }
 
 export function imageSrcset(url: string | undefined, widths: number[]) {

@@ -12,6 +12,9 @@
     "dev": "sanity dev",
     "start": "sanity start",
     "build": "sanity build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "check": "npm run lint && npm run typecheck && npm run build",
     "deploy": "sanity deploy",
     "deploy-graphql": "sanity graphql deploy"
   },
@@ -27,6 +30,7 @@
   },
   "devDependencies": {
     "@sanity/eslint-config-studio": "^6.0.0",
+    "@types/node": "^24.12.4",
     "@types/react": "^19.1",
     "eslint": "^9.28",
     "prettier": "^3.5",

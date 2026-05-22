@@ -53,7 +53,7 @@ const optimizedPoster = cloudinaryImage(safePoster, 1920)
   </div>
 
   <script>
-    async function initCinematicHero(root) {
+    async function initCinematicHero(root: Element) {
       if (!(root instanceof HTMLElement) || root.dataset.vhHeroInited === "1") return
       root.dataset.vhHeroInited = "1"
 
