@@ -69,6 +69,8 @@ npm run check
 
 The frontend check runs Astro diagnostics and a production static build. The backend check runs ESLint, TypeScript, and a Sanity Studio build.
 
+GitHub Actions runs the same checks on pushes and pull requests targeting `main`.
+
 ## Deployment
 
 Deploy the frontend as a static Astro site:
@@ -101,16 +103,3 @@ Sanity Studio includes production URL preview links for:
 For production, set `SANITY_STUDIO_SITE_URL` to the deployed frontend URL. For staging, set it to the staging frontend URL in that Studio environment.
 
 Draft preview is not currently enabled. If draft previews become necessary, add a token-protected preview route or server-rendered preview environment before exposing unpublished content.
-
-## Webhook/Rebuild Strategy
-
-Because the frontend is static, configure a Sanity webhook to trigger the hosting provider's build hook on publish events.
-
-Recommended setup:
-
-1. Create a build hook in the frontend hosting provider.
-2. In Sanity project settings, create a webhook for create/update/delete/publish events.
-3. Point the webhook at the provider build hook URL.
-4. Limit the webhook to relevant document types if the provider supports filtering: `work`, `category`, `seo`, `siteSettings`, `bioWithPreview`, `logoMarquee`.
-
-No webhook URL is committed to this repo because provider build hook URLs are secrets.
