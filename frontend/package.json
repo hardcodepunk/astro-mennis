@@ -19,7 +19,8 @@
     "@sanity/client": "^7.15.0",
     "@sanity/image-url": "^2.0.3",
     "@tailwindcss/vite": "^4.1.18",
-    "astro": "^5.17.1",
+    "astro": "^6.3.7",
+    "plyr": "^3.8.4",
     "tailwindcss": "^4.1.18"
   }
 }
