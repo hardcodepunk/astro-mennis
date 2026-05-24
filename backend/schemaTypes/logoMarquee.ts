@@ -6,13 +6,6 @@ export const logoMarquee = defineType({
   type: 'document',
   fields: [
     defineField({
-      name: 'title',
-      title: 'Internal title',
-      type: 'string',
-      initialValue: 'Homepage logos',
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
       name: 'logos',
       title: 'Logos',
       type: 'array',
@@ -45,8 +38,10 @@ export const logoMarquee = defineType({
     }),
   ],
   preview: {
-    select: {
-      title: 'title',
+    prepare() {
+      return {
+        title: 'Logo marquee',
+      }
     },
   },
 })
