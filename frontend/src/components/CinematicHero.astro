@@ -1,6 +1,6 @@
 ---
 import { getVideoHeroSettings } from "../lib/sanity.queries"
-import { imageAttributes, safePosterUrl } from "../lib/media"
+import { cloudinaryImage, safePosterUrl } from "../lib/media"
 
 const DEFAULT_MP4 =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4"
@@ -20,21 +20,13 @@ const {
   minRevealMs = 600,
 } = props
 const safePoster = safePosterUrl(poster, DEFAULT_POSTER)
-const posterAttrs = imageAttributes({
-  src: safePoster,
-  widths: [480, 768, 1024, 1280, 1600, 1920],
-  fallbackWidth: 1280,
-  sizes: "100vw",
-  quality: "auto:eco",
-})
+const optimizedPoster = cloudinaryImage(safePoster, 1920)
 ---
 
 <section class="vh-hero" data-min-reveal={minRevealMs}>
   <img
     class="vh-poster"
-    src={posterAttrs.src}
-    srcset={posterAttrs.srcset}
-    sizes={posterAttrs.sizes}
+    src={optimizedPoster}
     width="1920"
     height="1080"
     alt=""
@@ -48,7 +40,7 @@ const posterAttrs = imageAttributes({
     muted
     playsinline
     preload="none"
-    poster={posterAttrs.src}
+    poster={optimizedPoster}
     loop
     width="1920"
     height="1080"
