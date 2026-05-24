@@ -1,6 +1,8 @@
 const CLOUDINARY_UPLOAD = "/upload/"
 
-export function cloudinaryImage(url: string | undefined, width: number) {
+type CloudinaryQuality = "auto" | "auto:eco"
+
+export function cloudinaryImage(url: string | undefined, width: number, quality: CloudinaryQuality = "auto") {
   if (!url) return undefined
   if (!isImageUrl(url)) return url
   if (!url.includes("res.cloudinary.com") || !url.includes(CLOUDINARY_UPLOAD)) return url
@@ -13,7 +15,7 @@ export function cloudinaryImage(url: string | undefined, width: number) {
   const existingTransforms = hasTransformSegment ? segments[0].split(",") : []
   const assetPath = hasTransformSegment ? segments.slice(1).join("/") : afterUpload
   const preservedTransforms = existingTransforms.filter(transform => transform.startsWith("so_"))
-  const transforms = [...preservedTransforms, "f_auto", "q_auto", `w_${width}`]
+  const transforms = [...preservedTransforms, "f_auto", `q_${quality}`, `w_${width}`]
 
   return `${beforeUpload}${transforms.join(",")}/${assetPath}`
 }
@@ -28,7 +30,7 @@ export function safePosterUrl(url: string | undefined, fallback: string): string
   return url && isImageUrl(url) ? url : fallback
 }
 
-export function imageSrcset(url: string | undefined, widths: number[]) {
+export function imageSrcset(url: string | undefined, widths: number[], quality: CloudinaryQuality = "auto") {
   if (!url) return undefined
   if (!url.includes("res.cloudinary.com") || !url.includes(CLOUDINARY_UPLOAD)) return undefined
 
@@ -36,7 +38,7 @@ export function imageSrcset(url: string | undefined, widths: number[]) {
     .filter((width, index, list) => width > 0 && list.indexOf(width) === index)
     .sort((a, b) => a - b)
     .map(width => {
-      const transformed = cloudinaryImage(url, width)
+      const transformed = cloudinaryImage(url, width, quality)
       return transformed ? `${transformed} ${width}w` : undefined
     })
     .filter((entry): entry is string => Boolean(entry))
@@ -49,11 +51,12 @@ export function imageAttributes(options: {
   widths: number[]
   fallbackWidth: number
   sizes: string
+  quality?: CloudinaryQuality
 }) {
-  const { src, widths, fallbackWidth, sizes } = options
+  const { src, widths, fallbackWidth, sizes, quality = "auto" } = options
   return {
-    src: cloudinaryImage(src, fallbackWidth) ?? src,
-    srcset: imageSrcset(src, widths),
+    src: cloudinaryImage(src, fallbackWidth, quality) ?? src,
+    srcset: imageSrcset(src, widths, quality),
     sizes,
   }
 }
