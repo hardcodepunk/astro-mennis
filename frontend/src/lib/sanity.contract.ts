@@ -86,6 +86,11 @@ export type BioWithPreviewDoc = {
     webm?: string
     poster?: string
   }
+  approach?: {
+    kicker?: string
+    title?: string
+    body?: string
+  }
 }
 
 export type Category = {
@@ -193,6 +198,11 @@ export function validateBioWithPreview(value: unknown, path: string): BioWithPre
     mirrorLayout: optionalBoolean(obj.mirrorLayout, `${path}.mirrorLayout`),
     bioTextScale: optionalNumber(obj.bioTextScale, `${path}.bioTextScale`),
     previewVideo: optionalMediaUrls(obj.previewVideo, `${path}.previewVideo`),
+    approach: optionalObject(obj.approach, `${path}.approach`, approach => ({
+      kicker: optionalString(approach.kicker, `${path}.approach.kicker`),
+      title: optionalString(approach.title, `${path}.approach.title`),
+      body: optionalString(approach.body, `${path}.approach.body`),
+    })),
   }
 }
 

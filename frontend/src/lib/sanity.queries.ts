@@ -100,7 +100,12 @@ export async function getBioWithPreview() {
     bio,
     mirrorLayout,
     bioTextScale,
-    previewVideo{ mp4, webm, poster }
+    previewVideo{ mp4, webm, poster },
+    approach{
+      kicker,
+      title,
+      body
+    }
   }`
   const data = await sanity.fetch<unknown>(q)
   return nullable(data, "getBioWithPreview", validateBioWithPreview)
