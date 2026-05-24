@@ -47,7 +47,7 @@ const poster = imageAttributes({
   aria-label={`Open ${work.title}`}
   data-thumbnail-card
 >
-  <div class:list={["work-card-media", shouldAutoplay && "is-playing"]} data-thumbnail-video data-autoplay={shouldAutoplay ? "true" : "false"}>
+  <div class="work-card-media" data-thumbnail-video data-autoplay={shouldAutoplay ? "true" : "false"}>
     <img
       class="work-card-img"
       src={poster.src}
@@ -59,9 +59,9 @@ const poster = imageAttributes({
       loading="lazy"
       decoding="async"
     />
-    <video class="work-card-vid" muted loop playsinline preload={shouldAutoplay ? "metadata" : "none"} autoplay={shouldAutoplay} aria-hidden="true">
-      {work.preview.webm ? <source src={shouldAutoplay ? work.preview.webm : undefined} data-src={work.preview.webm} type="video/webm" /> : null}
-      {work.preview.mp4 ? <source src={shouldAutoplay ? work.preview.mp4 : undefined} data-src={work.preview.mp4} type="video/mp4" /> : null}
+    <video class="work-card-vid" muted loop playsinline preload="none" aria-hidden="true">
+      {work.preview.webm ? <source data-src={work.preview.webm} type="video/webm" /> : null}
+      {work.preview.mp4 ? <source data-src={work.preview.mp4} type="video/mp4" /> : null}
     </video>
   </div>
 

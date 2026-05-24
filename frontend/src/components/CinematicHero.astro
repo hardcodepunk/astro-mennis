@@ -24,21 +24,31 @@ const optimizedPoster = cloudinaryImage(safePoster, 1920)
 ---
 
 <section class="vh-hero" data-min-reveal={minRevealMs}>
+  <img
+    class="vh-poster"
+    src={optimizedPoster}
+    width="1920"
+    height="1080"
+    alt=""
+    decoding="async"
+    fetchpriority="high"
+    aria-hidden="true"
+  />
+
   <video
     class="vh-video"
     muted
     playsinline
-    preload="metadata"
+    preload="none"
     poster={optimizedPoster}
-    autoplay
     loop
     width="1920"
     height="1080"
     disableRemotePlayback
     aria-hidden="true"
+    data-webm={webm}
+    data-mp4={mp4}
   >
-    {webm ? <source src={webm} type="video/webm" /> : null}
-    {mp4 ? <source src={mp4} type="video/mp4" /> : null}
   </video>
 
   <div class="vh-overlay" aria-hidden="true"></div>
@@ -80,6 +90,40 @@ const optimizedPoster = cloudinaryImage(safePoster, 1920)
         window.setTimeout(reveal, delay)
       }
 
+      const motionAllowed = !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      const desktopViewport = window.matchMedia("(min-width: 768px)").matches
+
+      if (!motionAllowed || !desktopViewport) {
+        root.dataset.reduced = "1"
+        reveal()
+        return
+      }
+
+      const attachVideoSources = () => {
+        if (video.dataset.sourcesAttached === "1") return
+        video.dataset.sourcesAttached = "1"
+
+        const webm = video.dataset.webm
+        const mp4 = video.dataset.mp4
+
+        if (webm) {
+          const source = document.createElement("source")
+          source.src = webm
+          source.type = "video/webm"
+          video.append(source)
+        }
+
+        if (mp4) {
+          const source = document.createElement("source")
+          source.src = mp4
+          source.type = "video/mp4"
+          video.append(source)
+        }
+
+        video.load()
+        video.play().catch(revealWithMin)
+      }
+
       const onPlaying = () => revealWithMin()
       const onLoadedData = () => revealWithMin()
 
@@ -87,6 +131,22 @@ const optimizedPoster = cloudinaryImage(safePoster, 1920)
       video.addEventListener("loadeddata", onLoadedData, { signal })
 
       window.setTimeout(revealWithMin, 1500)
+
+      const loadVideo = () => {
+        const requestIdle = window.requestIdleCallback
+
+        if (typeof requestIdle === "function") {
+          requestIdle(attachVideoSources, { timeout: 1200 })
+        } else {
+          globalThis.setTimeout(attachVideoSources, 350)
+        }
+      }
+
+      if (document.readyState === "complete") {
+        loadVideo()
+      } else {
+        window.addEventListener("load", loadVideo, { once: true, signal })
+      }
 
       let cleanedUp = false
       const cleanup = () => {
@@ -113,6 +173,22 @@ const optimizedPoster = cloudinaryImage(safePoster, 1920)
   </script>
 
   <style>
+    .vh-poster {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 1;
+      transition: opacity 0.8s ease-out;
+    }
+
+    .vh-hero.is-playing .vh-poster {
+      opacity: 0;
+    }
+
     .vh-bottom-left {
       position: absolute;
       left: 0;
