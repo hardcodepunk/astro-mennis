@@ -34,7 +34,7 @@ export const siteSettings = defineType({
           title: 'Text above email',
           description: 'Optional line shown above the email link in the homepage video hero.',
           type: 'string',
-          initialValue: 'wild concepts captured by edgy and atypicaly video production',
+          initialValue: 'wild concepts captured by edgy and atypical video production',
         }),
         defineField({
           name: 'captionTextScale',

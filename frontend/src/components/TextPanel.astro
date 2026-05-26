@@ -38,7 +38,7 @@ const paragraphs = body
     .tp.is-full {
       width: 100vw;
       margin-left: calc(50% - 50vw);
-      background: var(--color-brand-secondary);
+      background: transparent;
     }
 
     .tp-inner {
@@ -56,8 +56,15 @@ const paragraphs = body
     .tp.is-full .tp-inner {
       max-width: 90rem;
       background: transparent;
+      color: var(--color-brand-secondary);
       padding-block: clamp(3rem, 7vw, 6rem);
       padding-inline: clamp(1.5rem, 5vw, 4rem);
+    }
+
+    .tp.is-full .tp-kicker,
+    .tp.is-full .tp-title,
+    .tp.is-full .tp-copy {
+      color: var(--color-brand-secondary);
     }
 
     .tp-kicker {
