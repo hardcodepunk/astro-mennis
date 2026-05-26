@@ -7,7 +7,8 @@ import Footer from "../components/Footer.astro"
 import { absoluteUrl, DEFAULT_DESCRIPTION, DEFAULT_SITE_URL, DEFAULT_TITLE, normalizeSiteUrl } from "../lib/seo"
 
 const transparentHeaderPaths = ["/", "/about"]
-const hasTransparentHeader = transparentHeaderPaths.includes(Astro.url.pathname)
+const normalizedPath = Astro.url.pathname.replace(/\/$/, "") || "/"
+const hasTransparentHeader = transparentHeaderPaths.includes(normalizedPath)
 const {
   title = DEFAULT_TITLE,
   description = DEFAULT_DESCRIPTION,
@@ -89,7 +90,7 @@ function escapeJsonLd(value: unknown) {
     <slot name="head" />
   </head>
   <body class="min-h-screen flex flex-col">
-    <Header transparentOnTop={hasTransparentHeader} />
+    <Header transparentOnTop={hasTransparentHeader} transparentPaths={transparentHeaderPaths} />
 
     <main class="flex-1">
       <slot />

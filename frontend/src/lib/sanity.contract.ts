@@ -12,6 +12,14 @@ export type SiteSettings = {
     mp4?: string
     webm?: string
     poster?: string
+    caption?: string
+    captionTextScale?: number
+    captionUppercase?: boolean
+  }
+  workflowPanel?: {
+    kicker?: string
+    title?: string
+    body?: string
   }
 }
 
@@ -142,6 +150,11 @@ export function validateSiteSettings(value: unknown, path: string): SiteSettings
     homeSeoH1: optionalString(obj.homeSeoH1, `${path}.homeSeoH1`),
     projectsSeoH1: optionalString(obj.projectsSeoH1, `${path}.projectsSeoH1`),
     videoHero: optionalMediaUrls(obj.videoHero, `${path}.videoHero`),
+    workflowPanel: optionalObject(obj.workflowPanel, `${path}.workflowPanel`, workflow => ({
+      kicker: optionalString(workflow.kicker, `${path}.workflowPanel.kicker`),
+      title: optionalString(workflow.title, `${path}.workflowPanel.title`),
+      body: optionalString(workflow.body, `${path}.workflowPanel.body`),
+    })),
   }
 }
 
@@ -299,6 +312,9 @@ function optionalMediaUrls(value: unknown, path: string) {
     mp4: optionalString(obj.mp4, `${path}.mp4`),
     webm: optionalString(obj.webm, `${path}.webm`),
     poster: optionalString(obj.poster, `${path}.poster`),
+    caption: optionalString(obj.caption, `${path}.caption`),
+    captionTextScale: optionalNumber(obj.captionTextScale, `${path}.captionTextScale`),
+    captionUppercase: optionalBoolean(obj.captionUppercase, `${path}.captionUppercase`),
   }))
 }
 

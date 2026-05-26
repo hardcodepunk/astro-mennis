@@ -28,7 +28,15 @@ export async function getSiteSettings() {
     videoHero{
       mp4,
       webm,
-      poster
+      poster,
+      caption,
+      captionTextScale,
+      captionUppercase
+    },
+    workflowPanel{
+      kicker,
+      title,
+      body
     }
   }`
   const data = await sanity.fetch<unknown>(q)

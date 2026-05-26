@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro"
 import Videohero from "../components/CinematicHero.astro"
+import TextPanel from "../components/TextPanel.astro"
 import { getFeaturedWorks, getSeoSettings, getSiteSettings } from "../lib/sanity.queries"
 import FeaturedWorks from "../components/FeaturedWorks.astro"
 import { formatTitle, metaDescription, organizationJsonLd, personJsonLd, socialImage, websiteJsonLd } from "../lib/seo"
@@ -9,8 +10,27 @@ import { imageAttributes, safePosterUrl } from "../lib/media"
 const featuredWorks = await getFeaturedWorks(3)
 const siteSettings = await getSiteSettings()
 const seoSettings = await getSeoSettings()
+const DEFAULT_WORKFLOW_PANEL = {
+  kicker: "Workflow",
+  title:
+    "Whether I’m on rollerblades capturing ultra-smooth tracking shots at high speeds, or climbing structures to rig cameras for daring perspectives, I capture the raw energy of your project without the bloat of a massive crew.",
+  body: [
+    "What to Contact Me For:",
+    "* Edgy & Daring Branding: Commercials and promos that breaks the rules.",
+    "* Lifestyle & Community Culture: Highlighting the people, the movement, and the vibe behind your brand.",
+    "* High-Motion Content: Music videos, sports, and events that require speed, flow, and kinetic energy.",
+    "* Freelance (rollerblade) camera operator & editor",
+    "* Aerial filmography",
+    "* Idea’s",
+  ].join("\n\n"),
+}
 const seoH1 = seoSettings?.homeH1 ?? siteSettings?.homeSeoH1 ?? "De Mennis"
 const heroSettings = siteSettings?.videoHero
+const workflowPanel = {
+  kicker: siteSettings?.workflowPanel?.kicker?.trim() || DEFAULT_WORKFLOW_PANEL.kicker,
+  title: siteSettings?.workflowPanel?.title?.trim() || DEFAULT_WORKFLOW_PANEL.title,
+  body: siteSettings?.workflowPanel?.body?.trim() || DEFAULT_WORKFLOW_PANEL.body,
+}
 const heroPoster = heroSettings?.poster ? safePosterUrl(heroSettings.poster, featuredWorks[0]?.preview.poster ?? "") : undefined
 const title = formatTitle(seoSettings, seoSettings?.homeTitle ?? "De Mennis", true)
 const description = metaDescription(seoSettings, seoSettings?.homeDescription)
@@ -43,8 +63,13 @@ const jsonLd = [websiteJsonLd(seoSettings), organizationJsonLd(seoSettings), per
     mp4={heroSettings?.mp4}
     webm={heroSettings?.webm}
     poster={heroSettings?.poster}
+    caption={heroSettings?.caption}
+    captionTextScale={heroSettings?.captionTextScale}
+    captionUppercase={heroSettings?.captionUppercase}
     minRevealMs={600}
   />
+
+  <TextPanel kicker={workflowPanel.kicker} title={workflowPanel.title} body={workflowPanel.body} />
 
   <FeaturedWorks items={featuredWorks} />
 </Layout>

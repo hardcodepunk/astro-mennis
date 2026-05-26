@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro"
 import BioWithPreview from "../components/BioWithPreview.astro"
 import LogosMarquee from "../components/LogosMarquee.astro"
+import TextPanel from "../components/TextPanel.astro"
 import { getBioWithPreview, getSeoSettings } from "../lib/sanity.queries"
 import { breadcrumbJsonLd, formatTitle, metaDescription, socialImage } from "../lib/seo"
 import { cloudinaryImage, imageAttributes, safePosterUrl } from "../lib/media"
@@ -35,10 +36,6 @@ const approach = {
   title: aboutDoc?.approach?.title?.trim() || DEFAULT_APPROACH.title,
   body: aboutDoc?.approach?.body?.trim() || DEFAULT_APPROACH.body,
 }
-const approachParagraphs = approach.body
-  .split(/\n{2,}/)
-  .map(paragraph => paragraph.trim())
-  .filter(Boolean)
 const title = formatTitle(seoSettings, seoSettings?.aboutTitle ?? "About")
 const description = metaDescription(seoSettings, seoSettings?.aboutDescription)
 const heroPosterImage = heroPoster.includes("/video/upload/") ? DEFAULT_HERO_POSTER : heroPoster
@@ -107,18 +104,7 @@ const jsonLd = breadcrumbJsonLd(
       bioTextScale={aboutDoc?.bioTextScale}
     />
 
-    <section class="about-page__section">
-      <div class="about-page__inner about-page__grid">
-        <div class="about-page__col">
-          <p class="about-page__kicker">{approach.kicker}</p>
-          <h2 class="about-page__section-title">{approach.title}</h2>
-        </div>
-
-        <div class="about-page__copy">
-          {approachParagraphs.map(paragraph => <p>{paragraph}</p>)}
-        </div>
-      </div>
-    </section>
+    <TextPanel kicker={approach.kicker} title={approach.title} body={approach.body} />
 
     <LogosMarquee />
   </main>
@@ -199,67 +185,7 @@ const jsonLd = breadcrumbJsonLd(
       color: #fff;
     }
 
-    .about-page__section {
-      padding-top: 32px;
-    }
-
-    .about-page__grid {
-      display: grid;
-      grid-template-columns: 0.9fr 1.1fr;
-      gap: 0;
-      align-items: start;
-      background: var(--color-brand-secondary);
-      color: #fff;
-      padding: clamp(1.5rem, 4vw, 3rem);
-    }
-
-    .about-page__kicker {
-      margin: 0 0 10px 0;
-      color: rgba(255, 255, 255, 0.68);
-      font-size: 0.95rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    .about-page__section-title {
-      margin: 0;
-      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-      font-size: clamp(2rem, 4vw, 3.4rem);
-      line-height: 0.92;
-      font-weight: 400;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      color: #fff;
-    }
-
-    .about-page__copy {
-      max-width: 42rem;
-      font-family:
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        sans-serif;
-      font-size: 1rem;
-      line-height: 1.8;
-      font-weight: 400;
-      color: #fff;
-    }
-
-    .about-page__copy p {
-      margin: 0;
-    }
-
-    .about-page__copy p + p {
-      margin-top: 18px;
-    }
-
     @media (max-width: 900px) {
-      .about-page__grid {
-        grid-template-columns: 1fr;
-        gap: 24px;
-      }
-
       .about-page__title {
         max-width: 12ch;
       }

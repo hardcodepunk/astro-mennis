@@ -1,0 +1,92 @@
+---
+type Props = {
+  kicker?: string
+  title: string
+  body: string
+}
+
+const { kicker, title, body } = Astro.props as Props
+const paragraphs = body
+  .split(/\n{2,}/)
+  .map(paragraph => paragraph.trim())
+  .filter(Boolean)
+---
+
+<section class="tp">
+  <div class="tp-inner">
+    <div class="tp-col">
+      {kicker ? <p class="tp-kicker">{kicker}</p> : null}
+      <h2 class="tp-title">{title}</h2>
+    </div>
+
+    <div class="tp-copy">
+      {paragraphs.map(paragraph => <p>{paragraph}</p>)}
+    </div>
+  </div>
+
+  <style>
+    .tp {
+      padding-top: 32px;
+    }
+
+    .tp-inner {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 0;
+      align-items: start;
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: clamp(1.5rem, 4vw, 3rem);
+      background: var(--color-brand-secondary);
+      color: #fff;
+    }
+
+    .tp-kicker {
+      margin: 0 0 10px 0;
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 0.95rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .tp-title {
+      margin: 0;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 0.92;
+      font-weight: 400;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .tp-copy {
+      max-width: 42rem;
+      font-family:
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+      font-size: 1rem;
+      line-height: 1.8;
+      font-weight: 400;
+      color: #fff;
+    }
+
+    .tp-copy p {
+      margin: 0;
+    }
+
+    .tp-copy p + p {
+      margin-top: 18px;
+    }
+
+    @media (max-width: 900px) {
+      .tp-inner {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
+  </style>
+</section>

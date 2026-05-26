@@ -8,6 +8,9 @@ const DEFAULT_WEBM =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm"
 const DEFAULT_POSTER =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg"
+const DEFAULT_CAPTION = "wild concepts captured by edgy and atypicaly video production"
+const DEFAULT_EMAIL_TEXT = "Shoot hello@demennis.be"
+const DEFAULT_EMAIL_ADDRESS = "hello@demennis.be"
 
 const props = Astro.props
 const needsSettings = !props.mp4 || !props.webm || !props.poster
@@ -17,9 +20,14 @@ const {
   mp4 = settings?.mp4 ?? DEFAULT_MP4,
   webm = settings?.webm ?? DEFAULT_WEBM,
   poster = settings?.poster ?? DEFAULT_POSTER,
+  caption = settings?.caption,
+  captionTextScale = settings?.captionTextScale ?? 100,
+  captionUppercase = settings?.captionUppercase ?? true,
   minRevealMs = 600,
 } = props
 const safePoster = safePosterUrl(poster, DEFAULT_POSTER)
+const heroCaption = typeof caption === "string" && caption.trim() ? caption.trim() : DEFAULT_CAPTION
+const captionScale = Math.min(1.8, Math.max(0.6, Number(captionTextScale) / 100 || 1))
 const posterAttrs = imageAttributes({
   src: safePoster,
   widths: [480, 768, 1024, 1280, 1600, 1920],
@@ -61,12 +69,17 @@ const posterAttrs = imageAttributes({
 
   <div class="vh-overlay" aria-hidden="true"></div>
 
-  <div class="vh-bottom-left">
+  <div class="vh-bottom-left" style={`--vh-caption-scale: ${captionScale};`}>
+    {
+      heroCaption ? (
+        <p class:list={["vh-caption", captionUppercase && "is-uppercase"]}>{heroCaption}</p>
+      ) : null
+    }
     <a
-      href="mailto:hello@demennis.be"
-      class="font-display text-2xl tracking-widest text-white/90 hover:text-white transition-colors uppercase opacity-50 hover:opacity-100"
+      href={`mailto:${DEFAULT_EMAIL_ADDRESS}`}
+      class="vh-email is-uppercase"
     >
-      Shoot hello@demennis.be
+      {DEFAULT_EMAIL_TEXT}
     </a>
   </div>
 
@@ -203,16 +216,49 @@ const posterAttrs = imageAttributes({
       bottom: 3rem;
       padding: 0 1.5rem;
       z-index: 30;
+      color: #fff;
+    }
+
+    .vh-caption,
+    .vh-email {
+      margin: 0;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+    }
+
+    .vh-caption {
+      margin-bottom: 0.35rem;
+      font-size: clamp(calc(1.2rem * var(--vh-caption-scale)), calc(2vw * var(--vh-caption-scale)), calc(2rem * var(--vh-caption-scale)));
+      line-height: 0.95;
+      color: rgba(255, 255, 255, 0.84);
+    }
+
+    .vh-email {
+      display: inline-flex;
+      font-size: clamp(1.5rem, 2.2vw, 2.4rem);
+      line-height: 0.95;
+      color: rgba(255, 255, 255, 0.72);
+      text-decoration: none;
+      transition:
+        color 180ms ease,
+        opacity 180ms ease;
+    }
+
+    .vh-email:hover {
+      color: #fff;
+    }
+
+    .is-uppercase {
+      text-transform: uppercase;
     }
 
     @media (max-width: 640px) {
       .vh-bottom-left {
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
+        left: 0;
         bottom: 1.5rem;
-        padding: 0;
-        text-align: center;
+        padding: 0 1.5rem;
+        text-align: left;
         width: calc(100% - 2rem);
       }
     }

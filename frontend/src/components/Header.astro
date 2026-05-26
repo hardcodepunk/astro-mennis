@@ -5,7 +5,7 @@ const NAV = [
   { label: "Contact", href: "/#contact" },
 ]
 
-const { transparentOnTop = false } = Astro.props
+const { transparentOnTop = false, transparentPaths = [] } = Astro.props
 ---
 
 <header class:list={["site-header fixed top-0 z-50 w-full", !transparentOnTop && "is-solid"]} data-header>
@@ -257,7 +257,7 @@ const { transparentOnTop = false } = Astro.props
   }
 </style>
 
-<script is:inline define:vars={{ transparentOnTop }}>
+<script is:inline define:vars={{ transparentOnTop, transparentPaths }}>
   ;(() => {
     const header = document.querySelector("[data-header]")
     const btn = document.querySelector("[data-menu-button]")
@@ -295,11 +295,16 @@ const { transparentOnTop = false } = Astro.props
     window.addEventListener("hashchange", () => setMenuOpen(false))
 
     const topThreshold = 8
+    const normalizePath = path => path.replace(/\/$/, "") || "/"
+    const canBeTransparent = () => {
+      const paths = Array.isArray(transparentPaths) ? transparentPaths : []
+      return paths.length > 0 ? paths.includes(normalizePath(window.location.pathname)) : transparentOnTop
+    }
 
     const updateHeaderBg = () => {
       if (overlay.classList.contains("is-open")) return
 
-      if (!transparentOnTop) {
+      if (!canBeTransparent()) {
         header.classList.add("is-solid")
         return
       }
@@ -309,6 +314,7 @@ const { transparentOnTop = false } = Astro.props
     }
 
     window.addEventListener("scroll", updateHeaderBg, { passive: true })
+    document.addEventListener("astro:page-load", updateHeaderBg)
     updateHeaderBg()
   })()
 </script>
