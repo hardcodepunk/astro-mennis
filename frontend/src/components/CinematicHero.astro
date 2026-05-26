@@ -8,7 +8,7 @@ const DEFAULT_WEBM =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm"
 const DEFAULT_POSTER =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg"
-const DEFAULT_CAPTION = "wild concepts captured by edgy and atypicaly video production"
+const DEFAULT_CAPTION = "wild concepts captured by edgy and atypical video production"
 
 const props = Astro.props
 const needsSettings = !props.mp4 || !props.webm || !props.poster
@@ -68,11 +68,7 @@ const posterAttrs = imageAttributes({
   <div class="vh-overlay" aria-hidden="true"></div>
 
   <div class="vh-bottom-left" style={`--vh-caption-scale: ${captionScale};`}>
-    {
-      heroCaption ? (
-        <p class:list={["vh-caption", captionUppercase && "is-uppercase"]}>{heroCaption}</p>
-      ) : null
-    }
+    {heroCaption ? <p class:list={["vh-caption", captionUppercase && "is-uppercase"]}>{heroCaption}</p> : null}
   </div>
 
   <script>
@@ -220,7 +216,11 @@ const posterAttrs = imageAttributes({
 
     .vh-caption {
       max-width: min(28rem, calc(100vw - 3rem));
-      font-size: clamp(calc(2rem * var(--vh-caption-scale)), calc(4.2vw * var(--vh-caption-scale)), calc(4.2rem * var(--vh-caption-scale)));
+      font-size: clamp(
+        calc(2rem * var(--vh-caption-scale)),
+        calc(4.2vw * var(--vh-caption-scale)),
+        calc(4.2rem * var(--vh-caption-scale))
+      );
       line-height: 0.95;
       color: #fff;
     }
