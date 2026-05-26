@@ -69,7 +69,13 @@ const jsonLd = [websiteJsonLd(seoSettings), organizationJsonLd(seoSettings), per
     minRevealMs={600}
   />
 
-  <TextPanel kicker={workflowPanel.kicker} title={workflowPanel.title} body={workflowPanel.body} />
+  <TextPanel
+    kicker={workflowPanel.kicker}
+    title={workflowPanel.title}
+    body={workflowPanel.body}
+    fullWidth
+    flushTop
+  />
 
   <FeaturedWorks items={featuredWorks} />
 </Layout>

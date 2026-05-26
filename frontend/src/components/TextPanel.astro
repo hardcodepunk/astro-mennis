@@ -3,16 +3,18 @@ type Props = {
   kicker?: string
   title: string
   body: string
+  fullWidth?: boolean
+  flushTop?: boolean
 }
 
-const { kicker, title, body } = Astro.props as Props
+const { kicker, title, body, fullWidth = false, flushTop = false } = Astro.props as Props
 const paragraphs = body
   .split(/\n{2,}/)
   .map(paragraph => paragraph.trim())
   .filter(Boolean)
 ---
 
-<section class="tp">
+<section class:list={["tp", fullWidth && "is-full", flushTop && "is-flush"]}>
   <div class="tp-inner">
     <div class="tp-col">
       {kicker ? <p class="tp-kicker">{kicker}</p> : null}
@@ -29,6 +31,16 @@ const paragraphs = body
       padding-top: 32px;
     }
 
+    .tp.is-flush {
+      padding-top: 0;
+    }
+
+    .tp.is-full {
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      background: var(--color-brand-secondary);
+    }
+
     .tp-inner {
       display: grid;
       grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -39,6 +51,13 @@ const paragraphs = body
       padding: clamp(1.5rem, 4vw, 3rem);
       background: var(--color-brand-secondary);
       color: #fff;
+    }
+
+    .tp.is-full .tp-inner {
+      max-width: 90rem;
+      background: transparent;
+      padding-block: clamp(3rem, 7vw, 6rem);
+      padding-inline: clamp(1.5rem, 5vw, 4rem);
     }
 
     .tp-kicker {
