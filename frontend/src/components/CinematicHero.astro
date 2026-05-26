@@ -9,8 +9,6 @@ const DEFAULT_WEBM =
 const DEFAULT_POSTER =
   "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg"
 const DEFAULT_CAPTION = "wild concepts captured by edgy and atypicaly video production"
-const DEFAULT_EMAIL_TEXT = "Shoot hello@demennis.be"
-const DEFAULT_EMAIL_ADDRESS = "hello@demennis.be"
 
 const props = Astro.props
 const needsSettings = !props.mp4 || !props.webm || !props.poster
@@ -75,12 +73,6 @@ const posterAttrs = imageAttributes({
         <p class:list={["vh-caption", captionUppercase && "is-uppercase"]}>{heroCaption}</p>
       ) : null
     }
-    <a
-      href={`mailto:${DEFAULT_EMAIL_ADDRESS}`}
-      class="vh-email is-uppercase"
-    >
-      {DEFAULT_EMAIL_TEXT}
-    </a>
   </div>
 
   <script>
@@ -219,8 +211,7 @@ const posterAttrs = imageAttributes({
       color: #fff;
     }
 
-    .vh-caption,
-    .vh-email {
+    .vh-caption {
       margin: 0;
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
       font-weight: 400;
@@ -228,24 +219,9 @@ const posterAttrs = imageAttributes({
     }
 
     .vh-caption {
-      margin-bottom: 0.35rem;
-      font-size: clamp(calc(1.2rem * var(--vh-caption-scale)), calc(2vw * var(--vh-caption-scale)), calc(2rem * var(--vh-caption-scale)));
+      max-width: min(28rem, calc(100vw - 3rem));
+      font-size: clamp(calc(2rem * var(--vh-caption-scale)), calc(4.2vw * var(--vh-caption-scale)), calc(4.2rem * var(--vh-caption-scale)));
       line-height: 0.95;
-      color: rgba(255, 255, 255, 0.84);
-    }
-
-    .vh-email {
-      display: inline-flex;
-      font-size: clamp(1.5rem, 2.2vw, 2.4rem);
-      line-height: 0.95;
-      color: rgba(255, 255, 255, 0.72);
-      text-decoration: none;
-      transition:
-        color 180ms ease,
-        opacity 180ms ease;
-    }
-
-    .vh-email:hover {
       color: #fff;
     }
 

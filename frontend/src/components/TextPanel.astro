@@ -31,8 +31,8 @@ const paragraphs = body
 
     .tp-inner {
       display: grid;
-      grid-template-columns: 0.9fr 1.1fr;
-      gap: 0;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: clamp(2rem, 6vw, 5rem);
       align-items: start;
       max-width: 72rem;
       margin: 0 auto;
@@ -58,6 +58,7 @@ const paragraphs = body
       letter-spacing: 0.03em;
       text-transform: uppercase;
       color: #fff;
+      overflow-wrap: break-word;
     }
 
     .tp-copy {
