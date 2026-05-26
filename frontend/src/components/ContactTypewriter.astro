@@ -18,10 +18,6 @@ const mailHref = `mailto:${email}`
 
 <section class="contact-page">
   <div class="contact-page__inner">
-    <div class="contact-page__headline" aria-live="polite">
-      <span data-contact-typewriter>{firstSentence}</span><span class="contact-page__cursor" aria-hidden="true">|</span>
-    </div>
-
     <div class="contact-page__details">
       <a class="contact-page__mail" href={mailHref}>
         <span>{mailSentence}</span>
@@ -30,13 +26,34 @@ const mailHref = `mailto:${email}`
 
       {socialLinks.length ? (
         <nav class="contact-page__socials" aria-label="Social links">
-          {socialLinks.map(link => (
-            <a href={link.url} target="_blank" rel="noopener noreferrer">
-              {link.label}
-            </a>
-          ))}
+          {socialLinks.map(link => {
+            const isInstagram = link.label.toLowerCase().includes("instagram")
+
+            return (
+              <a
+                class:list={["contact-page__social", isInstagram && "is-instagram"]}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={link.label}
+              >
+                {isInstagram ? (
+                  <picture>
+                    <source srcset="/icons/instagram.webp" type="image/webp" />
+                    <img src="/icons/instagram.png" width="24" height="24" alt="" loading="lazy" decoding="async" />
+                  </picture>
+                ) : (
+                  <span>{link.label}</span>
+                )}
+              </a>
+            )
+          })}
         </nav>
       ) : null}
+    </div>
+
+    <div class="contact-page__headline" aria-live="polite">
+      <span data-contact-typewriter>{firstSentence}</span><span class="contact-page__cursor" aria-hidden="true">|</span>
     </div>
   </div>
 </section>
@@ -121,7 +138,7 @@ const mailHref = `mailto:${email}`
     width: min(100%, 90rem);
     margin: 0 auto;
     display: grid;
-    gap: clamp(2rem, 6vh, 4rem);
+    gap: clamp(2rem, 5vh, 3.25rem);
   }
 
   .contact-page__headline {
@@ -142,7 +159,7 @@ const mailHref = `mailto:${email}`
 
   .contact-page__details {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 2rem;
   }
@@ -182,19 +199,38 @@ const mailHref = `mailto:${email}`
     gap: 0.75rem;
   }
 
-  .contact-page__socials a {
+  .contact-page__social {
     display: inline-flex;
-    min-height: 44px;
     align-items: center;
     justify-content: center;
+    min-width: 48px;
+    min-height: 48px;
     border: 1px solid currentColor;
-    padding: 0.65rem 1rem;
+    padding: 0.65rem;
     color: var(--color-brand-secondary);
     font-size: 0.85rem;
     font-weight: 800;
     letter-spacing: 0.1em;
     text-decoration: none;
     text-transform: uppercase;
+  }
+
+  .contact-page__social:not(.is-instagram) {
+    padding-inline: 1rem;
+  }
+
+  .contact-page__social img {
+    display: block;
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(20%) sepia(10%) saturate(1104%) hue-rotate(79deg) brightness(90%)
+      contrast(83%);
+    transition: filter 160ms ease;
+  }
+
+  .contact-page__social:hover img {
+    filter: brightness(0) invert(1);
   }
 
   @keyframes contact-cursor {
