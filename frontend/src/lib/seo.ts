@@ -230,6 +230,33 @@ export function collectionPageJsonLd(params: {
   }
 }
 
+export function contactPageJsonLd(params: {
+  seo: SeoSettings | null | undefined
+  title: string
+  description: string
+  email?: string
+  socialUrls?: string[]
+}) {
+  const { seo, title, description, email, socialUrls = [] } = params
+  return {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "@id": pageId("/contact", seo?.siteUrl),
+    name: title,
+    description,
+    url: absoluteUrl("/contact", seo?.siteUrl),
+    isPartOf: { "@id": websiteId(seo) },
+    publisher: { "@id": organizationId(seo) },
+    mainEntity: {
+      "@type": "Organization",
+      "@id": organizationId(seo),
+      name: brandName(seo),
+      email,
+      sameAs: socialUrls.length ? socialUrls : sameAs(seo),
+    },
+  }
+}
+
 export function creativeWorkJsonLd(params: {
   seo: SeoSettings | null | undefined
   work: WorkItem

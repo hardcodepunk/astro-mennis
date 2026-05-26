@@ -1,0 +1,69 @@
+---
+import ContactTypewriter from "../components/ContactTypewriter.astro"
+import Layout from "../layouts/Layout.astro"
+import { getContactPage, getSeoSettings } from "../lib/sanity.queries"
+import { breadcrumbJsonLd, contactPageJsonLd, formatTitle, metaDescription, socialImage } from "../lib/seo"
+
+const DEFAULT_CONTACT = {
+  animatedSentences: [
+    "Wild concepts captured with sharp video production.",
+    "Edgy visuals for brands, music and movement.",
+    "Atypical camera work with a calm production process.",
+  ],
+  mailSentence: "Shoot at",
+  email: "hello@demennis.be",
+  socialLinks: [{ label: "Instagram", url: "https://www.instagram.com/demennis_/" }],
+}
+
+const contactPage = await getContactPage()
+const seoSettings = await getSeoSettings()
+const animatedSentences = contactPage?.animatedSentences?.map(sentence => sentence.trim()).filter(Boolean)
+const socialLinks = contactPage?.socialLinks?.filter(link => link.label.trim() && link.url.trim())
+const contact = {
+  animatedSentences: animatedSentences?.length ? animatedSentences : DEFAULT_CONTACT.animatedSentences,
+  mailSentence: contactPage?.mailSentence?.trim() || DEFAULT_CONTACT.mailSentence,
+  email: contactPage?.email?.trim() || DEFAULT_CONTACT.email,
+  socialLinks: socialLinks?.length ? socialLinks : DEFAULT_CONTACT.socialLinks,
+}
+const seoH1 = seoSettings?.contactH1 ?? "Contact De Mennis"
+const title = formatTitle(seoSettings, seoSettings?.contactTitle ?? "Contact")
+const description = metaDescription(seoSettings, seoSettings?.contactDescription)
+const image = socialImage(seoSettings, seoSettings?.contactSocialImage)
+const jsonLd = [
+  breadcrumbJsonLd(
+    [
+      { name: "Home", path: "/" },
+      { name: "Contact", path: "/contact" },
+    ],
+    seoSettings?.siteUrl,
+  ),
+  contactPageJsonLd({
+    seo: seoSettings,
+    title,
+    description,
+    email: contact.email,
+    socialUrls: contact.socialLinks.map(link => link.url),
+  }),
+]
+---
+
+<Layout
+  title={title}
+  description={description}
+  image={image}
+  imageAlt={seoSettings?.defaultSocialImageAlt}
+  noindex={seoSettings?.contactNoindex}
+  siteUrl={seoSettings?.siteUrl}
+  twitterHandle={seoSettings?.twitterHandle}
+  jsonLd={jsonLd}
+>
+  <main>
+    <h1 class="sr-only">{seoH1}</h1>
+    <ContactTypewriter
+      sentences={contact.animatedSentences}
+      mailSentence={contact.mailSentence}
+      email={contact.email}
+      socialLinks={contact.socialLinks}
+    />
+  </main>
+</Layout>

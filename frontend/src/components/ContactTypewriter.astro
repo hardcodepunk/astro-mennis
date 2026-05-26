@@ -1,0 +1,225 @@
+---
+type SocialLink = {
+  label: string
+  url: string
+}
+
+type Props = {
+  sentences: string[]
+  mailSentence: string
+  email: string
+  socialLinks: SocialLink[]
+}
+
+const { sentences, mailSentence, email, socialLinks } = Astro.props as Props
+const firstSentence = sentences[0] ?? ""
+const mailHref = `mailto:${email}`
+---
+
+<section class="contact-page">
+  <div class="contact-page__inner">
+    <div class="contact-page__headline" aria-live="polite">
+      <span data-contact-typewriter>{firstSentence}</span><span class="contact-page__cursor" aria-hidden="true">|</span>
+    </div>
+
+    <div class="contact-page__details">
+      <a class="contact-page__mail" href={mailHref}>
+        <span>{mailSentence}</span>
+        <strong>{email}</strong>
+      </a>
+
+      {socialLinks.length ? (
+        <nav class="contact-page__socials" aria-label="Social links">
+          {socialLinks.map(link => (
+            <a href={link.url} target="_blank" rel="noopener noreferrer">
+              {link.label}
+            </a>
+          ))}
+        </nav>
+      ) : null}
+    </div>
+  </div>
+</section>
+
+<script is:inline define:vars={{ sentences }}>
+  ;(() => {
+    const bootTypewriter = () => {
+      const target = document.querySelector("[data-contact-typewriter]")
+      if (!(target instanceof HTMLElement) || target.dataset.typewriterReady === "true") return
+
+      const values = Array.isArray(sentences)
+        ? sentences.map(value => String(value || "").trim()).filter(Boolean)
+        : []
+
+      if (values.length <= 1 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        target.textContent = values[0] || target.textContent || ""
+        return
+      }
+
+      target.dataset.typewriterReady = "true"
+
+      let sentenceIndex = 0
+      let charIndex = values[0].length
+      let deleting = true
+      let timeoutId = 0
+
+      const tick = () => {
+        const current = values[sentenceIndex] || ""
+
+        if (deleting) {
+          charIndex -= 1
+          target.textContent = current.slice(0, Math.max(0, charIndex))
+
+          if (charIndex <= 0) {
+            deleting = false
+            sentenceIndex = (sentenceIndex + 1) % values.length
+          }
+        } else {
+          const next = values[sentenceIndex] || ""
+          charIndex += 1
+          target.textContent = next.slice(0, charIndex)
+
+          if (charIndex >= next.length) {
+            deleting = true
+          }
+        }
+
+        const atFullSentence = deleting && charIndex >= (values[sentenceIndex] || "").length
+        const atEmptySentence = !deleting && charIndex <= 0
+        const delay = atFullSentence ? 1400 : atEmptySentence ? 240 : deleting ? 32 : 58
+        timeoutId = window.setTimeout(tick, delay)
+      }
+
+      timeoutId = window.setTimeout(tick, 1200)
+
+      document.addEventListener(
+        "astro:before-swap",
+        () => {
+          window.clearTimeout(timeoutId)
+        },
+        { once: true },
+      )
+    }
+
+    bootTypewriter()
+    document.addEventListener("astro:page-load", bootTypewriter)
+    document.addEventListener("astro:after-swap", bootTypewriter)
+  })()
+</script>
+
+<style>
+  .contact-page {
+    min-height: 100svh;
+    display: grid;
+    align-items: center;
+    padding: clamp(5rem, 10vh, 7rem) 1.5rem clamp(2rem, 6vh, 4rem);
+    background: transparent;
+    color: var(--color-brand-secondary);
+  }
+
+  .contact-page__inner {
+    width: min(100%, 90rem);
+    margin: 0 auto;
+    display: grid;
+    gap: clamp(2rem, 6vh, 4rem);
+  }
+
+  .contact-page__headline {
+    min-height: clamp(10rem, 28vw, 20rem);
+    max-width: 68rem;
+    font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+    font-size: clamp(3.5rem, 10vw, 9rem);
+    line-height: 0.9;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .contact-page__cursor {
+    display: inline-block;
+    margin-left: 0.08em;
+    animation: contact-cursor 700ms steps(2, start) infinite;
+  }
+
+  .contact-page__details {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .contact-page__mail {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    color: var(--color-brand-secondary);
+    text-decoration: none;
+  }
+
+  .contact-page__mail span {
+    font-size: 0.95rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .contact-page__mail strong {
+    font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    line-height: 0.9;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .contact-page__mail:hover,
+  .contact-page__socials a:hover {
+    color: #fff;
+  }
+
+  .contact-page__socials {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  .contact-page__socials a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid currentColor;
+    padding: 0.65rem 1rem;
+    color: var(--color-brand-secondary);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  @keyframes contact-cursor {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .contact-page__headline {
+      min-height: 18rem;
+    }
+
+    .contact-page__details {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .contact-page__socials {
+      justify-content: flex-start;
+    }
+  }
+</style>

@@ -50,10 +50,27 @@ export type SeoSettings = {
   aboutDescription?: string
   aboutSocialImage?: string
   aboutNoindex?: boolean
+  contactH1?: string
+  contactTitle?: string
+  contactDescription?: string
+  contactSocialImage?: string
+  contactNoindex?: boolean
   categoryTitleTemplate?: string
   categoryDescriptionTemplate?: string
   workTitleTemplate?: string
   workDescriptionTemplate?: string
+}
+
+export type ContactPageDoc = {
+  animatedSentences?: string[]
+  mailSentence?: string
+  email?: string
+  socialLinks?: SocialLink[]
+}
+
+export type SocialLink = {
+  label: string
+  url: string
 }
 
 export type DocumentSeo = {
@@ -187,10 +204,36 @@ export function validateSeoSettings(value: unknown, path: string): SeoSettings {
     aboutDescription: optionalString(obj.aboutDescription, `${path}.aboutDescription`),
     aboutSocialImage: optionalString(obj.aboutSocialImage, `${path}.aboutSocialImage`),
     aboutNoindex: optionalBoolean(obj.aboutNoindex, `${path}.aboutNoindex`),
+    contactH1: optionalString(obj.contactH1, `${path}.contactH1`),
+    contactTitle: optionalString(obj.contactTitle, `${path}.contactTitle`),
+    contactDescription: optionalString(obj.contactDescription, `${path}.contactDescription`),
+    contactSocialImage: optionalString(obj.contactSocialImage, `${path}.contactSocialImage`),
+    contactNoindex: optionalBoolean(obj.contactNoindex, `${path}.contactNoindex`),
     categoryTitleTemplate: optionalString(obj.categoryTitleTemplate, `${path}.categoryTitleTemplate`),
     categoryDescriptionTemplate: optionalString(obj.categoryDescriptionTemplate, `${path}.categoryDescriptionTemplate`),
     workTitleTemplate: optionalString(obj.workTitleTemplate, `${path}.workTitleTemplate`),
     workDescriptionTemplate: optionalString(obj.workDescriptionTemplate, `${path}.workDescriptionTemplate`),
+  }
+}
+
+export function validateContactPage(value: unknown, path: string): ContactPageDoc {
+  const obj = objectAt(value, path)
+  return {
+    animatedSentences: optionalStringArray(obj.animatedSentences, `${path}.animatedSentences`),
+    mailSentence: optionalString(obj.mailSentence, `${path}.mailSentence`),
+    email: optionalString(obj.email, `${path}.email`),
+    socialLinks:
+      obj.socialLinks === null || obj.socialLinks === undefined
+        ? undefined
+        : arrayOf(obj.socialLinks, `${path}.socialLinks`, validateSocialLink),
+  }
+}
+
+function validateSocialLink(value: unknown, path: string): SocialLink {
+  const obj = objectAt(value, path)
+  return {
+    label: requiredString(obj.label, `${path}.label`),
+    url: requiredString(obj.url, `${path}.url`),
   }
 }
 

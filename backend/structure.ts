@@ -1,6 +1,6 @@
 import type {StructureResolver} from 'sanity/structure'
 
-const singletonTypes = ['seo', 'siteSettings', 'bioWithPreview', 'logoMarquee'] as const
+const singletonTypes = ['seo', 'siteSettings', 'bioWithPreview', 'contactPage', 'logoMarquee'] as const
 
 export const singletonTypeNames = new Set<string>(singletonTypes)
 
@@ -8,6 +8,7 @@ const singletonTitles: Record<(typeof singletonTypes)[number], string> = {
   seo: 'SEO',
   siteSettings: 'Site settings',
   bioWithPreview: 'About page',
+  contactPage: 'Contact page',
   logoMarquee: 'Logo marquee',
 }
 
@@ -40,6 +41,7 @@ export function productionUrlForDocument(document: {_type?: string; slug?: {curr
   }
 
   if (document._type === 'bioWithPreview') return `${siteUrl}/about`
+  if (document._type === 'contactPage') return `${siteUrl}/contact`
   if (document._type === 'seo' || document._type === 'siteSettings' || document._type === 'logoMarquee') {
     return siteUrl
   }

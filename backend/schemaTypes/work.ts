@@ -108,7 +108,8 @@ export const work = defineType({
     defineField({
       name: 'thumbnailAutoplay',
       title: 'Autoplay thumbnail',
-      description: 'Autoplay this project thumbnail in project grids, homepage cards, and recent work previews.',
+      description:
+        'Autoplay this project thumbnail in project grids, homepage cards, and recent work previews when a thumbnail video URL is set.',
       type: 'boolean',
       initialValue: false,
     }),

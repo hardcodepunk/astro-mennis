@@ -4,6 +4,7 @@ import {
   nullable,
   validateBioWithPreview,
   validateCategory,
+  validateContactPage,
   validateLogoMarquee,
   validateSeoSettings,
   validateSiteSettings,
@@ -13,6 +14,7 @@ import {
 export type {
   BioWithPreviewDoc,
   Category,
+  ContactPageDoc,
   DocumentSeo,
   LogoItem,
   SeoSettings,
@@ -71,6 +73,11 @@ export async function getSeoSettings() {
     aboutDescription,
     aboutSocialImage,
     aboutNoindex,
+    contactH1,
+    contactTitle,
+    contactDescription,
+    contactSocialImage,
+    contactNoindex,
     categoryTitleTemplate,
     categoryDescriptionTemplate,
     workTitleTemplate,
@@ -78,6 +85,20 @@ export async function getSeoSettings() {
   }`
   const data = await sanity.fetch<unknown>(q)
   return nullable(data, "getSeoSettings", validateSeoSettings)
+}
+
+export async function getContactPage() {
+  const q = `*[_type == "contactPage"][0]{
+    animatedSentences,
+    mailSentence,
+    email,
+    socialLinks[]{
+      label,
+      url
+    }
+  }`
+  const data = await sanity.fetch<unknown>(q)
+  return nullable(data, "getContactPage", validateContactPage)
 }
 
 export async function getVideoHeroSettings() {

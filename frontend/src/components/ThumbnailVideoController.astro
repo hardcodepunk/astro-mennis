@@ -51,14 +51,14 @@
           block.classList.remove("is-playing")
         }
 
-        if (!motionAllowed || !desktopViewport) return
+        if (!motionAllowed) return
 
         if (shouldAutoplay) {
           start()
           return
         }
 
-        if (!finePointer.matches) return
+        if (!desktopViewport || !finePointer.matches) return
 
         item.addEventListener("pointerenter", start)
         item.addEventListener("pointerleave", stop)
@@ -69,5 +69,6 @@
 
     initThumbnailVideos()
     document.addEventListener("astro:page-load", initThumbnailVideos)
+    document.addEventListener("astro:after-swap", initThumbnailVideos)
   })()
 </script>
