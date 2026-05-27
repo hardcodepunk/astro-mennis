@@ -14,13 +14,15 @@ const mailHref = `mailto:${email}`
   <div class="contact-page__inner">
     <div class="contact-page__details">
       <div class="contact-page__intro">
-        <p class="contact-page__location">
-          <span>Based in</span>
+        <p class="contact-page__meta">
+          <span class="contact-page__meta-label">Based in</span>
+          <span class="contact-page__meta-separator" aria-hidden="true">|</span>
           <strong>Gent, Belgium</strong>
         </p>
 
-        <a class="contact-page__mail" href={mailHref}>
-          <span>{mailSentence}</span>
+        <a class="contact-page__meta contact-page__mail" href={mailHref}>
+          <span class="contact-page__meta-label">{mailSentence}</span>
+          <span class="contact-page__meta-separator" aria-hidden="true">|</span>
           <strong>{email}</strong>
         </a>
       </div>
@@ -145,52 +147,38 @@ const mailHref = `mailto:${email}`
 
   .contact-page__intro {
     display: grid;
-    gap: clamp(1.35rem, 3vh, 2rem);
+    gap: 0.75rem;
   }
 
-  .contact-page__location {
+  .contact-page__meta {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.45rem;
+    gap: 0.5rem;
     margin: 0;
     color: var(--color-brand-secondary);
   }
 
-  .contact-page__location span {
-    font-size: 1rem;
-    font-weight: 800;
-  }
-
-  .contact-page__location strong {
-    font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-    font-size: clamp(2rem, 4vw, 3.25rem);
-    line-height: 0.9;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .contact-page__mail {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    color: var(--color-brand-secondary);
-    text-decoration: none;
-  }
-
-  .contact-page__mail span {
+  .contact-page__meta-label,
+  .contact-page__meta-separator {
     font-size: 0.95rem;
     font-weight: 800;
-    text-transform: uppercase;
     letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 
-  .contact-page__mail strong {
+  .contact-page__meta strong {
     font-family: var(--font-bebas, "Bebas Neue", sans-serif);
     font-size: clamp(2.2rem, 5vw, 4rem);
     line-height: 0.9;
     letter-spacing: 0.03em;
     text-transform: uppercase;
+  }
+
+  .contact-page__mail {
+    display: inline-flex;
+    color: var(--color-brand-secondary);
+    text-decoration: none;
   }
 
   .contact-page__mail:hover {
