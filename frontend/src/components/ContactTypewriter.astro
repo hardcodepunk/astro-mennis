@@ -1,17 +1,11 @@
 ---
-type SocialLink = {
-  label: string
-  url: string
-}
-
 type Props = {
   sentences: string[]
   mailSentence: string
   email: string
-  socialLinks: SocialLink[]
 }
 
-const { sentences, mailSentence, email, socialLinks } = Astro.props as Props
+const { sentences, mailSentence, email } = Astro.props as Props
 const firstSentence = sentences[0] ?? ""
 const mailHref = `mailto:${email}`
 ---
@@ -24,32 +18,6 @@ const mailHref = `mailto:${email}`
         <strong>{email}</strong>
       </a>
 
-      {socialLinks.length ? (
-        <nav class="contact-page__socials" aria-label="Social links">
-          {socialLinks.map(link => {
-            const isInstagram = link.label.toLowerCase().includes("instagram")
-
-            return (
-              <a
-                class:list={["contact-page__social", isInstagram && "is-instagram"]}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={link.label}
-              >
-                {isInstagram ? (
-                  <picture>
-                    <source srcset="/icons/instagram.webp" type="image/webp" />
-                    <img src="/icons/instagram.png" width="24" height="24" alt="" loading="lazy" decoding="async" />
-                  </picture>
-                ) : (
-                  <span>{link.label}</span>
-                )}
-              </a>
-            )
-          })}
-        </nav>
-      ) : null}
     </div>
 
     <div class="contact-page__headline" aria-live="polite">
@@ -148,7 +116,6 @@ const mailHref = `mailto:${email}`
     font-size: clamp(3.5rem, 10vw, 9rem);
     line-height: 0.9;
     letter-spacing: 0;
-    text-transform: uppercase;
   }
 
   .contact-page__cursor {
@@ -187,50 +154,8 @@ const mailHref = `mailto:${email}`
     text-transform: uppercase;
   }
 
-  .contact-page__mail:hover,
-  .contact-page__socials a:hover {
+  .contact-page__mail:hover {
     color: #fff;
-  }
-
-  .contact-page__socials {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.75rem;
-  }
-
-  .contact-page__social {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 48px;
-    min-height: 48px;
-    border: 1px solid currentColor;
-    padding: 0.65rem;
-    color: var(--color-brand-secondary);
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-decoration: none;
-    text-transform: uppercase;
-  }
-
-  .contact-page__social:not(.is-instagram) {
-    padding-inline: 1rem;
-  }
-
-  .contact-page__social img {
-    display: block;
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    filter: brightness(0) saturate(100%) invert(20%) sepia(10%) saturate(1104%) hue-rotate(79deg) brightness(90%)
-      contrast(83%);
-    transition: filter 160ms ease;
-  }
-
-  .contact-page__social:hover img {
-    filter: brightness(0) invert(1);
   }
 
   @keyframes contact-cursor {
@@ -254,8 +179,5 @@ const mailHref = `mailto:${email}`
       flex-direction: column;
     }
 
-    .contact-page__socials {
-      justify-content: flex-start;
-    }
   }
 </style>

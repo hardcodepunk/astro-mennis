@@ -20,6 +20,7 @@ export type SiteSettings = {
     kicker?: string
     title?: string
     body?: string
+    mirrorLayout?: boolean
   }
 }
 
@@ -65,12 +66,6 @@ export type ContactPageDoc = {
   animatedSentences?: string[]
   mailSentence?: string
   email?: string
-  socialLinks?: SocialLink[]
-}
-
-export type SocialLink = {
-  label: string
-  url: string
 }
 
 export type DocumentSeo = {
@@ -115,6 +110,7 @@ export type BioWithPreviewDoc = {
     kicker?: string
     title?: string
     body?: string
+    mirrorLayout?: boolean
   }
 }
 
@@ -171,6 +167,7 @@ export function validateSiteSettings(value: unknown, path: string): SiteSettings
       kicker: optionalString(workflow.kicker, `${path}.workflowPanel.kicker`),
       title: optionalString(workflow.title, `${path}.workflowPanel.title`),
       body: optionalString(workflow.body, `${path}.workflowPanel.body`),
+      mirrorLayout: optionalBoolean(workflow.mirrorLayout, `${path}.workflowPanel.mirrorLayout`),
     })),
   }
 }
@@ -222,18 +219,6 @@ export function validateContactPage(value: unknown, path: string): ContactPageDo
     animatedSentences: optionalStringArray(obj.animatedSentences, `${path}.animatedSentences`),
     mailSentence: optionalString(obj.mailSentence, `${path}.mailSentence`),
     email: optionalString(obj.email, `${path}.email`),
-    socialLinks:
-      obj.socialLinks === null || obj.socialLinks === undefined
-        ? undefined
-        : arrayOf(obj.socialLinks, `${path}.socialLinks`, validateSocialLink),
-  }
-}
-
-function validateSocialLink(value: unknown, path: string): SocialLink {
-  const obj = objectAt(value, path)
-  return {
-    label: requiredString(obj.label, `${path}.label`),
-    url: requiredString(obj.url, `${path}.url`),
   }
 }
 
@@ -258,6 +243,7 @@ export function validateBioWithPreview(value: unknown, path: string): BioWithPre
       kicker: optionalString(approach.kicker, `${path}.approach.kicker`),
       title: optionalString(approach.title, `${path}.approach.title`),
       body: optionalString(approach.body, `${path}.approach.body`),
+      mirrorLayout: optionalBoolean(approach.mirrorLayout, `${path}.approach.mirrorLayout`),
     })),
   }
 }

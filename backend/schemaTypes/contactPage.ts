@@ -1,5 +1,4 @@
 import {defineField, defineType} from 'sanity'
-import {httpsUrl} from './validation'
 
 export const contactPage = defineType({
   name: 'contactPage',
@@ -33,39 +32,6 @@ export const contactPage = defineType({
       type: 'string',
       initialValue: 'hello@demennis.be',
       validation: (r) => r.required().email(),
-    }),
-    defineField({
-      name: 'socialLinks',
-      title: 'Social links',
-      type: 'array',
-      of: [
-        defineField({
-          name: 'socialLink',
-          title: 'Social link',
-          type: 'object',
-          fields: [
-            defineField({
-              name: 'label',
-              title: 'Label',
-              type: 'string',
-              validation: (r) => r.required(),
-            }),
-            defineField({
-              name: 'url',
-              title: 'URL',
-              type: 'url',
-              validation: (r) => r.required().uri({scheme: ['https']}).custom(httpsUrl),
-            }),
-          ],
-          preview: {
-            select: {
-              title: 'label',
-              subtitle: 'url',
-            },
-          },
-        }),
-      ],
-      initialValue: [{label: 'Instagram', url: 'https://www.instagram.com/demennis_/'}],
     }),
   ],
   preview: {

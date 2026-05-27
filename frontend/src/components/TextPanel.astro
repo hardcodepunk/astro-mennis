@@ -5,16 +5,17 @@ type Props = {
   body: string
   fullWidth?: boolean
   flushTop?: boolean
+  mirrorLayout?: boolean
 }
 
-const { kicker, title, body, fullWidth = false, flushTop = false } = Astro.props as Props
+const { kicker, title, body, fullWidth = false, flushTop = false, mirrorLayout = false } = Astro.props as Props
 const paragraphs = body
   .split(/\n{2,}/)
   .map(paragraph => paragraph.trim())
   .filter(Boolean)
 ---
 
-<section class:list={["tp", fullWidth && "is-full", flushTop && "is-flush"]}>
+<section class:list={["tp", fullWidth && "is-full", flushTop && "is-flush", mirrorLayout && "is-mirrored"]}>
   <div class="tp-inner">
     <div class="tp-col">
       {kicker ? <p class="tp-kicker">{kicker}</p> : null}
@@ -67,6 +68,14 @@ const paragraphs = body
       color: var(--color-brand-secondary);
     }
 
+    .tp.is-mirrored .tp-col {
+      order: 2;
+    }
+
+    .tp.is-mirrored .tp-copy {
+      order: 1;
+    }
+
     .tp-kicker {
       margin: 0 0 10px 0;
       color: rgba(255, 255, 255, 0.68);
@@ -113,6 +122,11 @@ const paragraphs = body
       .tp-inner {
         grid-template-columns: 1fr;
         gap: 24px;
+      }
+
+      .tp.is-mirrored .tp-col,
+      .tp.is-mirrored .tp-copy {
+        order: initial;
       }
     }
   </style>

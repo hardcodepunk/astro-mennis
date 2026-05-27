@@ -71,6 +71,7 @@ export const siteSettings = defineType({
           '* Aerial filmography',
           '* Idea’s',
         ].join('\n\n'),
+        mirrorLayout: false,
       },
       fields: [
         defineField({
@@ -90,6 +91,13 @@ export const siteSettings = defineType({
           description: 'Separate paragraphs with a blank line.',
           type: 'text',
           rows: 8,
+        }),
+        defineField({
+          name: 'mirrorLayout',
+          title: 'Put body text on the left',
+          description: 'Switches the heading and body text columns on desktop.',
+          type: 'boolean',
+          initialValue: false,
         }),
       ],
     }),

@@ -24,6 +24,7 @@ const DEFAULT_APPROACH = {
     "That can mean branded content, campaign visuals, portraits, event films or short-form edits. The output changes depending on the project, but the standard stays the same.",
     "I care about images that carry weight without feeling overworked. Clean direction, strong editing and the right energy on set matter just as much as the final look.",
   ].join("\n\n"),
+  mirrorLayout: false,
 }
 
 const heroTitle = aboutDoc?.heroTitle ?? aboutDoc?.seoH1 ?? "Filmmaking with clarity, rhythm and feel."
@@ -35,6 +36,7 @@ const approach = {
   kicker: aboutDoc?.approach?.kicker?.trim() || DEFAULT_APPROACH.kicker,
   title: aboutDoc?.approach?.title?.trim() || DEFAULT_APPROACH.title,
   body: aboutDoc?.approach?.body?.trim() || DEFAULT_APPROACH.body,
+  mirrorLayout: aboutDoc?.approach?.mirrorLayout ?? DEFAULT_APPROACH.mirrorLayout,
 }
 const title = formatTitle(seoSettings, seoSettings?.aboutTitle ?? "About")
 const description = metaDescription(seoSettings, seoSettings?.aboutDescription)
@@ -104,7 +106,7 @@ const jsonLd = breadcrumbJsonLd(
       bioTextScale={aboutDoc?.bioTextScale}
     />
 
-    <TextPanel kicker={approach.kicker} title={approach.title} body={approach.body} />
+    <TextPanel kicker={approach.kicker} title={approach.title} body={approach.body} mirrorLayout={approach.mirrorLayout} />
 
     <LogosMarquee />
   </main>

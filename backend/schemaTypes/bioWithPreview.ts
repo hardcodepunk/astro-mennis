@@ -111,6 +111,7 @@ export const bioWithPreview = defineType({
           'That can mean branded content, campaign visuals, portraits, event films or short-form edits. The output changes depending on the project, but the standard stays the same.',
           'I care about images that carry weight without feeling overworked. Clean direction, strong editing and the right energy on set matter just as much as the final look.',
         ].join('\n\n'),
+        mirrorLayout: false,
       },
       fields: [
         defineField({
@@ -130,6 +131,13 @@ export const bioWithPreview = defineType({
           description: 'Separate paragraphs with a blank line.',
           type: 'text',
           rows: 8,
+        }),
+        defineField({
+          name: 'mirrorLayout',
+          title: 'Put body text on the left',
+          description: 'Switches the heading and body text columns on desktop.',
+          type: 'boolean',
+          initialValue: false,
         }),
       ],
     }),

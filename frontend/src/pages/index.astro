@@ -23,6 +23,7 @@ const DEFAULT_WORKFLOW_PANEL = {
     "* Aerial filmography",
     "* Idea’s",
   ].join("\n\n"),
+  mirrorLayout: false,
 }
 const seoH1 = seoSettings?.homeH1 ?? siteSettings?.homeSeoH1 ?? "De Mennis"
 const heroSettings = siteSettings?.videoHero
@@ -30,6 +31,7 @@ const workflowPanel = {
   kicker: siteSettings?.workflowPanel?.kicker?.trim() || DEFAULT_WORKFLOW_PANEL.kicker,
   title: siteSettings?.workflowPanel?.title?.trim() || DEFAULT_WORKFLOW_PANEL.title,
   body: siteSettings?.workflowPanel?.body?.trim() || DEFAULT_WORKFLOW_PANEL.body,
+  mirrorLayout: siteSettings?.workflowPanel?.mirrorLayout ?? DEFAULT_WORKFLOW_PANEL.mirrorLayout,
 }
 const heroPoster = heroSettings?.poster ? safePosterUrl(heroSettings.poster, featuredWorks[0]?.preview.poster ?? "") : undefined
 const title = formatTitle(seoSettings, seoSettings?.homeTitle ?? "De Mennis", true)
@@ -73,6 +75,7 @@ const jsonLd = [websiteJsonLd(seoSettings), organizationJsonLd(seoSettings), per
     kicker={workflowPanel.kicker}
     title={workflowPanel.title}
     body={workflowPanel.body}
+    mirrorLayout={workflowPanel.mirrorLayout}
     fullWidth
     flushTop
   />

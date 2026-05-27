@@ -38,7 +38,8 @@ export async function getSiteSettings() {
     workflowPanel{
       kicker,
       title,
-      body
+      body,
+      mirrorLayout
     }
   }`
   const data = await sanity.fetch<unknown>(q)
@@ -91,11 +92,7 @@ export async function getContactPage() {
   const q = `*[_type == "contactPage"][0]{
     animatedSentences,
     mailSentence,
-    email,
-    socialLinks[]{
-      label,
-      url
-    }
+    email
   }`
   const data = await sanity.fetch<unknown>(q)
   return nullable(data, "getContactPage", validateContactPage)
@@ -133,7 +130,8 @@ export async function getBioWithPreview() {
     approach{
       kicker,
       title,
-      body
+      body,
+      mirrorLayout
     }
   }`
   const data = await sanity.fetch<unknown>(q)
