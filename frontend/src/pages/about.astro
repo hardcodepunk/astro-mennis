@@ -76,18 +76,20 @@ const jsonLd = breadcrumbJsonLd(
         <div class="about-page__hero-frame">
           <video
             class="about-page__hero-video"
+            data-about-autoplay-video
             autoplay
             muted
             loop
             playsinline
+            webkit-playsinline
             preload="metadata"
             poster={optimizedHeroPoster}
             width="1920"
             height="1080"
             aria-hidden="true"
           >
-            {heroWebm ? <source src={heroWebm} type="video/webm" /> : null}
             {heroMp4 ? <source src={heroMp4} type="video/mp4" /> : null}
+            {heroWebm ? <source src={heroWebm} type="video/webm" /> : null}
           </video>
           <div class="about-page__hero-shade" aria-hidden="true"></div>
           <div class="about-page__hero-content">
@@ -110,6 +112,52 @@ const jsonLd = breadcrumbJsonLd(
 
     <LogosMarquee />
   </main>
+
+  <script>
+    ;(() => {
+      const win = window as Window & { __aboutAutoplayBooted?: boolean }
+      if (win.__aboutAutoplayBooted) return
+      win.__aboutAutoplayBooted = true
+
+      const prepareVideo = (video: HTMLVideoElement) => {
+        video.muted = true
+        video.defaultMuted = true
+        video.playsInline = true
+        video.setAttribute("muted", "")
+        video.setAttribute("playsinline", "")
+        video.setAttribute("webkit-playsinline", "")
+      }
+
+      const bootAboutVideo = () => {
+        const videos = document.querySelectorAll("[data-about-autoplay-video]")
+
+        videos.forEach(video => {
+          if (!(video instanceof HTMLVideoElement)) return
+
+          prepareVideo(video)
+
+          const play = () => {
+            if (!document.body.contains(video) || !video.paused) return
+            video.play().catch(() => {
+              video.addEventListener("loadeddata", play, { once: true })
+              video.addEventListener("canplay", play, { once: true })
+            })
+          }
+
+          play()
+          window.setTimeout(play, 120)
+        })
+      }
+
+      bootAboutVideo()
+      window.addEventListener("pageshow", bootAboutVideo)
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) bootAboutVideo()
+      })
+      document.addEventListener("astro:page-load", bootAboutVideo)
+      document.addEventListener("astro:after-swap", bootAboutVideo)
+    })()
+  </script>
 
   <style>
     .about-page {

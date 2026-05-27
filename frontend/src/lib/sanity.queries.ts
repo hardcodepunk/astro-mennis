@@ -24,7 +24,7 @@ export type {
 } from "./sanity.contract"
 
 export async function getSiteSettings() {
-  const q = `*[_type == "siteSettings"][0]{
+  const q = `*[_type == "siteSettings"] | order(select(_id == "siteSettings" => 0, 1) asc, _updatedAt desc)[0]{
     homeSeoH1,
     projectsSeoH1,
     videoHero{

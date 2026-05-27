@@ -1,5 +1,18 @@
 <script>
   ;(() => {
+    const win = window as Window & { __thumbnailVideoControllerBooted?: boolean }
+    if (win.__thumbnailVideoControllerBooted) return
+    win.__thumbnailVideoControllerBooted = true
+
+    const prepareVideo = (video: HTMLVideoElement) => {
+      video.muted = true
+      video.defaultMuted = true
+      video.playsInline = true
+      video.setAttribute("muted", "")
+      video.setAttribute("playsinline", "")
+      video.setAttribute("webkit-playsinline", "")
+    }
+
     const initThumbnailVideos = () => {
       const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)")
       const motionAllowed = !window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -15,11 +28,13 @@
 
         const video = block.querySelector("video")
         if (!(video instanceof HTMLVideoElement)) return
+        prepareVideo(video)
 
         const sources = Array.from(video.querySelectorAll("source"))
         const shouldAutoplay = block.dataset.autoplay === "true"
         let hydrated = false
         let playing = false
+        let pendingStart = false
 
         const hydrate = () => {
           if (hydrated) return
@@ -31,9 +46,26 @@
           video.load()
         }
 
+        const scheduleStart = () => {
+          if (pendingStart || playing) return
+          pendingStart = true
+
+          const retry = () => {
+            pendingStart = false
+            start()
+          }
+
+          video.addEventListener("loadeddata", retry, { once: true })
+          video.addEventListener("canplay", retry, { once: true })
+          window.setTimeout(retry, 160)
+        }
+
         const start = async () => {
           if (playing) return
+          pendingStart = false
           hydrate()
+          prepareVideo(video)
+
           try {
             await video.play()
             playing = true
@@ -41,20 +73,29 @@
           } catch {
             playing = false
             block.classList.remove("is-playing")
+            if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) scheduleStart()
           }
         }
 
         const stop = () => {
           playing = false
+          pendingStart = false
           video.pause()
-          video.currentTime = 0
+          try {
+            video.currentTime = 0
+          } catch {}
           block.classList.remove("is-playing")
         }
 
         if (!motionAllowed) return
 
         if (shouldAutoplay) {
+          video.preload = "metadata"
           start()
+          window.addEventListener("pageshow", start)
+          document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) start()
+          })
           return
         }
 
