@@ -13,11 +13,17 @@ const mailHref = `mailto:${email}`
 <section class="contact-page">
   <div class="contact-page__inner">
     <div class="contact-page__details">
-      <a class="contact-page__mail" href={mailHref}>
-        <span>{mailSentence}</span>
-        <strong>{email}</strong>
-      </a>
+      <div class="contact-page__intro">
+        <p class="contact-page__location">
+          <span>Based in</span>
+          <strong>Gent, Belgium</strong>
+        </p>
 
+        <a class="contact-page__mail" href={mailHref}>
+          <span>{mailSentence}</span>
+          <strong>{email}</strong>
+        </a>
+      </div>
     </div>
 
     <div class="contact-page__headline" aria-live="polite">
@@ -135,6 +141,33 @@ const mailHref = `mailto:${email}`
     align-items: flex-start;
     justify-content: space-between;
     gap: 2rem;
+  }
+
+  .contact-page__intro {
+    display: grid;
+    gap: clamp(1.35rem, 3vh, 2rem);
+  }
+
+  .contact-page__location {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.45rem;
+    margin: 0;
+    color: var(--color-brand-secondary);
+  }
+
+  .contact-page__location span {
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .contact-page__location strong {
+    font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    line-height: 0.9;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   .contact-page__mail {
