@@ -3,12 +3,10 @@ import type { Category, SeoSettings, WorkItem } from "./sanity.queries"
 export const DEFAULT_SITE_URL = "https://www.demennis.be"
 export const DEFAULT_TITLE = "De Mennis"
 export const DEFAULT_DESCRIPTION = "Cinematic video work, brand films, reels and creative direction by De Mennis."
-export const DEFAULT_PERSON_NAME = "Dennis Van Stappen"
-export const DEFAULT_BASE_CITY = "Gent"
-export const DEFAULT_BASE_COUNTRY = "Belgium"
-export const DEFAULT_SAME_AS = ["https://www.instagram.com/demennis_/"]
-
-export type JsonLd = Record<string, unknown> | Record<string, unknown>[]
+const DEFAULT_PERSON_NAME = "Dennis Van Stappen"
+const DEFAULT_BASE_CITY = "Gent"
+const DEFAULT_BASE_COUNTRY = "Belgium"
+const DEFAULT_SAME_AS = ["https://www.instagram.com/demennis_/"]
 
 export function normalizeSiteUrl(siteUrl?: string) {
   return (siteUrl || DEFAULT_SITE_URL).replace(/\/+$/, "")
@@ -76,7 +74,7 @@ function pageId(path: string, siteUrl?: string) {
   return `${absoluteUrl(path, siteUrl)}#webpage`
 }
 
-export function replaceSeoTokens(template: string | undefined, tokens: Record<string, string | undefined>) {
+function replaceSeoTokens(template: string | undefined, tokens: Record<string, string | undefined>) {
   if (!template) return ""
   return Object.entries(tokens).reduce(
     (value, [token, replacement]) => value.replaceAll(`%${token}%`, replacement || ""),

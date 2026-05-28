@@ -20,7 +20,7 @@ export function cloudinaryImage(url: string | undefined, width: number, quality:
   return `${beforeUpload}${transforms.join(",")}/${assetPath}`
 }
 
-export function isImageUrl(url: string | undefined) {
+function isImageUrl(url: string | undefined) {
   if (!url) return false
   const cleanUrl = url.split("?")[0].toLowerCase()
   return /\.(avif|gif|jpe?g|png|svg|webp)$/.test(cleanUrl)
@@ -30,7 +30,7 @@ export function safePosterUrl(url: string | undefined, fallback: string): string
   return url && isImageUrl(url) ? url : fallback
 }
 
-export function imageSrcset(url: string | undefined, widths: number[], quality: CloudinaryQuality = "auto") {
+function imageSrcset(url: string | undefined, widths: number[], quality: CloudinaryQuality = "auto") {
   if (!url) return undefined
   if (!url.includes("res.cloudinary.com") || !url.includes(CLOUDINARY_UPLOAD)) return undefined
 

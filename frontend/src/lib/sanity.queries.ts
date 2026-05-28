@@ -12,19 +12,13 @@ import {
 } from "./sanity.contract"
 
 export type {
-  BioWithPreviewDoc,
   Category,
-  ContactPageDoc,
-  DocumentSeo,
-  LogoItem,
   SeoSettings,
-  SiteSettings,
   WorkItem,
-  WorkMedia,
 } from "./sanity.contract"
 
 export async function getSiteSettings() {
-  const q = `*[_type == "siteSettings"] | order(select(_id == "siteSettings" => 0, 1) asc, _updatedAt desc)[0]{
+  const q = `*[_id == "siteSettings"][0]{
     homeSeoH1,
     projectsSeoH1,
     videoHero{
@@ -47,7 +41,7 @@ export async function getSiteSettings() {
 }
 
 export async function getSeoSettings() {
-  const q = `*[_type == "seo"][0]{
+  const q = `*[_id == "seo"][0]{
     siteUrl,
     defaultTitle,
     titleTemplate,
@@ -89,7 +83,7 @@ export async function getSeoSettings() {
 }
 
 export async function getContactPage() {
-  const q = `*[_type == "contactPage"][0]{
+  const q = `*[_id == "contactPage"][0]{
     animatedSentences,
     mailSentence,
     email
@@ -104,7 +98,7 @@ export async function getVideoHeroSettings() {
 }
 
 export async function getLogoMarquee() {
-  const q = `*[_type == "logoMarquee"][0]{
+  const q = `*[_id == "logoMarquee"][0]{
     logos[]{
       name,
       alt,
@@ -119,7 +113,7 @@ export async function getLogoMarquee() {
 }
 
 export async function getBioWithPreview() {
-  const q = `*[_type == "bioWithPreview"] | order(_updatedAt desc)[0]{
+  const q = `*[_id == "bioWithPreview"][0]{
     heroTitle,
     seoH1,
     heroVideo{ mp4, webm, poster },

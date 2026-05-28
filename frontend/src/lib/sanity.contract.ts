@@ -1,4 +1,4 @@
-export class SanityContractError extends Error {
+class SanityContractError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "SanityContractError"
@@ -68,7 +68,7 @@ export type ContactPageDoc = {
   email?: string
 }
 
-export type DocumentSeo = {
+type DocumentSeo = {
   title?: string
   description?: string
   socialImage?: string
@@ -121,7 +121,7 @@ export type Category = {
   seo?: DocumentSeo
 }
 
-export type WorkMedia =
+type WorkMedia =
   | { mode: "preview" }
   | { mode: "single"; youtubeUrl?: string }
   | { mode: "slider"; reels?: string[] }
