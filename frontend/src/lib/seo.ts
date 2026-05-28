@@ -2,11 +2,14 @@ import type { Category, SeoSettings, WorkItem } from "./sanity.queries"
 
 export const DEFAULT_SITE_URL = "https://www.demennis.be"
 export const DEFAULT_TITLE = "De Mennis"
-export const DEFAULT_DESCRIPTION = "Cinematic video work, brand films, reels and creative direction by De Mennis."
+export const DEFAULT_DESCRIPTION =
+  "Videographer and editor based in Gent, Belgium, creating brand films, music videos, event recaps and sharp social video."
 const DEFAULT_PERSON_NAME = "Dennis Van Stappen"
+const DEFAULT_JOB_TITLE = "Videographer and editor"
 const DEFAULT_BASE_CITY = "Gent"
 const DEFAULT_BASE_COUNTRY = "Belgium"
 const DEFAULT_SAME_AS = ["https://www.instagram.com/demennis_/"]
+const DEFAULT_KNOWS_ABOUT = ["Videography", "Video editing", "Brand films", "Music videos", "Event video"]
 
 export function normalizeSiteUrl(siteUrl?: string) {
   return (siteUrl || DEFAULT_SITE_URL).replace(/\/+$/, "")
@@ -58,6 +61,10 @@ function addressJsonLd(seo: SeoSettings | null | undefined) {
   }
 }
 
+function locationName(seo: SeoSettings | null | undefined) {
+  return `${seo?.baseCity || DEFAULT_BASE_CITY}, ${seo?.baseCountry || DEFAULT_BASE_COUNTRY}`
+}
+
 function personId(seo: SeoSettings | null | undefined) {
   return `${normalizeSiteUrl(seo?.siteUrl)}/#person`
 }
@@ -100,7 +107,8 @@ export function categorySeoDescription(
   if (descriptionOverride) return metaDescription(seo, descriptionOverride)
 
   const description = replaceSeoTokens(
-    seo?.categoryDescriptionTemplate || "Explore %category% video projects by De Mennis.",
+    seo?.categoryDescriptionTemplate ||
+      "Explore %category% video projects by De Mennis, a videographer and editor based in Gent, Belgium.",
     { category: categoryTitle },
   )
   return metaDescription(seo, description)
@@ -122,7 +130,8 @@ export function workSeoDescription(seo: SeoSettings | null | undefined, work: Wo
   if (work.seo?.description) return metaDescription(seo, work.seo.description)
 
   const description = replaceSeoTokens(
-    seo?.workDescriptionTemplate || "%title% is a %category% video project for %client% by De Mennis.",
+    seo?.workDescriptionTemplate ||
+      "%title% is a %category% video project for %client% by De Mennis, a videographer and editor in Gent, Belgium.",
     {
       title: work.title,
       client: work.client,
@@ -153,9 +162,14 @@ export function organizationJsonLd(seo: SeoSettings | null | undefined) {
     "@type": "Organization",
     "@id": organizationId(seo),
     name: brandName(seo),
+    description: metaDescription(seo),
     url: siteUrl,
     logo,
     address: addressJsonLd(seo),
+    areaServed: {
+      "@type": "Place",
+      name: seo?.baseCountry || DEFAULT_BASE_COUNTRY,
+    },
     founder: { "@id": personId(seo) },
     sameAs: sameAs(seo),
   }
@@ -167,10 +181,13 @@ export function personJsonLd(seo: SeoSettings | null | undefined) {
     "@type": "Person",
     "@id": personId(seo),
     name: personName(seo),
+    jobTitle: DEFAULT_JOB_TITLE,
+    description: metaDescription(seo),
+    knowsAbout: DEFAULT_KNOWS_ABOUT,
     url: normalizeSiteUrl(seo?.siteUrl),
     homeLocation: {
       "@type": "Place",
-      name: `${seo?.baseCity || DEFAULT_BASE_CITY}, ${seo?.baseCountry || DEFAULT_BASE_COUNTRY}`,
+      name: locationName(seo),
       address: addressJsonLd(seo),
     },
     worksFor: { "@id": organizationId(seo) },
@@ -279,7 +296,7 @@ export function creativeWorkJsonLd(params: {
     publisher: { "@id": organizationId(seo) },
     locationCreated: {
       "@type": "Place",
-      name: `${seo?.baseCity || DEFAULT_BASE_CITY}, ${seo?.baseCountry || DEFAULT_BASE_COUNTRY}`,
+      name: locationName(seo),
       address: addressJsonLd(seo),
     },
     about: [
