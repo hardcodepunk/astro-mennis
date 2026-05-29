@@ -16,13 +16,11 @@ const mailHref = `mailto:${email}`
       <div class="contact-page__intro">
         <p class="contact-page__meta">
           <span class="contact-page__meta-label">Based in</span>
-          <span class="contact-page__meta-separator" aria-hidden="true">|</span>
           <strong>Gent, Belgium</strong>
         </p>
 
         <a class="contact-page__meta contact-page__mail" href={mailHref}>
           <span class="contact-page__meta-label">{mailSentence}</span>
-          <span class="contact-page__meta-separator" aria-hidden="true">|</span>
           <strong>{email}</strong>
         </a>
       </div>
@@ -146,43 +144,67 @@ const mailHref = `mailto:${email}`
   }
 
   .contact-page__intro {
-    display: grid;
-    gap: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(0.85rem, 2vw, 1.15rem);
+    align-items: stretch;
   }
 
   .contact-page__meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.5rem;
+    display: grid;
+    gap: 0.45rem;
+    align-content: start;
+    min-width: min(100%, 20rem);
     margin: 0;
+    padding: clamp(0.85rem, 1.7vw, 1.15rem) clamp(0.95rem, 2vw, 1.35rem);
+    border: 2px solid currentColor;
+    background: rgba(47, 58, 48, 0.07);
     color: var(--color-brand-secondary);
+    box-shadow: 0.5rem 0.5rem 0 var(--color-brand-secondary);
+    transform: translate(-0.5rem, -0.5rem);
   }
 
-  .contact-page__meta-label,
-  .contact-page__meta-separator {
-    font-size: 0.95rem;
+  .contact-page__meta-label {
+    width: max-content;
+    padding: 0.25rem 0.42rem 0.22rem;
+    background: var(--color-brand-secondary);
+    color: var(--color-brand-primary);
+    font-size: 0.78rem;
     font-weight: 800;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.13em;
+    line-height: 1;
     text-transform: uppercase;
   }
 
   .contact-page__meta strong {
     font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-size: clamp(2rem, 4.4vw, 3.7rem);
     line-height: 0.9;
     letter-spacing: 0.03em;
     text-transform: uppercase;
+    overflow-wrap: anywhere;
   }
 
   .contact-page__mail {
-    display: inline-flex;
     color: var(--color-brand-secondary);
     text-decoration: none;
+    transition:
+      background 160ms ease,
+      color 160ms ease,
+      transform 160ms ease,
+      box-shadow 160ms ease;
   }
 
   .contact-page__mail:hover {
-    color: #fff;
+    background: var(--color-brand-secondary);
+    color: var(--color-brand-primary);
+    box-shadow: 0.28rem 0.28rem 0 var(--color-brand-secondary);
+    transform: translate(-0.28rem, -0.28rem);
+  }
+
+  .contact-page__mail:hover .contact-page__meta-label {
+    background: var(--color-brand-primary);
+    color: var(--color-brand-secondary);
   }
 
   @keyframes contact-cursor {
@@ -204,6 +226,16 @@ const mailHref = `mailto:${email}`
     .contact-page__details {
       align-items: flex-start;
       flex-direction: column;
+    }
+
+    .contact-page__intro {
+      display: grid;
+      width: 100%;
+    }
+
+    .contact-page__meta {
+      transform: none;
+      box-shadow: none;
     }
 
   }
