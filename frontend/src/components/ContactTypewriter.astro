@@ -160,7 +160,7 @@ const mailHref = `mailto:${email}`
 
   .contact-page__meta-label {
     flex: 0 0 auto;
-    color: currentColor;
+    color: #fff;
     font-size: 0.78rem;
     font-weight: 800;
     letter-spacing: 0.13em;
@@ -180,10 +180,13 @@ const mailHref = `mailto:${email}`
   .contact-page__mail {
     color: var(--color-brand-secondary);
     text-decoration: none;
+  }
+
+  .contact-page__mail strong {
     transition: color 160ms ease;
   }
 
-  .contact-page__mail:hover {
+  .contact-page__mail:hover strong {
     color: #fff;
   }
 
