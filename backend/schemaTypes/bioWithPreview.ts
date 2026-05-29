@@ -65,10 +65,10 @@ export const bioWithPreview = defineType({
     defineField({
       name: 'bioTextScale',
       title: 'Bio text size',
-      description: 'Use 100 for default. Try 90 for smaller, 110 for larger.',
+      description: 'Use 100 for default. Try 60 for smaller, 110 for larger.',
       type: 'number',
       initialValue: 100,
-      validation: (r) => r.min(75).max(140),
+      validation: (r) => r.min(50).max(140),
     }),
     defineField({
       name: 'previewVideo',
