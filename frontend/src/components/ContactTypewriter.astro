@@ -146,29 +146,21 @@ const mailHref = `mailto:${email}`
   .contact-page__intro {
     display: flex;
     flex-wrap: wrap;
-    gap: clamp(0.85rem, 2vw, 1.15rem);
-    align-items: stretch;
+    gap: clamp(0.65rem, 2vw, 1rem) clamp(1.5rem, 4vw, 3rem);
+    align-items: baseline;
   }
 
   .contact-page__meta {
-    display: grid;
-    gap: 0.45rem;
-    align-content: start;
-    min-width: min(100%, 20rem);
+    display: flex;
+    align-items: baseline;
+    gap: clamp(0.55rem, 1.4vw, 0.85rem);
     margin: 0;
-    padding: clamp(0.85rem, 1.7vw, 1.15rem) clamp(0.95rem, 2vw, 1.35rem);
-    border: 2px solid currentColor;
-    background: rgba(47, 58, 48, 0.07);
     color: var(--color-brand-secondary);
-    box-shadow: 0.5rem 0.5rem 0 var(--color-brand-secondary);
-    transform: translate(-0.5rem, -0.5rem);
   }
 
   .contact-page__meta-label {
-    width: max-content;
-    padding: 0.25rem 0.42rem 0.22rem;
-    background: var(--color-brand-secondary);
-    color: var(--color-brand-primary);
+    flex: 0 0 auto;
+    color: currentColor;
     font-size: 0.78rem;
     font-weight: 800;
     letter-spacing: 0.13em;
@@ -178,7 +170,7 @@ const mailHref = `mailto:${email}`
 
   .contact-page__meta strong {
     font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-    font-size: clamp(2rem, 4.4vw, 3.7rem);
+    font-size: clamp(2rem, 5vw, 4.35rem);
     line-height: 0.9;
     letter-spacing: 0.03em;
     text-transform: uppercase;
@@ -188,23 +180,11 @@ const mailHref = `mailto:${email}`
   .contact-page__mail {
     color: var(--color-brand-secondary);
     text-decoration: none;
-    transition:
-      background 160ms ease,
-      color 160ms ease,
-      transform 160ms ease,
-      box-shadow 160ms ease;
+    transition: color 160ms ease;
   }
 
   .contact-page__mail:hover {
-    background: var(--color-brand-secondary);
-    color: var(--color-brand-primary);
-    box-shadow: 0.28rem 0.28rem 0 var(--color-brand-secondary);
-    transform: translate(-0.28rem, -0.28rem);
-  }
-
-  .contact-page__mail:hover .contact-page__meta-label {
-    background: var(--color-brand-primary);
-    color: var(--color-brand-secondary);
+    color: #fff;
   }
 
   @keyframes contact-cursor {
@@ -234,8 +214,9 @@ const mailHref = `mailto:${email}`
     }
 
     .contact-page__meta {
-      transform: none;
-      box-shadow: none;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.45rem;
     }
 
   }
