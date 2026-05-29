@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro"
 import Videohero from "../components/CinematicHero.astro"
 import TextPanel from "../components/TextPanel.astro"
+import ContactReasons from "../components/ContactReasons.astro"
 import { getFeaturedWorks, getSeoSettings, getSiteSettings } from "../lib/sanity.queries"
 import FeaturedWorks from "../components/FeaturedWorks.astro"
 import { formatTitle, metaDescription, organizationJsonLd, personJsonLd, socialImage, websiteJsonLd } from "../lib/seo"
@@ -12,18 +13,25 @@ const siteSettings = await getSiteSettings()
 const seoSettings = await getSeoSettings()
 const DEFAULT_WORKFLOW_PANEL = {
   kicker: "Workflow",
-  title:
-    "Whether I’m on rollerblades capturing ultra-smooth tracking shots at high speeds, or climbing structures to rig cameras for daring perspectives, I capture the raw energy of your project without the bloat of a massive crew.",
+  title: "Playful process, bold ideas, thoughtful results",
   body: [
-    "What to Contact Me For:",
-    "* Edgy & Daring Branding: Commercials and promos that breaks the rules.",
-    "* Lifestyle & Community Culture: Highlighting the people, the movement, and the vibe behind your brand.",
-    "* High-Motion Content: Music videos, sports, and events that require speed, flow, and kinetic energy.",
-    "* Freelance (rollerblade) camera operator & editor",
-    "* Aerial filmography",
-    "* Idea’s",
+    "We live in a world of acceleration, chasing the end goal, forgetting to enjoy the ride. At De Mennis, we slow down just enough to capture the magic in between: the boldness, the play, the small details that get lost when there is no room to breathe.",
+    "We believe that when passionate people come together and actually enjoy the process, something extraordinary happens.",
+    "And what cannot be put into words, we put into visuals.",
   ].join("\n\n"),
   mirrorLayout: false,
+}
+const DEFAULT_CONTACT_REASONS = {
+  kicker: "What to contact me for",
+  title: "Built for bold projects with movement, edge and energy.",
+  items: [
+    "Edgy & daring branding: commercials and promos that break the rules.",
+    "Lifestyle & community culture: highlighting the people, the movement, and the vibe behind your brand.",
+    "High-motion content: music videos, sports, and events that require speed, flow, and kinetic energy.",
+    "Freelance rollerblade camera operator & editor.",
+    "Aerial filmography.",
+    "Ideas.",
+  ],
 }
 const seoH1 = seoSettings?.homeH1 ?? siteSettings?.homeSeoH1 ?? "De Mennis"
 const heroSettings = siteSettings?.videoHero
@@ -32,6 +40,12 @@ const workflowPanel = {
   title: siteSettings?.workflowPanel?.title?.trim() || DEFAULT_WORKFLOW_PANEL.title,
   body: siteSettings?.workflowPanel?.body?.trim() || DEFAULT_WORKFLOW_PANEL.body,
   mirrorLayout: siteSettings?.workflowPanel?.mirrorLayout ?? DEFAULT_WORKFLOW_PANEL.mirrorLayout,
+}
+const contactReasonItems = siteSettings?.contactReasons?.items?.map(item => item.trim()).filter(Boolean)
+const contactReasons = {
+  kicker: siteSettings?.contactReasons?.kicker?.trim() || DEFAULT_CONTACT_REASONS.kicker,
+  title: siteSettings?.contactReasons?.title?.trim() || DEFAULT_CONTACT_REASONS.title,
+  items: contactReasonItems?.length ? contactReasonItems : DEFAULT_CONTACT_REASONS.items,
 }
 const heroPoster = heroSettings?.poster ? safePosterUrl(heroSettings.poster, featuredWorks[0]?.preview.poster ?? "") : undefined
 const title = formatTitle(seoSettings, seoSettings?.homeTitle ?? "De Mennis", true)
@@ -79,6 +93,8 @@ const jsonLd = [websiteJsonLd(seoSettings), organizationJsonLd(seoSettings), per
     fullWidth
     flushTop
   />
+
+  <ContactReasons kicker={contactReasons.kicker} title={contactReasons.title} items={contactReasons.items} />
 
   <FeaturedWorks items={featuredWorks} />
 </Layout>

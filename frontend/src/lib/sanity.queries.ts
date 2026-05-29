@@ -34,6 +34,11 @@ export async function getSiteSettings() {
       title,
       body,
       mirrorLayout
+    },
+    contactReasons{
+      kicker,
+      title,
+      items
     }
   }`
   const data = await sanity.fetch<unknown>(q)

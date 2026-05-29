@@ -1,6 +1,19 @@
 import {defineField, defineType} from 'sanity'
 import {cloudinaryMp4Url, cloudinaryPosterUrl, cloudinaryWebmUrl} from './validation'
 
+const contactReasonsInitialValue = {
+  kicker: 'What to contact me for',
+  title: 'Built for bold projects with movement, edge and energy.',
+  items: [
+    'Edgy & daring branding: commercials and promos that break the rules.',
+    'Lifestyle & community culture: highlighting the people, the movement, and the vibe behind your brand.',
+    'High-motion content: music videos, sports, and events that require speed, flow, and kinetic energy.',
+    'Freelance rollerblade camera operator & editor.',
+    'Aerial filmography.',
+    'Ideas.',
+  ],
+}
+
 export const siteSettings = defineType({
   name: 'siteSettings',
   title: 'Site settings',
@@ -62,15 +75,7 @@ export const siteSettings = defineType({
         kicker: 'Workflow',
         title:
           'Whether I’m on rollerblades capturing ultra-smooth tracking shots at high speeds, or climbing structures to rig cameras for daring perspectives, I capture the raw energy of your project without the bloat of a massive crew.',
-        body: [
-          'What to Contact Me For:',
-          '* Edgy & Daring Branding: Commercials and promos that breaks the rules.',
-          '* Lifestyle & Community Culture: Highlighting the people, the movement, and the vibe behind your brand.',
-          '* High-Motion Content: Music videos, sports, and events that require speed, flow, and kinetic energy.',
-          '* Freelance (rollerblade) camera operator & editor',
-          '* Aerial filmography',
-          '* Idea’s',
-        ].join('\n\n'),
+        body: 'I shape visual work around rhythm, movement and the energy of the people in front of the camera. The process stays lean, direct and built around the project.',
         mirrorLayout: false,
       },
       fields: [
@@ -98,6 +103,33 @@ export const siteSettings = defineType({
           description: 'Switches the heading and body text columns on desktop.',
           type: 'boolean',
           initialValue: false,
+        }),
+      ],
+    }),
+    defineField({
+      name: 'contactReasons',
+      title: 'Homepage contact reasons',
+      description: 'Separate editable bullet section shown below the homepage workflow panel.',
+      type: 'object',
+      initialValue: contactReasonsInitialValue,
+      fields: [
+        defineField({
+          name: 'kicker',
+          title: 'Small label',
+          type: 'string',
+        }),
+        defineField({
+          name: 'title',
+          title: 'Heading',
+          type: 'string',
+        }),
+        defineField({
+          name: 'items',
+          title: 'Reasons',
+          description: 'Each item becomes one bullet in the homepage section.',
+          type: 'array',
+          of: [{type: 'string'}],
+          validation: (r) => r.min(1),
         }),
       ],
     }),
