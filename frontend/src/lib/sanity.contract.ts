@@ -27,6 +27,11 @@ export type SiteSettings = {
     title?: string
     items?: string[]
   }
+  legalDocument?: {
+    label?: string
+    url?: string
+    filename?: string
+  }
 }
 
 export type SeoSettings = {
@@ -178,6 +183,11 @@ export function validateSiteSettings(value: unknown, path: string): SiteSettings
       kicker: optionalString(contactReasons.kicker, `${path}.contactReasons.kicker`),
       title: optionalString(contactReasons.title, `${path}.contactReasons.title`),
       items: optionalStringArray(contactReasons.items, `${path}.contactReasons.items`),
+    })),
+    legalDocument: optionalObject(obj.legalDocument, `${path}.legalDocument`, legalDocument => ({
+      label: optionalString(legalDocument.label, `${path}.legalDocument.label`),
+      url: optionalString(legalDocument.url, `${path}.legalDocument.url`),
+      filename: optionalString(legalDocument.filename, `${path}.legalDocument.filename`),
     })),
   }
 }

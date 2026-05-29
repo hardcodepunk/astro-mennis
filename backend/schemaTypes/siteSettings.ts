@@ -133,6 +133,29 @@ export const siteSettings = defineType({
         }),
       ],
     }),
+    defineField({
+      name: 'legalDocument',
+      title: 'Footer legal document',
+      description: 'Optional small footer link for privacy, legal terms or another client-uploaded PDF.',
+      type: 'object',
+      fields: [
+        defineField({
+          name: 'label',
+          title: 'Link label',
+          description: 'Example: Privacy / Legal',
+          type: 'string',
+          initialValue: 'Privacy / Legal',
+        }),
+        defineField({
+          name: 'file',
+          title: 'PDF file',
+          type: 'file',
+          options: {
+            accept: 'application/pdf',
+          },
+        }),
+      ],
+    }),
   ],
   preview: {
     prepare() {

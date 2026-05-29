@@ -1,4 +1,14 @@
 ---
+import { getSiteSettings } from "../lib/sanity.queries"
+
+const siteSettings = await getSiteSettings()
+const legalDocument = siteSettings?.legalDocument
+const legalUrl = legalDocument?.url?.trim()
+const legalLabel = legalDocument?.label?.trim() || "Privacy / Legal"
+const legalFilename = legalDocument?.filename?.trim()
+const legalDownloadUrl = legalUrl
+  ? `${legalUrl}${legalUrl.includes("?") ? "&" : "?"}dl=${encodeURIComponent(legalFilename || legalLabel)}`
+  : undefined
 
 ---
 
@@ -25,17 +35,50 @@
         <img src="/icons/instagram.png" width="24" height="24" alt="" class="w-6 h-6 object-contain footer-instagram" loading="lazy" decoding="async" />
       </picture>
     </a>
+
+    {
+      legalDownloadUrl ? (
+        <p class="footer-legal">
+          <a href={legalDownloadUrl} target="_blank" rel="noopener noreferrer" download={legalFilename}>
+            {legalLabel}
+          </a>
+        </p>
+      ) : null
+    }
   </div>
 
   <style>
     .footer-instagram {
-      filter: brightness(0) saturate(100%) invert(76%) sepia(20%) saturate(814%) hue-rotate(211deg) brightness(93%)
-        contrast(91%);
+      filter: brightness(0) saturate(100%) invert(96%) sepia(4%) saturate(1313%) hue-rotate(204deg) brightness(105%)
+        contrast(99%);
       transition: filter 160ms ease;
     }
 
     .footer-instagram-link:hover .footer-instagram {
       filter: brightness(0) invert(1);
+    }
+
+    .footer-legal {
+      margin: 0.85rem 0 0;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .footer-legal a {
+      color: var(--color-brand-primary);
+      text-decoration: none;
+      opacity: 0.74;
+      transition:
+        opacity 160ms ease,
+        color 160ms ease;
+    }
+
+    .footer-legal a:hover {
+      color: #fff;
+      opacity: 1;
     }
   </style>
 </footer>

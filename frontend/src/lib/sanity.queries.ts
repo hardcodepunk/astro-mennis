@@ -39,6 +39,11 @@ export async function getSiteSettings() {
       kicker,
       title,
       items
+    },
+    legalDocument{
+      label,
+      "url": file.asset->url,
+      "filename": file.asset->originalFilename
     }
   }`
   const data = await sanity.fetch<unknown>(q)
