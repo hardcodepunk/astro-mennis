@@ -68,8 +68,8 @@ export const siteSettings = defineType({
     }),
     defineField({
       name: 'workflowPanel',
-      title: 'Homepage workflow panel',
-      description: 'Green text panel shown between the homepage video hero and projects.',
+      title: 'Homepage mission section',
+      description: 'Mission text section shown between the homepage video hero and contact reasons.',
       type: 'object',
       initialValue: {
         kicker: 'Workflow',
@@ -99,8 +99,8 @@ export const siteSettings = defineType({
         }),
         defineField({
           name: 'mirrorLayout',
-          title: 'Put body text on the left',
-          description: 'Switches the heading and body text columns on desktop.',
+          title: 'Flip columns',
+          description: 'Switches the heading and body text columns.',
           type: 'boolean',
           initialValue: false,
         }),

@@ -58,7 +58,7 @@ export const bioWithPreview = defineType({
     defineField({
       name: 'mirrorLayout',
       title: 'Put video on the left',
-      description: 'Switches the text and video sides on desktop.',
+      description: 'Switches the text and video sides.',
       type: 'boolean',
       initialValue: false,
     }),
@@ -134,8 +134,8 @@ export const bioWithPreview = defineType({
         }),
         defineField({
           name: 'mirrorLayout',
-          title: 'Put body text on the left',
-          description: 'Switches the heading and body text columns on desktop.',
+          title: 'Flip columns',
+          description: 'Switches the heading and body text columns.',
           type: 'boolean',
           initialValue: false,
         }),
