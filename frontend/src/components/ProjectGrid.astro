@@ -27,19 +27,19 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
         activeSlug === "all" ? (
           <span class="pg-pill ds-kicker ds-kicker--compact is-active" aria-current="page">All</span>
         ) : (
-          <a class="pg-pill ds-kicker ds-kicker--compact ds-progress-link" href={filterHref("all")}>All</a>
+          <a class="pg-pill ds-kicker ds-kicker--compact" href={filterHref("all")}>All</a>
         )
       }
 
       {
         categories.map(cat =>
-          activeSlug === cat.slug ? (
-            <span class="pg-pill ds-kicker ds-kicker--compact is-active" aria-current="page">{cat.title}</span>
-          ) : (
-            <a class="pg-pill ds-kicker ds-kicker--compact ds-progress-link" href={filterHref(cat.slug)}>{cat.title}</a>
-          ),
-        )
-      }
+        activeSlug === cat.slug ? (
+          <span class="pg-pill ds-kicker ds-kicker--compact is-active" aria-current="page">{cat.title}</span>
+        ) : (
+            <a class="pg-pill ds-kicker ds-kicker--compact" href={filterHref(cat.slug)}>{cat.title}</a>
+        ),
+      )
+    }
     </div>
 
     <div class="pg-grid">
