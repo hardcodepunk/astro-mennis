@@ -53,12 +53,12 @@ const jsonLd = [
   twitterHandle={seoSettings?.twitterHandle}
   jsonLd={jsonLd}
 >
-  <main>
+  <>
     <h1 class="sr-only">{seoH1}</h1>
     <ContactTypewriter
       sentences={contact.animatedSentences}
       mailSentence={contact.mailSentence}
       email={contact.email}
     />
-  </main>
+  </>
 </Layout>

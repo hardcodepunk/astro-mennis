@@ -13,7 +13,9 @@ const siteSettings = await getSiteSettings()
 const seoSettings = await getSeoSettings()
 const seoH1 = seoSettings?.homeH1 ?? siteSettings?.homeSeoH1 ?? "De Mennis"
 const heroSettings = siteSettings?.videoHero
-const workflowPanel = resolveTextPanel(siteSettings?.workflowPanel, DEFAULT_WORKFLOW_PANEL)
+const workflowPanel = resolveTextPanel(siteSettings?.workflowPanel, DEFAULT_WORKFLOW_PANEL, {
+  useFallbackOnBlankText: false,
+})
 const heroPoster = heroSettings?.poster ? safePosterUrl(heroSettings.poster, featuredWorks[0]?.preview.poster ?? "") : undefined
 const title = formatTitle(seoSettings, seoSettings?.homeTitle ?? "De Mennis", true)
 const description = metaDescription(seoSettings, seoSettings?.homeDescription)

@@ -3,8 +3,8 @@ import LineBreakText from "./LineBreakText.astro"
 
 type Props = {
   kicker?: string
-  title: string
-  body: string
+  title?: string
+  body?: string
   fullWidth?: boolean
   bleedBackground?: boolean
   flushTop?: boolean
@@ -20,33 +20,47 @@ const {
   flushTop = false,
   mirrorLayout = false,
 } = Astro.props as Props
-const paragraphs = body
+const safeKicker = kicker?.trim() ?? ""
+const safeTitle = title?.trim() ?? ""
+const paragraphs = (body ?? "")
   .split(/\n{2,}/)
   .map(paragraph => paragraph.trim())
   .filter(Boolean)
+const hasContent = Boolean(safeTitle || paragraphs.length)
 ---
 
-<section
-  class:list={[
-    "tp",
-    fullWidth && "is-full",
-    bleedBackground && "is-bleed",
-    flushTop && "is-flush",
-    mirrorLayout && "is-mirrored",
-  ]}
->
-  <div class="tp-inner ds-split-grid ds-shell">
-    <div class="tp-col">
-      {kicker ? <p class="tp-kicker ds-kicker">{kicker}</p> : null}
-      <h2 class="tp-title ds-title ds-title--xl"><LineBreakText text={title} /></h2>
-    </div>
+{
+  hasContent ? (
+    <section
+      class:list={[
+        "tp",
+        fullWidth && "is-full",
+        bleedBackground && "is-bleed",
+        flushTop && "is-flush",
+        mirrorLayout && "is-mirrored",
+        !safeKicker && !safeTitle && "is-copy-only",
+        !paragraphs.length && "is-heading-only",
+      ]}
+    >
+      <div class="tp-inner ds-split-grid ds-shell">
+        <div class="tp-col">
+          {safeKicker ? <p class="tp-kicker ds-kicker">{safeKicker}</p> : null}
+          {safeTitle ? (
+            <h2 class="tp-title ds-title ds-title--xl"><LineBreakText text={safeTitle} /></h2>
+          ) : null}
+        </div>
 
-    <div class="tp-copy ds-copy-body">
-      {paragraphs.map(paragraph => <p>{paragraph}</p>)}
-    </div>
-  </div>
+        {paragraphs.length ? (
+          <div class="tp-copy ds-copy-body">
+            {paragraphs.map(paragraph => <p>{paragraph}</p>)}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  ) : null
+}
 
-  <style>
+<style>
     .tp {
       padding-top: 32px;
     }
@@ -103,6 +117,15 @@ const paragraphs = body
       order: 1;
     }
 
+    .tp.is-copy-only .tp-inner,
+    .tp.is-heading-only .tp-inner {
+      grid-template-columns: 1fr;
+    }
+
+    .tp.is-copy-only .tp-col {
+      display: none;
+    }
+
     .tp-kicker {
       margin: 0 0 10px 0;
       color: rgba(255, 255, 255, 0.68);
@@ -132,4 +155,3 @@ const paragraphs = body
       }
     }
   </style>
-</section>

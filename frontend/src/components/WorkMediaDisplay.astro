@@ -29,6 +29,7 @@ const reelIds =
 
 const hasYouTube = Boolean(youtubeId)
 const hasSlider = reelIds.length > 0
+const hasSliderNav = reelIds.length > 1
 
 function ytPoster(id: string) {
   return youtubePoster(id, "maxres")!
@@ -69,9 +70,11 @@ function ytPosterFallback(id: string) {
       </div>
     ) : hasSlider ? (
       <section class="yt-gallery" aria-label="Reels">
-        <button class="yt-nav yt-nav--prev" type="button" aria-label="Previous" data-yt-prev>
-          <span class="yt-nav__chevron" aria-hidden="true"></span>
-        </button>
+        {hasSliderNav ? (
+          <button class="yt-nav yt-nav--prev" type="button" aria-label="Previous" data-yt-prev>
+            <span class="yt-nav__chevron" aria-hidden="true"></span>
+          </button>
+        ) : null}
 
         <div class="yt-rail" data-yt-rail>
           {reelIds.map((id, index) => (
@@ -103,9 +106,11 @@ function ytPosterFallback(id: string) {
           ))}
         </div>
 
-        <button class="yt-nav yt-nav--next" type="button" aria-label="Next" data-yt-next>
-          <span class="yt-nav__chevron" aria-hidden="true"></span>
-        </button>
+        {hasSliderNav ? (
+          <button class="yt-nav yt-nav--next" type="button" aria-label="Next" data-yt-next>
+            <span class="yt-nav__chevron" aria-hidden="true"></span>
+          </button>
+        ) : null}
       </section>
     ) : (
       <VideoPreview mp4={work.preview.mp4} webm={work.preview.webm} poster={work.preview.poster} />

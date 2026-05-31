@@ -143,6 +143,18 @@ const aboutControllers = new WeakMap<HTMLVideoElement, ReturnType<typeof makeAut
 const previewControllers = new WeakMap<HTMLVideoElement, ReturnType<typeof makeAutoplayController>>()
 const thumbnailControllers = new WeakMap<HTMLElement, ReturnType<typeof makeAutoplayController> & { autoplay: boolean }>()
 
+function bindResumeListeners(start: () => void) {
+  const abort = new AbortController()
+  const startWhenVisible = () => {
+    if (document.hidden) return
+    start()
+  }
+
+  window.addEventListener("pageshow", start, { signal: abort.signal })
+  document.addEventListener("visibilitychange", startWhenVisible, { signal: abort.signal })
+  document.addEventListener("astro:before-swap", () => abort.abort(), { once: true, signal: abort.signal })
+}
+
 function isMotionAllowed() {
   return !window.matchMedia("(prefers-reduced-motion: reduce)").matches
 }
@@ -188,11 +200,7 @@ function bootHeroVideos() {
 
     if (!existing) {
       heroControllers.set(root, controller)
-      window.addEventListener("pageshow", controller.start)
-      document.addEventListener("visibilitychange", () => {
-        if (document.hidden) return
-        controller.start()
-      })
+      bindResumeListeners(controller.start)
     }
 
     controller.start()
@@ -213,11 +221,7 @@ function bootVideoVideos() {
 
     if (!existing) {
       aboutControllers.set(video, controller)
-      window.addEventListener("pageshow", controller.start)
-      document.addEventListener("visibilitychange", () => {
-        if (document.hidden) return
-        controller.start()
-      })
+      bindResumeListeners(controller.start)
     }
 
     controller.start()
@@ -241,11 +245,7 @@ function bootPreviewVideos() {
 
     if (!existing) {
       previewControllers.set(video, controller)
-      window.addEventListener("pageshow", controller.start)
-      document.addEventListener("visibilitychange", () => {
-        if (document.hidden) return
-        controller.start()
-      })
+      bindResumeListeners(controller.start)
     }
 
     controller.start()
@@ -290,11 +290,7 @@ function bootThumbnailVideos() {
       if (shouldAutoplay) {
         video.preload = "metadata"
         controller.start()
-        window.addEventListener("pageshow", controller.start)
-        document.addEventListener("visibilitychange", () => {
-          if (document.hidden) return
-          controller.start()
-        })
+        bindResumeListeners(controller.start)
       } else {
         const shouldBindHover = finePointer.matches && desktopViewport.matches
         if (!shouldBindHover) return

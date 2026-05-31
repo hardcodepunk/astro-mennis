@@ -86,7 +86,7 @@ const jsonLd = [
   preloadImageSrcset={preloadHero.srcset}
   preloadImageSizes={preloadHero.sizes}
 >
-  <main class="page">
+  <div class="page">
     <div class="page-inner ds-shell--content">
       <h1 class="page-title ds-title ds-title--work text-brand-secondary">{work.title}</h1>
 
@@ -114,20 +114,24 @@ const jsonLd = [
           </div>
         </aside>
 
-        <article class="page-article">
-          <div class="page-article-card">
-            {
-              work.overviewTitle ? (
-                <h2 class="page-overview-title ds-title ds-title--section">{work.overviewTitle}</h2>
-              ) : null
-            }
+        {
+          work.overviewTitle || bodyHtml ? (
+            <article class="page-article">
+              <div class="page-article-card">
+                {
+                  work.overviewTitle ? (
+                    <h2 class="page-overview-title ds-title ds-title--section">{work.overviewTitle}</h2>
+                  ) : null
+                }
 
-            {bodyHtml ? <section class="page-body-rt ds-richtext" set:html={bodyHtml} /> : null}
-          </div>
-        </article>
+                {bodyHtml ? <section class="page-body-rt ds-richtext" set:html={bodyHtml} /> : null}
+              </div>
+            </article>
+          ) : null
+        }
       </div>
     </div>
-  </main>
+  </div>
 
   <RecentWorks items={recent} />
 
