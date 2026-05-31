@@ -45,6 +45,8 @@ html {
 @layer base {
   :root {
     --font-display: "Bebas Neue", sans-serif;
+    --ds-progress-offset: 0.04em;
+    --ds-progress-height: 2px;
   }
 }
 
@@ -258,6 +260,11 @@ html {
   .ds-progress-link.is-active::after,
   .ds-progress-link[aria-current]::after {
     transform: scaleX(1);
+  }
+
+  .ds-progress-link--spacious {
+    --ds-progress-offset: 0.6em;
+    --ds-progress-height: 1px;
   }
 
   .ds-split-grid {
