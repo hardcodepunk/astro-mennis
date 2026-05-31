@@ -41,7 +41,7 @@ const legalDownloadUrl = legalUrl
             {legalLabel}
           </a>
         ) : (
-          <span></span>
+          null
         )
       }
 
@@ -59,6 +59,7 @@ const legalDownloadUrl = legalUrl
 
   <style>
     .footer {
+      display: flex;
       width: 100%;
       padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 4rem);
       background: var(--color-brand-secondary);
@@ -70,7 +71,7 @@ const legalDownloadUrl = legalUrl
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100%;
+      flex: 1;
       gap: 1rem;
       width: min(100%, 44rem);
       margin: 0 auto;
