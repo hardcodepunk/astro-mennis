@@ -23,7 +23,7 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
       </div>
 
       <div class="fw-actions">
-        <a class="fw-cta ds-title ds-title--tiny ds-progress-link" href="/projects">View all projects</a>
+        <a class="fw-cta fw-link ds-progress-link" href="/projects">View all projects</a>
       </div>
     </div>
 
@@ -52,12 +52,18 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0 0 0.25rem;
-        color: var(--color-brand-secondary);
         font-weight: 700;
+      }
+
+      .fw-link {
+        color: var(--color-brand-secondary);
+        font-family: var(--font-body);
+        text-transform: none;
+        font-size: 1rem;
+        letter-spacing: 0.01em;
+        padding: 0 0 0.25rem;
         text-decoration: none;
         cursor: pointer;
-        letter-spacing: 0.08em;
       }
 
       @media (max-width: 900px) {
