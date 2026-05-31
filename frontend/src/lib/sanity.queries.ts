@@ -122,11 +122,11 @@ export async function getBioWithPreview() {
     heroTitle,
     heroTitleTextScale,
     seoH1,
-    heroVideo{ mp4, webm, poster },
+    heroVideo{ ${mediaSelection} },
     bio,
     mirrorLayout,
     bioTextScale,
-    previewVideo{ mp4, webm, poster },
+    previewVideo{ ${mediaSelection} },
     approach{
       kicker,
       title,
@@ -153,6 +153,10 @@ const seoSelection = `seo{
   noindex,
   focusKeyword
 }`
+const previewSelection = `preview{ poster, webm, mp4 }`
+const mediaSelection = `mp4, webm, poster`
+
+// Reusable media selection fragments used by list queries.
 
 export async function getFeaturedWorks(limit = 3) {
   const q = `*[_type == "work" && featuredOnHome == true]
@@ -164,7 +168,7 @@ export async function getFeaturedWorks(limit = 3) {
       client,
       publishedAt,
       "updatedAt": _updatedAt,
-      preview{ poster, webm, mp4 },
+    ${previewSelection},
       thumbnailAutoplay,
       featuredOnHome,
       featuredOrder
@@ -182,7 +186,7 @@ export async function getAllWorksForGrid() {
     client,
     publishedAt,
     "updatedAt": _updatedAt,
-    preview{ poster, webm, mp4 },
+    ${previewSelection},
     thumbnailAutoplay
   }`
   const data = await sanity.fetch<unknown>(q)
@@ -207,7 +211,7 @@ export async function getWorks() {
     "category": category->title,
     "categorySlug": category->slug.current,
     client,
-    preview{ poster, webm, mp4 },
+    ${previewSelection},
     thumbnailAutoplay,
     overviewTitle,
     ${seoSelection}
@@ -224,7 +228,7 @@ export async function getWorksByCategorySlug(slug: string) {
     "category": category->title,
     "categorySlug": category->slug.current,
     client,
-    preview{ poster, webm, mp4 },
+    ${previewSelection},
     thumbnailAutoplay,
     overviewTitle,
     ${seoSelection}
@@ -243,7 +247,7 @@ export async function getWorkBySlug(slug: string) {
     year,
     publishedAt,
     "updatedAt": _updatedAt,
-    preview{ poster, webm, mp4 },
+    ${previewSelection},
     thumbnailAutoplay,
     ${seoSelection},
 
@@ -277,7 +281,7 @@ export async function getRecentWorks(limit = 2, excludeSlug?: string) {
     "category": category->title,
     "categorySlug": category->slug.current,
     client,
-    preview{ poster, webm, mp4 },
+    ${previewSelection},
     thumbnailAutoplay
   }`
   const data = await sanity.fetch<unknown>(q, { limit, excludeSlug })

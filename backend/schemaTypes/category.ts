@@ -1,5 +1,5 @@
 import {defineField, defineType} from 'sanity'
-import {httpsImageUrl, httpsUrl} from './validation'
+import {defineDocumentSeoFields} from './shared'
 
 export const category = defineType({
   name: 'category',
@@ -37,54 +37,7 @@ export const category = defineType({
       description: 'Optional overrides for this category page. Empty fields fall back to the global SEO templates.',
       type: 'object',
       options: {collapsible: true, collapsed: true},
-      fields: [
-        defineField({
-          name: 'title',
-          title: 'SEO title',
-          description: 'Overrides the generated browser/search title for this category.',
-          type: 'string',
-          validation: (r) => r.max(70),
-        }),
-        defineField({
-          name: 'description',
-          title: 'Meta description',
-          description: 'Overrides the generated search/social description for this category.',
-          type: 'text',
-          rows: 3,
-          validation: (r) => r.max(170),
-        }),
-        defineField({
-          name: 'socialImage',
-          title: 'Social image URL',
-          description: 'Absolute image URL used for Open Graph and Twitter previews.',
-          type: 'url',
-          validation: (r) => r.uri({scheme: ['https']}).custom(httpsImageUrl),
-        }),
-        defineField({
-          name: 'socialImageAlt',
-          title: 'Social image alt text',
-          type: 'string',
-        }),
-        defineField({
-          name: 'canonicalUrl',
-          title: 'Canonical URL override',
-          description: 'Only use when this category should canonicalize to a different URL.',
-          type: 'url',
-          validation: (r) => r.uri({scheme: ['https']}).custom(httpsUrl),
-        }),
-        defineField({
-          name: 'noindex',
-          title: 'Hide this category from search results',
-          type: 'boolean',
-          initialValue: false,
-        }),
-        defineField({
-          name: 'focusKeyword',
-          title: 'Focus keyword',
-          description: 'Internal planning note only. This is not rendered as a meta keywords tag.',
-          type: 'string',
-        }),
-      ],
+      fields: defineDocumentSeoFields('category'),
     }),
   ],
 

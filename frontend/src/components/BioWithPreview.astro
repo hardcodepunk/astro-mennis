@@ -1,4 +1,6 @@
 ---
+import { defaultHeroMedia } from "../lib/media"
+
 import VideoPreview from "./VideoPreview.astro"
 
 const DEFAULT_BIO = `I shoot clean, cinematic video for brands and people who care about craft.
@@ -6,11 +8,11 @@ Fast turnaround, calm sets, sharp edits. Commercials, social cuts, event recaps,
 and story-driven pieces done properly.`
 
 const DEFAULT_MP4 =
-  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4"
+  defaultHeroMedia.mp4
 const DEFAULT_WEBM =
-  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm"
+  defaultHeroMedia.webm
 const DEFAULT_POSTER =
-  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg"
+  defaultHeroMedia.poster
 
 const props = Astro.props as {
   bio?: string

@@ -1,5 +1,5 @@
 import {defineField, defineType} from 'sanity'
-import {cloudinaryMp4Url, cloudinaryPosterUrl, cloudinaryWebmUrl} from './validation'
+import {defineCloudinaryVideoFields, defaultCloudinaryVideoUrls} from './shared'
 
 const contactReasonsInitialValue = {
   kicker: 'What to contact me for',
@@ -40,35 +40,10 @@ export const bioWithPreview = defineType({
       title: 'About hero video',
       description: 'Autoplaying video banner behind the About page title.',
       type: 'object',
-      initialValue: {
-        mp4: 'https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4',
-        webm: 'https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm',
-        poster:
-          'https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg',
-      },
-      fields: [
-        defineField({
-          name: 'poster',
-          title: 'Poster URL',
-          description: 'Static fallback image shown before the hero video loads.',
-          type: 'url',
-          validation: (r) => r.required().uri({scheme: ['https']}).custom(cloudinaryPosterUrl),
-        }),
-        defineField({
-          name: 'webm',
-          title: 'WEBM URL',
-          description: 'Preferred browser video format.',
-          type: 'url',
-          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryWebmUrl),
-        }),
-        defineField({
-          name: 'mp4',
-          title: 'MP4 URL',
-          description: 'Fallback video format.',
-          type: 'url',
-          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryMp4Url),
-        }),
-      ],
+      initialValue: defaultCloudinaryVideoUrls,
+      fields: defineCloudinaryVideoFields({
+        posterDescription: 'Static fallback image shown before the hero video loads.',
+      }),
     }),
     defineField({
       name: 'bio',
@@ -96,29 +71,9 @@ export const bioWithPreview = defineType({
       name: 'previewVideo',
       title: 'About preview video',
       type: 'object',
-      fields: [
-        defineField({
-          name: 'poster',
-          title: 'Poster URL',
-          description: 'Static fallback image shown before the video loads.',
-          type: 'url',
-          validation: (r) => r.required().uri({scheme: ['https']}).custom(cloudinaryPosterUrl),
-        }),
-        defineField({
-          name: 'webm',
-          title: 'WEBM URL',
-          description: 'Preferred browser video format.',
-          type: 'url',
-          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryWebmUrl),
-        }),
-        defineField({
-          name: 'mp4',
-          title: 'MP4 URL',
-          description: 'Fallback video format.',
-          type: 'url',
-          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryMp4Url),
-        }),
-      ],
+      fields: defineCloudinaryVideoFields({
+        posterDescription: 'Static fallback image shown before the video loads.',
+      }),
     }),
     defineField({
       name: 'approach',

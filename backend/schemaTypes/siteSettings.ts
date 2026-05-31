@@ -1,5 +1,5 @@
 import {defineField, defineType} from 'sanity'
-import {cloudinaryMp4Url, cloudinaryPosterUrl, cloudinaryWebmUrl} from './validation'
+import {defineCloudinaryVideoFields} from './shared'
 
 export const siteSettings = defineType({
   name: 'siteSettings',
@@ -11,23 +11,11 @@ export const siteSettings = defineType({
       title: 'Video hero',
       type: 'object',
       fields: [
-        defineField({
-          name: 'mp4',
-          title: 'MP4 URL',
-          type: 'url',
-          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryMp4Url),
-        }),
-        defineField({
-          name: 'webm',
-          title: 'WEBM URL',
-          type: 'url',
-          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryWebmUrl),
-        }),
-        defineField({
-          name: 'poster',
-          title: 'Poster URL',
-          type: 'url',
-          validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryPosterUrl),
+        ...defineCloudinaryVideoFields({
+          mp4Description: 'Fallback video format.',
+          webmDescription: 'Preferred browser video format.',
+          posterDescription: 'Poster image shown while the video is loading.',
+          posterTitle: 'Poster URL',
         }),
         defineField({
           name: 'caption',

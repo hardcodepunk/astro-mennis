@@ -7,17 +7,12 @@ import LogosMarquee from "../components/LogosMarquee.astro"
 import TextPanel from "../components/TextPanel.astro"
 import { getBioWithPreview, getSeoSettings } from "../lib/sanity.queries"
 import { breadcrumbJsonLd, formatTitle, metaDescription, socialImage } from "../lib/seo"
-import { cloudinaryImage, imageAttributes, safePosterUrl } from "../lib/media"
+import { cloudinaryImage, defaultHeroMedia, imageAttributes, safePosterUrl } from "../lib/media"
 
 const aboutDoc = await getBioWithPreview()
 const seoSettings = await getSeoSettings()
 
-const DEFAULT_HERO_MP4 =
-  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_h264,ac_aac,f_mp4/v1737957147/wsuszohtmu2pks673muc.mp4"
-const DEFAULT_HERO_WEBM =
-  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,vc_vp9,f_webm/v1761381373/b8f7chk3u9s6jaqh4bae.webm"
-const DEFAULT_HERO_POSTER =
-  "https://res.cloudinary.com/hardcodepunk/video/upload/q_auto:eco,so_0,f_jpg,w_1600/v1737957147/wsuszohtmu2pks673muc.jpg"
+const {mp4: DEFAULT_HERO_MP4, webm: DEFAULT_HERO_WEBM, poster: DEFAULT_HERO_POSTER} = defaultHeroMedia
 const DEFAULT_APPROACH = {
   kicker: "Approach",
   title: "Clean frames. Strong pacing. Calm process.",
