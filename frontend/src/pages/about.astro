@@ -133,7 +133,13 @@ const jsonLd = breadcrumbJsonLd(
       bioUppercase={aboutDoc?.bioUppercase}
     />
 
-    <TextPanel kicker={approach.kicker} title={approach.title} body={approach.body} mirrorLayout={approach.mirrorLayout} />
+    <TextPanel
+      kicker={approach.kicker}
+      title={approach.title}
+      body={approach.body}
+      mirrorLayout={approach.mirrorLayout}
+      fullWidth
+    />
 
     <ContactReasons
       kicker={contactReasons.kicker}
@@ -242,9 +248,9 @@ const jsonLd = breadcrumbJsonLd(
 
     .about-page__hero-content {
       width: 100%;
-      max-width: 72rem;
-      margin: 0 auto;
-      padding: 0 1rem;
+      max-width: none;
+      margin: 0;
+      padding: 0 1.5rem;
       position: relative;
       z-index: 1;
     }
