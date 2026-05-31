@@ -28,10 +28,6 @@ const DEFAULT_APPROACH = {
   ].join("\n\n"),
   mirrorLayout: false,
 }
-const DEFAULT_BIO_INTRO = {
-  kicker: "Bio",
-  title: "Behind the camera",
-}
 const DEFAULT_CONTACT_REASONS = {
   kicker: "What to contact me for",
   title: "Built for bold projects with movement, edge and energy.",
@@ -57,12 +53,6 @@ const approach = {
   body: aboutDoc?.approach?.body?.trim() || DEFAULT_APPROACH.body,
   mirrorLayout: aboutDoc?.approach?.mirrorLayout ?? DEFAULT_APPROACH.mirrorLayout,
 }
-const bioIntro = aboutDoc?.bioIntro
-  ? {
-      kicker: aboutDoc.bioIntro.kicker?.trim() ?? "",
-      title: aboutDoc.bioIntro.title?.trim() ?? "",
-    }
-  : DEFAULT_BIO_INTRO
 const contactReasonItems = aboutDoc?.contactReasons
   ? (aboutDoc.contactReasons.items?.map(item => item.trim()).filter(Boolean) ?? [])
   : DEFAULT_CONTACT_REASONS.items
@@ -134,8 +124,6 @@ const jsonLd = breadcrumbJsonLd(
     </section>
 
     <BioWithPreview
-      sectionKicker={bioIntro.kicker}
-      sectionTitle={bioIntro.title}
       bio={aboutDoc?.bio}
       mp4={aboutDoc?.previewVideo?.mp4}
       webm={aboutDoc?.previewVideo?.webm}

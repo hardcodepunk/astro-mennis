@@ -104,10 +104,6 @@ export type BioWithPreviewDoc = {
     poster?: string
   }
   bio?: string
-  bioIntro?: {
-    kicker?: string
-    title?: string
-  }
   mirrorLayout?: boolean
   bioTextScale?: number
   bioUppercase?: boolean
@@ -257,10 +253,6 @@ export function validateBioWithPreview(value: unknown, path: string): BioWithPre
     seoH1: optionalString(obj.seoH1, `${path}.seoH1`),
     heroVideo: optionalMediaUrls(obj.heroVideo, `${path}.heroVideo`),
     bio: optionalString(obj.bio, `${path}.bio`),
-    bioIntro: optionalObject(obj.bioIntro, `${path}.bioIntro`, bioIntro => ({
-      kicker: optionalString(bioIntro.kicker, `${path}.bioIntro.kicker`),
-      title: optionalString(bioIntro.title, `${path}.bioIntro.title`),
-    })),
     mirrorLayout: optionalBoolean(obj.mirrorLayout, `${path}.mirrorLayout`),
     bioTextScale: optionalNumber(obj.bioTextScale, `${path}.bioTextScale`),
     bioUppercase: optionalBoolean(obj.bioUppercase, `${path}.bioUppercase`),

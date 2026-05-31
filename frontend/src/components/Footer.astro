@@ -44,12 +44,9 @@ const legalDownloadUrl = legalUrl
         href="https://www.instagram.com/demennis_/"
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Instagram"
       >
-        <picture>
-          <source srcset="/icons/instagram.webp" type="image/webp" />
-          <img src="/icons/instagram.png" width="24" height="24" alt="" class="footer-instagram" loading="lazy" decoding="async" />
-        </picture>
+        <span class="footer-instagram" aria-hidden="true"></span>
+        <span class="footer-instagram-copy">Instagram</span>
       </a>
     </div>
   </div>
@@ -148,12 +145,55 @@ const legalDownloadUrl = legalUrl
       min-height: 1.25rem;
     }
 
+    .footer-instagram-link {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding-bottom: 0.25rem;
+      color: var(--color-brand-primary);
+      font-size: 0.72rem;
+      font-weight: 400;
+      line-height: 1.2;
+      text-decoration: none;
+      transition: color 160ms ease;
+    }
+
     .footer-instagram {
-      display: block;
-      width: 1.5rem;
-      height: 1.5rem;
-      filter: brightness(0) saturate(100%) invert(96%) sepia(4%) saturate(1313%) hue-rotate(204deg) brightness(105%)
-        contrast(99%);
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      background: currentColor;
+      mask: url("/icons/instagram.png") center / contain no-repeat;
+      -webkit-mask: url("/icons/instagram.png") center / contain no-repeat;
+    }
+
+    .footer-instagram-copy {
+      position: relative;
+      display: inline-block;
+    }
+
+    .footer-instagram-copy::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.25rem;
+      height: 2px;
+      background: var(--color-brand-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 220ms ease;
+    }
+
+    .footer-instagram-link:hover,
+    .footer-instagram-link:focus-visible {
+      color: var(--color-brand-accent);
+    }
+
+    .footer-instagram-link:hover .footer-instagram-copy::after,
+    .footer-instagram-link:focus-visible .footer-instagram-copy::after {
+      transform: scaleX(1);
     }
 
     .footer-legal {
@@ -166,6 +206,7 @@ const legalDownloadUrl = legalUrl
       letter-spacing: 0;
       line-height: 1.2;
       text-decoration: none;
+      transition: color 160ms ease;
     }
 
     .footer-legal::after {
@@ -184,6 +225,11 @@ const legalDownloadUrl = legalUrl
     .footer-legal:hover::after,
     .footer-legal:focus-visible::after {
       transform: scaleX(1);
+    }
+
+    .footer-legal:hover,
+    .footer-legal:focus-visible {
+      color: var(--color-brand-accent);
     }
 
     @media (max-width: 700px) {

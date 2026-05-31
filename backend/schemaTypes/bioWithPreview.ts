@@ -70,31 +70,6 @@ export const bioWithPreview = defineType({
       rows: 4,
     }),
     defineField({
-      name: 'bioIntro',
-      title: 'Bio section intro',
-      description: 'Optional small label and heading shown above the bio/video block. Leave both fields empty to hide it.',
-      type: 'object',
-      initialValue: {
-        kicker: 'Bio',
-        title: 'Behind the camera',
-      },
-      fields: [
-        defineField({
-          name: 'kicker',
-          title: 'Small label',
-          description: 'Small uppercase label above the heading.',
-          type: 'string',
-        }),
-        defineField({
-          name: 'title',
-          title: 'Heading',
-          description: 'Use Enter for line breaks.',
-          type: 'text',
-          rows: 2,
-        }),
-      ],
-    }),
-    defineField({
       name: 'mirrorLayout',
       title: 'Put video on the left',
       description: 'Switches the text and video sides.',
@@ -112,9 +87,9 @@ export const bioWithPreview = defineType({
     defineField({
       name: 'bioUppercase',
       title: 'Uppercase bio text',
-      description: 'Turn off to preserve normal casing.',
+      description: 'Off keeps normal casing. On displays the bio in uppercase.',
       type: 'boolean',
-      initialValue: true,
+      initialValue: false,
     }),
     defineField({
       name: 'previewVideo',

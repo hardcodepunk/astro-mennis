@@ -123,10 +123,6 @@ export async function getBioWithPreview() {
     seoH1,
     heroVideo{ mp4, webm, poster },
     bio,
-    bioIntro{
-      kicker,
-      title
-    },
     mirrorLayout,
     bioTextScale,
     bioUppercase,
