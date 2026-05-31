@@ -35,11 +35,6 @@ export async function getSiteSettings() {
       body,
       mirrorLayout
     },
-    contactReasons{
-      kicker,
-      title,
-      items
-    },
     legalDocument{
       label,
       "url": file.asset->url,
@@ -136,6 +131,11 @@ export async function getBioWithPreview() {
       title,
       body,
       mirrorLayout
+    },
+    contactReasons{
+      kicker,
+      title,
+      items
     }
   }`
   const data = await sanity.fetch<unknown>(q)

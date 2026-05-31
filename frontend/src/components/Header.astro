@@ -110,7 +110,24 @@ const { transparentOnTop = false, transparentPaths = [] } = Astro.props
   }
 
   .desktop-link {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.25rem;
     color: #fff;
+  }
+
+  .desktop-link::after,
+  .mobile-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--color-brand-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 220ms ease;
   }
 
   .site-header.is-solid .desktop-link {
@@ -118,11 +135,17 @@ const { transparentOnTop = false, transparentPaths = [] } = Astro.props
   }
 
   .site-header.is-solid .desktop-link:hover {
-    color: #fff;
+    color: var(--color-brand-secondary);
   }
 
   .desktop-link:hover {
     color: #fff;
+  }
+
+  .desktop-link:hover::after,
+  .mobile-link:hover::after,
+  .mobile-link:focus-visible::after {
+    transform: scaleX(1);
   }
 
   .hamburger {
@@ -199,6 +222,7 @@ const { transparentOnTop = false, transparentPaths = [] } = Astro.props
   }
 
   .mobile-link {
+    position: relative;
     color: var(--color-brand-secondary);
     transition:
       color 150ms ease,
@@ -208,11 +232,12 @@ const { transparentOnTop = false, transparentPaths = [] } = Astro.props
     transform: translateY(6px);
     display: flex;
     justify-content: center;
+    padding-bottom: 0.25rem;
   }
 
   .mobile-link:hover {
     color: var(--color-brand-secondary);
-    opacity: 0.8;
+    opacity: 1;
   }
 
   .mobile-menu.is-open {
@@ -255,7 +280,9 @@ const { transparentOnTop = false, transparentPaths = [] } = Astro.props
     .mobile-menu__panel,
     .mobile-link,
     .brand,
-    .desktop-link {
+    .desktop-link,
+    .desktop-link::after,
+    .mobile-link::after {
       transition: none !important;
     }
   }

@@ -22,11 +22,6 @@ export type SiteSettings = {
     body?: string
     mirrorLayout?: boolean
   }
-  contactReasons?: {
-    kicker?: string
-    title?: string
-    items?: string[]
-  }
   legalDocument?: {
     label?: string
     url?: string
@@ -122,6 +117,11 @@ export type BioWithPreviewDoc = {
     body?: string
     mirrorLayout?: boolean
   }
+  contactReasons?: {
+    kicker?: string
+    title?: string
+    items?: string[]
+  }
 }
 
 export type Category = {
@@ -178,11 +178,6 @@ export function validateSiteSettings(value: unknown, path: string): SiteSettings
       title: optionalString(workflow.title, `${path}.workflowPanel.title`),
       body: optionalString(workflow.body, `${path}.workflowPanel.body`),
       mirrorLayout: optionalBoolean(workflow.mirrorLayout, `${path}.workflowPanel.mirrorLayout`),
-    })),
-    contactReasons: optionalObject(obj.contactReasons, `${path}.contactReasons`, contactReasons => ({
-      kicker: optionalString(contactReasons.kicker, `${path}.contactReasons.kicker`),
-      title: optionalString(contactReasons.title, `${path}.contactReasons.title`),
-      items: optionalStringArray(contactReasons.items, `${path}.contactReasons.items`),
     })),
     legalDocument: optionalObject(obj.legalDocument, `${path}.legalDocument`, legalDocument => ({
       label: optionalString(legalDocument.label, `${path}.legalDocument.label`),
@@ -264,6 +259,11 @@ export function validateBioWithPreview(value: unknown, path: string): BioWithPre
       title: optionalString(approach.title, `${path}.approach.title`),
       body: optionalString(approach.body, `${path}.approach.body`),
       mirrorLayout: optionalBoolean(approach.mirrorLayout, `${path}.approach.mirrorLayout`),
+    })),
+    contactReasons: optionalObject(obj.contactReasons, `${path}.contactReasons`, contactReasons => ({
+      kicker: optionalString(contactReasons.kicker, `${path}.contactReasons.kicker`),
+      title: optionalString(contactReasons.title, `${path}.contactReasons.title`),
+      items: optionalStringArray(contactReasons.items, `${path}.contactReasons.items`),
     })),
   }
 }

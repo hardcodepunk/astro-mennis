@@ -3,6 +3,7 @@
 @theme {
   --color-brand-primary: #f7f3fe;
   --color-brand-secondary: #202620;
+  --color-brand-accent: #b8a7e2;
 }
 
 body {
