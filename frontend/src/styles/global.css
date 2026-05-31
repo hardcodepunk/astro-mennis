@@ -45,7 +45,7 @@ html {
 @layer base {
   :root {
     --font-display: "Bebas Neue", sans-serif;
-    --ds-progress-offset: 0.04em;
+    --ds-progress-offset: 0.14em;
     --ds-progress-height: 2px;
   }
 }
@@ -247,19 +247,19 @@ html {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: var(--ds-progress-offset, 0.04em);
+    top: 100%;
     height: var(--ds-progress-height, 2px);
     background: var(--ds-progress-color, var(--color-brand-accent));
-    transform: scaleX(0);
     transform-origin: left;
     transition: transform 220ms ease;
+    transform: scaleX(0) translateY(var(--ds-progress-offset, 0.14em));
   }
 
   .ds-progress-link:hover::after,
   .ds-progress-link:focus-visible::after,
   .ds-progress-link.is-active::after,
   .ds-progress-link[aria-current]::after {
-    transform: scaleX(1);
+    transform: scaleX(1) translateY(var(--ds-progress-offset, 0.14em));
   }
 
   .ds-progress-link--spacious {
