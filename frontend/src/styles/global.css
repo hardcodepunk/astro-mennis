@@ -4,6 +4,13 @@
   --color-brand-primary: #f7f3fe;
   --color-brand-secondary: #202620;
   --color-brand-accent: #b8a7e2;
+
+  --font-body:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 body {
@@ -42,8 +49,230 @@ html {
 }
 
 @layer utilities {
+  .ds-shell {
+    width: min(100%, 90rem);
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  .ds-shell--wide {
+    width: min(100%, 96rem);
+  }
+
+  .ds-shell--content {
+    width: min(100%, 72rem);
+    margin-inline: auto;
+    padding-inline: clamp(1.5rem, 5vw, 4rem);
+  }
+
+  .ds-shell--compact {
+    width: min(100%, 68rem);
+    margin-inline: auto;
+    padding-inline: clamp(1.5rem, 5vw, 4rem);
+  }
+
+  .ds-kicker {
+    font-size: 0.95rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .ds-kicker--small {
+    font-size: 0.78rem;
+    letter-spacing: 0.13em;
+  }
+
+  .ds-kicker--compact {
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+  }
+
+  .ds-kicker--xsmall {
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+  }
+
+  .ds-title {
+    margin: 0;
+    font-family: var(--font-display);
+    line-height: 0.92;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-size: var(--ds-title-size, clamp(2rem, 4vw, 3.4rem));
+  }
+
+  .ds-title--xl {
+    --ds-title-size: clamp(2.2rem, 4.6vw, 4.2rem);
+  }
+
+  .ds-title--tiny {
+    --ds-title-size: clamp(1.15rem, 2.1vw, 1.55rem);
+  }
+
+  .ds-title--hero {
+    --ds-title-size: clamp(2.6rem, 6.2vw, 5.4rem);
+  }
+
+  .ds-title--large {
+    --ds-title-size: clamp(2.1rem, 5vw, 4.2rem);
+  }
+
+  .ds-title--card {
+    --ds-title-size: clamp(1.6rem, 2.4vw, 2.5rem);
+  }
+
+  .ds-title--card-featured {
+    --ds-title-size: clamp(2.5rem, 4vw, 4rem);
+  }
+
+  .ds-title--card-muted {
+    --ds-title-size: clamp(1.5rem, 2.6vw, 2.4rem);
+  }
+
+  .ds-title--work {
+    --ds-title-size: clamp(3.4rem, 9vw, 7.2rem);
+  }
+
+  .ds-title--section {
+    --ds-title-size: clamp(2.05rem, 3.1vw, 2.75rem);
+  }
+
+  .ds-title--subsection {
+    --ds-title-size: clamp(1.5rem, 2.4vw, 2.2rem);
+  }
+
+  .ds-copy {
+    margin: 0;
+    font-family: var(--font-body);
+    line-height: 1.8;
+    font-weight: 400;
+  }
+
+  .ds-copy--strong {
+    font-weight: 600;
+  }
+
+  .ds-copy-list {
+    font-family: var(--font-body);
+    max-width: 42rem;
+    font-size: clamp(1rem, 1.7vw, 1.25rem);
+    line-height: 1.55;
+    font-weight: 600;
+  }
+
+  .ds-copy-body {
+    margin: 0;
+    font-family: var(--font-body);
+    max-width: 42rem;
+    line-height: 1.8;
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  .ds-meta-label {
+    margin: 0;
+    color: inherit;
+    font-family: var(--font-body);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+    opacity: 0.72;
+  }
+
+  .ds-meta-value {
+    display: block;
+    margin-top: 5px;
+    color: inherit;
+    font-size: 1.08rem;
+    line-height: 1.05;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .ds-richtext {
+    margin-top: 0;
+    max-width: 70ch;
+    font-family: var(--font-body);
+    line-height: 1.75;
+    font-size: 1rem;
+    color: inherit;
+    font-weight: 400;
+  }
+
+  .ds-richtext > :first-child {
+    margin-top: 0;
+  }
+
+  .ds-richtext p {
+    margin: 20px 0 0 0;
+  }
+
+  .ds-richtext h2,
+  .ds-richtext h3,
+  .ds-richtext h4 {
+    margin: 42px 0 0 0;
+    color: inherit;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 0.95;
+  }
+
+  .ds-richtext h2 {
+    font-size: clamp(2rem, 3.4vw, 3.2rem);
+  }
+
+  .ds-richtext h3 {
+    font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+  }
+
+  .ds-richtext h4 {
+    font-size: 1.25rem;
+  }
+
+  .ds-progress-link {
+    position: relative;
+    display: inline-block;
+    text-decoration: none;
+  }
+
+  .ds-progress-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--ds-progress-height, 2px);
+    background: var(--ds-progress-color, var(--color-brand-accent));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 220ms ease;
+  }
+
+  .ds-progress-link:hover::after,
+  .ds-progress-link:focus-visible::after,
+  .ds-progress-link.is-active::after,
+  .ds-progress-link[aria-current]::after {
+    transform: scaleX(1);
+  }
+
+  .ds-split-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: start;
+  }
+
   .font-display {
     font-family: var(--font-display);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
   }
 }
 

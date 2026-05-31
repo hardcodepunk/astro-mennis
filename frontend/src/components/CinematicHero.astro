@@ -64,7 +64,9 @@ const posterAttrs = imageAttributes({
   <div class="vh-overlay" aria-hidden="true"></div>
 
   <div class="vh-bottom-left" style={`--vh-caption-scale: ${captionScale};`}>
-    {heroCaption ? <p class:list={["vh-caption", captionUppercase && "is-uppercase"]}>{heroCaption}</p> : null}
+    {heroCaption ? (
+      <p class:list={["vh-caption ds-title", !captionUppercase && "is-lowercase"]}>{heroCaption}</p>
+    ) : null}
   </div>
 
   <style>
@@ -95,24 +97,20 @@ const posterAttrs = imageAttributes({
 
     .vh-caption {
       margin: 0;
-      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-      font-weight: 400;
-      letter-spacing: 0.08em;
-    }
-
-    .vh-caption {
       max-width: min(28rem, calc(100vw - 3rem));
-      font-size: clamp(
+      --ds-title-size: clamp(
         calc(2rem * var(--vh-caption-scale)),
         calc(4.2vw * var(--vh-caption-scale)),
         calc(4.2rem * var(--vh-caption-scale))
       );
+      font-weight: 400;
+      letter-spacing: 0.08em;
       line-height: 0.95;
       color: #fff;
     }
 
-    .is-uppercase {
-      text-transform: uppercase;
+    .is-lowercase {
+      text-transform: none;
     }
 
     @media (max-width: 640px) {

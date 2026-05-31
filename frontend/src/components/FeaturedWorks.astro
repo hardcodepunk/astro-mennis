@@ -7,7 +7,7 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
 
 {items.length ? (
   <section id="projects" class="fw">
-    <div class="fw-inner">
+    <div class="fw-inner ds-shell">
       <h2 class="sr-only">Featured projects</h2>
 
       <div class="fw-grid">
@@ -23,7 +23,7 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
       </div>
 
       <div class="fw-actions">
-        <a class="fw-cta" href="/projects">View all projects</a>
+        <a class="fw-cta ds-title ds-title--tiny ds-progress-link" href="/projects">View all projects</a>
       </div>
     </div>
 
@@ -33,9 +33,7 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
       }
 
       .fw-inner {
-        max-width: 90rem;
         margin: 0 auto;
-        padding: 0 1rem;
       }
 
       .fw-grid {
@@ -51,37 +49,15 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
       }
 
       .fw-cta {
-        position: relative;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 0 0 0.25rem;
         color: var(--color-brand-secondary);
-        font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-        font-size: 1.4rem;
         font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
         text-decoration: none;
         cursor: pointer;
-      }
-
-      .fw-cta::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 2px;
-        background: var(--color-brand-accent);
-        transform: scaleX(0);
-        transform-origin: left;
-        transition: transform 220ms ease;
-      }
-
-      .fw-cta:hover::after,
-      .fw-cta:focus-visible::after {
-        transform: scaleX(1);
+        letter-spacing: 0.08em;
       }
 
       @media (max-width: 900px) {

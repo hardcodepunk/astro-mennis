@@ -21,22 +21,22 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
 ---
 
 <section class="pg">
-  <div class="pg-inner">
+  <div class="pg-inner ds-shell--wide">
     <div class="pg-filters">
       {
         activeSlug === "all" ? (
-          <span class="pg-pill is-active" aria-current="page">All</span>
+          <span class="pg-pill ds-kicker ds-kicker--compact is-active" aria-current="page">All</span>
         ) : (
-          <a class="pg-pill" href={filterHref("all")}>All</a>
+          <a class="pg-pill ds-kicker ds-kicker--compact ds-progress-link" href={filterHref("all")}>All</a>
         )
       }
 
       {
         categories.map(cat =>
           activeSlug === cat.slug ? (
-            <span class="pg-pill is-active" aria-current="page">{cat.title}</span>
+            <span class="pg-pill ds-kicker ds-kicker--compact is-active" aria-current="page">{cat.title}</span>
           ) : (
-            <a class="pg-pill" href={filterHref(cat.slug)}>{cat.title}</a>
+            <a class="pg-pill ds-kicker ds-kicker--compact ds-progress-link" href={filterHref(cat.slug)}>{cat.title}</a>
           ),
         )
       }
@@ -53,9 +53,7 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
     }
 
     .pg-inner {
-      max-width: 96rem;
       margin: 0 auto;
-      padding: 0 1rem;
     }
 
     .pg-filters {
@@ -72,13 +70,10 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
       justify-content: center;
       min-height: 48px;
       padding: 0.65rem 1.25rem;
-      border: 1px solid var(--color-brand-secondary);
-      border-radius: 999px;
       color: var(--color-brand-secondary);
+      border-radius: 999px;
+      border: 1px solid var(--color-brand-secondary);
       text-decoration: none;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      font-size: 0.95rem;
       transition:
         background 160ms ease,
         color 160ms ease;

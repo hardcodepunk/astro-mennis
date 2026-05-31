@@ -76,9 +76,9 @@ const jsonLd = breadcrumbJsonLd(
             {heroWebm ? <source src={heroWebm} type="video/webm" /> : null}
           </video>
           <div class="about-page__hero-shade" aria-hidden="true"></div>
-          <div class="about-page__hero-content">
-            <h1 class="about-page__title"><LineBreakText text={heroTitle} /></h1>
-          </div>
+      <div class="about-page__hero-content">
+          <h1 class="about-page__title ds-title ds-title--hero"><LineBreakText text={heroTitle} /></h1>
+        </div>
         </div>
       </div>
     </section>
@@ -177,7 +177,6 @@ const jsonLd = breadcrumbJsonLd(
     .about-page__title {
       margin: 0;
       max-width: min(20ch, 62rem);
-      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
       font-size: clamp(
         calc(2.6rem * var(--about-hero-title-scale)),
         calc(6.2vw * var(--about-hero-title-scale)),
@@ -186,7 +185,6 @@ const jsonLd = breadcrumbJsonLd(
       line-height: 0.95;
       font-weight: 400;
       letter-spacing: 0.08em;
-      text-transform: uppercase;
       color: #fff;
     }
 

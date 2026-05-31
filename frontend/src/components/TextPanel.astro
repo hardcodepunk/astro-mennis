@@ -35,13 +35,13 @@ const paragraphs = body
     mirrorLayout && "is-mirrored",
   ]}
 >
-  <div class="tp-inner">
+  <div class="tp-inner ds-split-grid ds-shell">
     <div class="tp-col">
-      {kicker ? <p class="tp-kicker">{kicker}</p> : null}
-      <h2 class="tp-title"><LineBreakText text={title} /></h2>
+      {kicker ? <p class="tp-kicker ds-kicker">{kicker}</p> : null}
+      <h2 class="tp-title ds-title ds-title--xl"><LineBreakText text={title} /></h2>
     </div>
 
-    <div class="tp-copy">
+    <div class="tp-copy ds-copy-body">
       {paragraphs.map(paragraph => <p>{paragraph}</p>)}
     </div>
   </div>
@@ -68,12 +68,7 @@ const paragraphs = body
     }
 
     .tp-inner {
-      display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-      gap: clamp(2rem, 6vw, 5rem);
-      align-items: start;
       max-width: 72rem;
-      margin: 0 auto;
       padding: clamp(1.5rem, 4vw, 3rem);
       background: var(--color-brand-secondary);
       color: #fff;
@@ -111,34 +106,14 @@ const paragraphs = body
     .tp-kicker {
       margin: 0 0 10px 0;
       color: rgba(255, 255, 255, 0.68);
-      font-size: 0.95rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
     }
 
     .tp-title {
-      margin: 0;
-      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-      font-size: clamp(2rem, 4vw, 3.4rem);
-      line-height: 0.92;
-      font-weight: 400;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
       color: #fff;
-      overflow-wrap: break-word;
     }
 
     .tp-copy {
       max-width: 42rem;
-      font-family:
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        sans-serif;
-      font-size: 1rem;
-      line-height: 1.8;
-      font-weight: 400;
       color: #fff;
     }
 

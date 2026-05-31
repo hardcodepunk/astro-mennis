@@ -18,17 +18,21 @@ const hasHeading = Boolean(safeKicker || safeTitle)
 {
   safeItems.length ? (
     <section class:list={["cr", mirrorLayout && "is-mirrored"]} aria-labelledby={safeTitle ? "contact-reasons-title" : undefined}>
-      <div class:list={["cr-inner", !hasHeading && "is-list-only"]}>
+      <div class:list={["cr-inner ds-split-grid ds-shell", !hasHeading && "is-list-only"]}>
         {
           hasHeading ? (
             <div class="cr-heading">
-              {safeKicker ? <p class="cr-kicker">{safeKicker}</p> : null}
-              {safeTitle ? <h2 id="contact-reasons-title" class="cr-title"><LineBreakText text={safeTitle} /></h2> : null}
+              {safeKicker ? <p class="cr-kicker ds-kicker">{safeKicker}</p> : null}
+              {safeTitle ? (
+                <h2 id="contact-reasons-title" class="cr-title ds-title ds-title--xl">
+                  <LineBreakText text={safeTitle} />
+                </h2>
+              ) : null}
             </div>
           ) : null
         }
 
-        <ul class="cr-list">
+        <ul class="cr-list ds-copy-list">
           {safeItems.map(item => (
             <li class="cr-item">
               <span class="cr-dot" aria-hidden="true"></span>
@@ -47,12 +51,7 @@ const hasHeading = Boolean(safeKicker || safeTitle)
   }
 
   .cr-inner {
-    display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    gap: clamp(2rem, 6vw, 5rem);
-    align-items: start;
     max-width: 90rem;
-    margin: 0 auto;
     padding-block: clamp(1.5rem, 4vw, 3rem);
     padding-inline: clamp(1.5rem, 5vw, 4rem);
     color: var(--color-brand-secondary);
@@ -74,22 +73,11 @@ const hasHeading = Boolean(safeKicker || safeTitle)
   .cr-kicker {
     margin: 0 0 10px 0;
     color: var(--color-brand-secondary);
-    font-size: 0.95rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
     opacity: 0.68;
   }
 
   .cr-title {
-    margin: 0;
     max-width: 12ch;
-    font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-    font-size: clamp(2.2rem, 4.6vw, 4.2rem);
-    line-height: 0.92;
-    font-weight: 400;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    overflow-wrap: break-word;
   }
 
   .cr-list {
@@ -98,15 +86,6 @@ const hasHeading = Boolean(safeKicker || safeTitle)
     margin: 0;
     padding: 0;
     list-style: none;
-    font-family:
-      ui-sans-serif,
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont,
-      sans-serif;
-    font-size: clamp(1rem, 1.7vw, 1.25rem);
-    line-height: 1.55;
-    font-weight: 600;
   }
 
   .cr-item {

@@ -67,8 +67,8 @@ const poster = imageAttributes({
   </div>
 
   <div class="work-card-overlay">
-    <div class="work-card-kicker">{work.category}</div>
-    <Heading class="work-card-title">{work.title}</Heading>
+    <div class="work-card-kicker ds-kicker">{work.category}</div>
+    <Heading class="work-card-title ds-title ds-title--card">{work.title}</Heading>
   </div>
 </a>
 
@@ -117,20 +117,13 @@ const poster = imageAttributes({
     color: #fff;
   }
 
-  .work-card-kicker {
-    font-size: 0.85rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.72);
-  }
+    .work-card-kicker {
+      color: rgba(255, 255, 255, 0.72);
+    }
 
   .work-card-title {
-    margin: 0.35rem 0 0;
-    font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-    font-size: clamp(1.6rem, 2.4vw, 2.5rem);
-    line-height: 0.95;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
+      margin: 0.35rem 0 0;
+      line-height: 0.95;
   }
 
   .work-card--featured-primary {
@@ -150,11 +143,11 @@ const poster = imageAttributes({
   }
 
   .work-card--featured .work-card-title {
-    font-size: clamp(1.5rem, 2.6vw, 2.4rem);
+    --ds-title-size: clamp(1.5rem, 2.6vw, 2.4rem);
   }
 
   .work-card--featured-primary .work-card-title {
-    font-size: clamp(2.5rem, 4vw, 4rem);
+    --ds-title-size: clamp(2.5rem, 4vw, 4rem);
   }
 
   @media (max-width: 900px) {

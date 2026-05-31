@@ -30,7 +30,10 @@ const isActiveNav = (href: string) => {
         NAV.map(item => (
           <a
             href={item.href}
-            class:list={["desktop-link transition-colors", isActiveNav(item.href) && "is-active"]}
+            class:list={[
+              "desktop-link ds-progress-link transition-colors",
+              isActiveNav(item.href) && "is-active",
+            ]}
             aria-current={isActiveNav(item.href) ? "page" : undefined}
           >
             {item.label}
@@ -66,7 +69,7 @@ const isActiveNav = (href: string) => {
           NAV.map(item => (
             <a
               href={item.href}
-              class:list={["mobile-link", isActiveNav(item.href) && "is-active"]}
+              class:list={["mobile-link ds-progress-link", isActiveNav(item.href) && "is-active"]}
               aria-current={isActiveNav(item.href) ? "page" : undefined}
               data-menu-link
             >
@@ -130,20 +133,6 @@ const isActiveNav = (href: string) => {
     color: #fff;
   }
 
-  .desktop-link::after,
-  .mobile-link::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 2px;
-    background: var(--color-brand-accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 220ms ease;
-  }
-
   .site-header.is-solid .desktop-link {
     color: var(--color-brand-secondary);
   }
@@ -156,13 +145,6 @@ const isActiveNav = (href: string) => {
     color: #fff;
   }
 
-  .desktop-link:hover::after,
-  .desktop-link.is-active::after,
-  .mobile-link:hover::after,
-  .mobile-link:focus-visible::after,
-  .mobile-link.is-active::after {
-    transform: scaleX(1);
-  }
 
   .hamburger {
     width: 28px;
@@ -296,9 +278,7 @@ const isActiveNav = (href: string) => {
     .mobile-menu__panel,
     .mobile-link,
     .brand,
-    .desktop-link,
-    .desktop-link::after,
-    .mobile-link::after {
+    .desktop-link {
       transition: none !important;
     }
   }

@@ -11,17 +11,17 @@ const mailHref = `mailto:${email}`
 ---
 
 <section class="contact-page">
-  <div class="contact-page__inner">
+  <div class="contact-page__inner ds-shell">
     <div class="contact-page__details">
       <div class="contact-page__intro">
         <p class="contact-page__meta">
-          <span class="contact-page__meta-label">Based in</span>
-          <strong>Gent, Belgium</strong>
+          <span class="contact-page__meta-label ds-kicker ds-kicker--small">Based in</span>
+          <strong class="ds-title ds-title--card">Gent, Belgium</strong>
         </p>
 
-        <a class="contact-page__meta contact-page__mail" href={mailHref}>
-          <span class="contact-page__meta-label">{mailSentence}</span>
-          <strong>{email}</strong>
+        <a class="contact-page__meta contact-page__mail ds-progress-link" href={mailHref}>
+          <span class="contact-page__meta-label ds-kicker ds-kicker--small">{mailSentence}</span>
+          <strong class="ds-title ds-title--card">{email}</strong>
         </a>
       </div>
     </div>
@@ -109,8 +109,7 @@ const mailHref = `mailto:${email}`
   }
 
   .contact-page__inner {
-    width: min(100%, 90rem);
-    margin: 0 auto;
+    padding-inline: 1.5rem;
     display: grid;
     gap: clamp(2rem, 5vh, 3.25rem);
   }
@@ -118,12 +117,7 @@ const mailHref = `mailto:${email}`
   .contact-page__headline {
     min-height: clamp(10rem, 28vw, 20rem);
     max-width: 68rem;
-    font-family:
-      ui-sans-serif,
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont,
-      sans-serif;
+    font-family: var(--font-body);
     font-size: clamp(2.7rem, 7vw, 7rem);
     font-weight: 800;
     line-height: 1;
@@ -158,52 +152,14 @@ const mailHref = `mailto:${email}`
     color: var(--color-brand-secondary);
   }
 
-  .contact-page__meta-label {
-    flex: 0 0 auto;
-    color: var(--color-brand-secondary);
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.13em;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
   .contact-page__meta strong {
-    font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-    font-size: clamp(2rem, 5vw, 4.35rem);
+    --ds-title-size: clamp(2rem, 5vw, 4.35rem);
     line-height: 0.9;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
     overflow-wrap: anywhere;
   }
 
   .contact-page__mail {
     color: var(--color-brand-secondary);
-    text-decoration: none;
-  }
-
-  .contact-page__mail strong {
-    position: relative;
-    display: inline-block;
-    padding-bottom: 0.08em;
-  }
-
-  .contact-page__mail strong::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 0.05em;
-    background: var(--color-brand-accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 220ms ease;
-  }
-
-  .contact-page__mail:hover strong::after,
-  .contact-page__mail:focus-visible strong::after {
-    transform: scaleX(1);
   }
 
   @keyframes contact-cursor {
