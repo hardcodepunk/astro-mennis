@@ -28,6 +28,14 @@ export const bioWithPreview = defineType({
       validation: (r) => r.required(),
     }),
     defineField({
+      name: 'heroTitleTextScale',
+      title: 'Hero title size',
+      description: 'Use 100 for default. Try 90 for smaller, 120 for larger.',
+      type: 'number',
+      initialValue: 100,
+      validation: (r) => r.min(60).max(180),
+    }),
+    defineField({
       name: 'heroVideo',
       title: 'About hero video',
       description: 'Autoplaying video banner behind the About page title.',
@@ -83,13 +91,6 @@ export const bioWithPreview = defineType({
       type: 'number',
       initialValue: 100,
       validation: (r) => r.min(50).max(140),
-    }),
-    defineField({
-      name: 'bioUppercase',
-      title: 'Uppercase bio text',
-      description: 'Off keeps normal casing. On displays the bio in uppercase.',
-      type: 'boolean',
-      initialValue: false,
     }),
     defineField({
       name: 'previewVideo',

@@ -97,6 +97,7 @@ export type LogoItem = {
 
 export type BioWithPreviewDoc = {
   heroTitle?: string
+  heroTitleTextScale?: number
   seoH1?: string
   heroVideo?: {
     mp4?: string
@@ -106,7 +107,6 @@ export type BioWithPreviewDoc = {
   bio?: string
   mirrorLayout?: boolean
   bioTextScale?: number
-  bioUppercase?: boolean
   previewVideo?: {
     mp4?: string
     webm?: string
@@ -250,12 +250,12 @@ export function validateBioWithPreview(value: unknown, path: string): BioWithPre
   const obj = objectAt(value, path)
   return {
     heroTitle: optionalString(obj.heroTitle, `${path}.heroTitle`),
+    heroTitleTextScale: optionalNumber(obj.heroTitleTextScale, `${path}.heroTitleTextScale`),
     seoH1: optionalString(obj.seoH1, `${path}.seoH1`),
     heroVideo: optionalMediaUrls(obj.heroVideo, `${path}.heroVideo`),
     bio: optionalString(obj.bio, `${path}.bio`),
     mirrorLayout: optionalBoolean(obj.mirrorLayout, `${path}.mirrorLayout`),
     bioTextScale: optionalNumber(obj.bioTextScale, `${path}.bioTextScale`),
-    bioUppercase: optionalBoolean(obj.bioUppercase, `${path}.bioUppercase`),
     previewVideo: optionalMediaUrls(obj.previewVideo, `${path}.previewVideo`),
     approach: optionalObject(obj.approach, `${path}.approach`, approach => ({
       kicker: optionalString(approach.kicker, `${path}.approach.kicker`),

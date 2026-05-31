@@ -120,12 +120,12 @@ export async function getLogoMarquee() {
 export async function getBioWithPreview() {
   const q = `*[_id == "bioWithPreview"][0]{
     heroTitle,
+    heroTitleTextScale,
     seoH1,
     heroVideo{ mp4, webm, poster },
     bio,
     mirrorLayout,
     bioTextScale,
-    bioUppercase,
     previewVideo{ mp4, webm, poster },
     approach{
       kicker,

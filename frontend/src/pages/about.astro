@@ -47,6 +47,7 @@ const heroMp4 = aboutDoc?.heroVideo?.mp4 ?? DEFAULT_HERO_MP4
 const heroWebm = aboutDoc?.heroVideo?.webm ?? DEFAULT_HERO_WEBM
 const heroPoster = safePosterUrl(aboutDoc?.heroVideo?.poster, DEFAULT_HERO_POSTER)
 const optimizedHeroPoster = cloudinaryImage(heroPoster, 1920)
+const heroTitleScale = Math.min(1.8, Math.max(0.6, (aboutDoc?.heroTitleTextScale ?? 100) / 100))
 const approach = {
   kicker: aboutDoc?.approach?.kicker?.trim() || DEFAULT_APPROACH.kicker,
   title: aboutDoc?.approach?.title?.trim() || DEFAULT_APPROACH.title,
@@ -97,7 +98,7 @@ const jsonLd = breadcrumbJsonLd(
   <main class="about-page">
     <section class="about-page__hero">
       <div class="about-page__inner about-page__hero-inner">
-        <div class="about-page__hero-frame">
+        <div class="about-page__hero-frame" style={`--about-hero-title-scale: ${heroTitleScale};`}>
           <video
             class="about-page__hero-video"
             data-about-autoplay-video
@@ -130,7 +131,6 @@ const jsonLd = breadcrumbJsonLd(
       poster={aboutDoc?.previewVideo?.poster}
       mirrorLayout={aboutDoc?.mirrorLayout}
       bioTextScale={aboutDoc?.bioTextScale}
-      bioUppercase={aboutDoc?.bioUppercase}
     />
 
     <TextPanel
@@ -138,7 +138,6 @@ const jsonLd = breadcrumbJsonLd(
       title={approach.title}
       body={approach.body}
       mirrorLayout={approach.mirrorLayout}
-      fullWidth
     />
 
     <ContactReasons
@@ -265,7 +264,11 @@ const jsonLd = breadcrumbJsonLd(
       margin: 0;
       max-width: min(20ch, 62rem);
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-      font-size: clamp(2.6rem, 6.2vw, 5.4rem);
+      font-size: clamp(
+        calc(2.6rem * var(--about-hero-title-scale)),
+        calc(6.2vw * var(--about-hero-title-scale)),
+        calc(5.4rem * var(--about-hero-title-scale))
+      );
       line-height: 0.95;
       font-weight: 400;
       letter-spacing: 0.08em;
