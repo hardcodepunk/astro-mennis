@@ -57,29 +57,31 @@ const legalDownloadUrl = legalUrl
   <style>
     .footer {
       width: 100%;
-      padding: clamp(3.5rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem);
+      padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 4rem);
       background: var(--color-brand-secondary);
       color: var(--color-brand-primary);
     }
 
     .footer-inner {
       display: grid;
-      gap: clamp(2.25rem, 6vw, 4.5rem);
-      width: min(100%, 90rem);
+      justify-items: center;
+      gap: 1rem;
+      width: min(100%, 44rem);
       margin: 0 auto;
+      text-align: center;
     }
 
     .footer-main,
     .footer-meta {
       display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(1rem, 3vw, 2rem);
     }
 
     .footer-brand {
       display: inline-flex;
-      width: clamp(4.2rem, 8vw, 6rem);
+      width: clamp(3rem, 6vw, 4.2rem);
       opacity: 0.78;
       transition: opacity 160ms ease;
     }
@@ -96,37 +98,54 @@ const legalDownloadUrl = legalUrl
 
     .footer-contact {
       display: grid;
-      gap: 0.45rem;
-      text-align: right;
+      gap: 0.35rem;
+      text-align: left;
     }
 
     .footer-label {
       margin: 0;
       color: color-mix(in srgb, var(--color-brand-primary) 72%, transparent);
-      font-size: 0.72rem;
-      font-weight: 800;
+      font-size: 0.66rem;
+      font-weight: 400;
       letter-spacing: 0.14em;
       line-height: 1;
       text-transform: uppercase;
     }
 
     .footer-mail {
+      position: relative;
+      display: inline-block;
+      padding-bottom: 0.1em;
       color: var(--color-brand-primary);
       font-family: var(--font-display, "Bebas Neue", sans-serif);
-      font-size: clamp(2rem, 4.8vw, 4rem);
+      font-size: clamp(1.15rem, 2.1vw, 1.55rem);
+      font-weight: 400;
       letter-spacing: 0.03em;
       line-height: 0.9;
       text-decoration: none;
-      transition: color 160ms ease;
     }
 
-    .footer-mail:hover {
-      color: #fff;
+    .footer-mail::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: var(--color-brand-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 220ms ease;
+    }
+
+    .footer-mail:hover::after,
+    .footer-mail:focus-visible::after {
+      transform: scaleX(1);
     }
 
     .footer-meta {
       align-items: center;
-      min-height: 1.5rem;
+      min-height: 1.25rem;
     }
 
     .footer-instagram {
@@ -135,11 +154,6 @@ const legalDownloadUrl = legalUrl
       height: 1.5rem;
       filter: brightness(0) saturate(100%) invert(96%) sepia(4%) saturate(1313%) hue-rotate(204deg) brightness(105%)
         contrast(99%);
-      transition: filter 160ms ease;
-    }
-
-    .footer-instagram-link:hover .footer-instagram {
-      filter: brightness(0) invert(1);
     }
 
     .footer-legal {
@@ -147,12 +161,11 @@ const legalDownloadUrl = legalUrl
       display: inline-block;
       padding-bottom: 0.25rem;
       color: var(--color-brand-primary);
-      font-size: 0.78rem;
-      font-weight: 700;
+      font-size: 0.72rem;
+      font-weight: 400;
       letter-spacing: 0;
       line-height: 1.2;
       text-decoration: none;
-      transition: color 160ms ease;
     }
 
     .footer-legal::after {
@@ -176,12 +189,12 @@ const legalDownloadUrl = legalUrl
     @media (max-width: 700px) {
       .footer-main,
       .footer-meta {
-        align-items: flex-start;
+        align-items: center;
         flex-direction: column;
       }
 
       .footer-contact {
-        text-align: left;
+        text-align: center;
       }
     }
   </style>

@@ -1,4 +1,6 @@
 ---
+import LineBreakText from "./LineBreakText.astro"
+
 type Props = {
   kicker?: string
   title: string
@@ -19,7 +21,7 @@ const paragraphs = body
   <div class="tp-inner">
     <div class="tp-col">
       {kicker ? <p class="tp-kicker">{kicker}</p> : null}
-      <h2 class="tp-title">{title}</h2>
+      <h2 class="tp-title"><LineBreakText text={title} /></h2>
     </div>
 
     <div class="tp-copy">

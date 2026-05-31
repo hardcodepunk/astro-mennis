@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro"
 import BioWithPreview from "../components/BioWithPreview.astro"
 import ContactReasons from "../components/ContactReasons.astro"
+import LineBreakText from "../components/LineBreakText.astro"
 import LogosMarquee from "../components/LogosMarquee.astro"
 import TextPanel from "../components/TextPanel.astro"
 import { getBioWithPreview, getSeoSettings } from "../lib/sanity.queries"
@@ -27,6 +28,10 @@ const DEFAULT_APPROACH = {
   ].join("\n\n"),
   mirrorLayout: false,
 }
+const DEFAULT_BIO_INTRO = {
+  kicker: "Bio",
+  title: "Behind the camera",
+}
 const DEFAULT_CONTACT_REASONS = {
   kicker: "What to contact me for",
   title: "Built for bold projects with movement, edge and energy.",
@@ -38,6 +43,7 @@ const DEFAULT_CONTACT_REASONS = {
     "Aerial filmography.",
     "Ideas.",
   ],
+  mirrorLayout: false,
 }
 
 const heroTitle = aboutDoc?.heroTitle ?? aboutDoc?.seoH1 ?? "Filmmaking with clarity, rhythm and feel."
@@ -51,11 +57,20 @@ const approach = {
   body: aboutDoc?.approach?.body?.trim() || DEFAULT_APPROACH.body,
   mirrorLayout: aboutDoc?.approach?.mirrorLayout ?? DEFAULT_APPROACH.mirrorLayout,
 }
-const contactReasonItems = aboutDoc?.contactReasons?.items?.map(item => item.trim()).filter(Boolean)
+const bioIntro = aboutDoc?.bioIntro
+  ? {
+      kicker: aboutDoc.bioIntro.kicker?.trim() ?? "",
+      title: aboutDoc.bioIntro.title?.trim() ?? "",
+    }
+  : DEFAULT_BIO_INTRO
+const contactReasonItems = aboutDoc?.contactReasons
+  ? (aboutDoc.contactReasons.items?.map(item => item.trim()).filter(Boolean) ?? [])
+  : DEFAULT_CONTACT_REASONS.items
 const contactReasons = {
-  kicker: aboutDoc?.contactReasons?.kicker?.trim() || DEFAULT_CONTACT_REASONS.kicker,
-  title: aboutDoc?.contactReasons?.title?.trim() || DEFAULT_CONTACT_REASONS.title,
-  items: contactReasonItems?.length ? contactReasonItems : DEFAULT_CONTACT_REASONS.items,
+  kicker: aboutDoc?.contactReasons ? (aboutDoc.contactReasons.kicker?.trim() ?? "") : DEFAULT_CONTACT_REASONS.kicker,
+  title: aboutDoc?.contactReasons ? (aboutDoc.contactReasons.title?.trim() ?? "") : DEFAULT_CONTACT_REASONS.title,
+  items: contactReasonItems,
+  mirrorLayout: aboutDoc?.contactReasons?.mirrorLayout ?? DEFAULT_CONTACT_REASONS.mirrorLayout,
 }
 const title = formatTitle(seoSettings, seoSettings?.aboutTitle ?? "About")
 const description = metaDescription(seoSettings, seoSettings?.aboutDescription)
@@ -112,24 +127,32 @@ const jsonLd = breadcrumbJsonLd(
           </video>
           <div class="about-page__hero-shade" aria-hidden="true"></div>
           <div class="about-page__hero-content">
-            <h1 class="about-page__title">{heroTitle}</h1>
+            <h1 class="about-page__title"><LineBreakText text={heroTitle} /></h1>
           </div>
         </div>
       </div>
     </section>
 
     <BioWithPreview
+      sectionKicker={bioIntro.kicker}
+      sectionTitle={bioIntro.title}
       bio={aboutDoc?.bio}
       mp4={aboutDoc?.previewVideo?.mp4}
       webm={aboutDoc?.previewVideo?.webm}
       poster={aboutDoc?.previewVideo?.poster}
       mirrorLayout={aboutDoc?.mirrorLayout}
       bioTextScale={aboutDoc?.bioTextScale}
+      bioUppercase={aboutDoc?.bioUppercase}
     />
 
     <TextPanel kicker={approach.kicker} title={approach.title} body={approach.body} mirrorLayout={approach.mirrorLayout} />
 
-    <ContactReasons kicker={contactReasons.kicker} title={contactReasons.title} items={contactReasons.items} />
+    <ContactReasons
+      kicker={contactReasons.kicker}
+      title={contactReasons.title}
+      items={contactReasons.items}
+      mirrorLayout={contactReasons.mirrorLayout}
+    />
 
     <LogosMarquee />
   </main>
@@ -246,19 +269,19 @@ const jsonLd = breadcrumbJsonLd(
 
     .about-page__title {
       margin: 0;
-      max-width: 11ch;
+      max-width: min(20ch, 62rem);
       font-family: var(--font-bebas, "Bebas Neue", sans-serif);
-      font-size: clamp(3rem, 7.6vw, 6.2rem);
-      line-height: 0.9;
+      font-size: clamp(2.6rem, 6.2vw, 5.4rem);
+      line-height: 0.95;
       font-weight: 400;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: #fff;
     }
 
     @media (max-width: 900px) {
       .about-page__title {
-        max-width: 12ch;
+        max-width: min(16ch, calc(100vw - 2rem));
       }
 
       .about-page__hero-frame {

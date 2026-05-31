@@ -75,7 +75,9 @@ export const siteSettings = defineType({
         defineField({
           name: 'title',
           title: 'Heading',
-          type: 'string',
+          description: 'Use Enter for line breaks.',
+          type: 'text',
+          rows: 4,
         }),
         defineField({
           name: 'body',

@@ -1,22 +1,32 @@
 ---
+import LineBreakText from "./LineBreakText.astro"
+
 type Props = {
   kicker?: string
-  title: string
+  title?: string
   items: string[]
+  mirrorLayout?: boolean
 }
 
-const { kicker, title, items } = Astro.props as Props
+const { kicker, title, items, mirrorLayout = false } = Astro.props as Props
+const safeKicker = kicker?.trim() ?? ""
+const safeTitle = title?.trim() ?? ""
 const safeItems = items.map(item => item.trim()).filter(Boolean)
+const hasHeading = Boolean(safeKicker || safeTitle)
 ---
 
 {
   safeItems.length ? (
-    <section class="cr" aria-labelledby="contact-reasons-title">
-      <div class="cr-inner">
-        <div class="cr-heading">
-          {kicker ? <p class="cr-kicker">{kicker}</p> : null}
-          <h2 id="contact-reasons-title" class="cr-title">{title}</h2>
-        </div>
+    <section class:list={["cr", mirrorLayout && "is-mirrored"]} aria-labelledby={safeTitle ? "contact-reasons-title" : undefined}>
+      <div class:list={["cr-inner", !hasHeading && "is-list-only"]}>
+        {
+          hasHeading ? (
+            <div class="cr-heading">
+              {safeKicker ? <p class="cr-kicker">{safeKicker}</p> : null}
+              {safeTitle ? <h2 id="contact-reasons-title" class="cr-title"><LineBreakText text={safeTitle} /></h2> : null}
+            </div>
+          ) : null
+        }
 
         <ul class="cr-list">
           {safeItems.map(item => (
@@ -33,9 +43,7 @@ const safeItems = items.map(item => item.trim()).filter(Boolean)
 
 <style>
   .cr {
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
-    padding: 0 clamp(1rem, 4vw, 4rem) clamp(3rem, 7vw, 6rem);
+    padding: 32px 0 clamp(3rem, 7vw, 6rem);
   }
 
   .cr-inner {
@@ -43,19 +51,32 @@ const safeItems = items.map(item => item.trim()).filter(Boolean)
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
     gap: clamp(2rem, 6vw, 5rem);
     align-items: start;
-    max-width: 90rem;
+    max-width: 72rem;
     margin: 0 auto;
     padding: clamp(1.5rem, 4vw, 3rem);
-    background: var(--color-brand-secondary);
-    color: #fff;
+    color: var(--color-brand-secondary);
+  }
+
+  .cr-inner.is-list-only {
+    grid-template-columns: 1fr;
+    padding-top: 0;
+  }
+
+  .cr.is-mirrored .cr-heading {
+    order: 2;
+  }
+
+  .cr.is-mirrored .cr-list {
+    order: 1;
   }
 
   .cr-kicker {
     margin: 0 0 10px 0;
-    color: rgba(255, 255, 255, 0.68);
+    color: var(--color-brand-secondary);
     font-size: 0.95rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
+    opacity: 0.68;
   }
 
   .cr-title {
@@ -98,7 +119,7 @@ const safeItems = items.map(item => item.trim()).filter(Boolean)
     width: 0.45rem;
     height: 0.45rem;
     margin-top: 0.62em;
-    background: #fff;
+    background: var(--color-brand-secondary);
   }
 
   @media (max-width: 900px) {

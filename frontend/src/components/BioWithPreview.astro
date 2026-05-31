@@ -1,4 +1,5 @@
 ---
+import LineBreakText from "./LineBreakText.astro"
 import VideoPreview from "./VideoPreview.astro"
 
 const DEFAULT_BIO = `I SHOOT CLEAN, CINEMATIC VIDEO FOR BRANDS AND PEOPLE WHO CARE ABOUT CRAFT.
@@ -14,11 +15,14 @@ const DEFAULT_POSTER =
 
 const props = Astro.props as {
   bio?: string
+  sectionKicker?: string
+  sectionTitle?: string
   mp4?: string
   webm?: string
   poster?: string
   mirrorLayout?: boolean
   bioTextScale?: number
+  bioUppercase?: boolean
 }
 
 const bio = props.bio ?? DEFAULT_BIO
@@ -27,12 +31,25 @@ const webm = props.webm ?? DEFAULT_WEBM
 const poster = props.poster ?? DEFAULT_POSTER
 const mirrorLayout = props.mirrorLayout ?? false
 const textScale = Math.min(1.4, Math.max(0.5, (props.bioTextScale ?? 100) / 100))
+const bioUppercase = props.bioUppercase ?? true
+const sectionKicker = props.sectionKicker?.trim() ?? ""
+const sectionTitle = props.sectionTitle?.trim() ?? ""
+const hasSectionIntro = Boolean(sectionKicker || sectionTitle)
 ---
 
 <section class:list={["bp", mirrorLayout && "is-mirrored"]} style={`--bio-scale: ${textScale};`}>
+  {
+    hasSectionIntro ? (
+      <div class="bp-section-intro">
+        {sectionKicker ? <p class="bp-kicker">{sectionKicker}</p> : null}
+        {sectionTitle ? <h2 class="bp-title"><LineBreakText text={sectionTitle} /></h2> : null}
+      </div>
+    ) : null
+  }
+
   <div class="bp-inner">
     <div class="bp-left">
-      <p class="bp-bio">{bio}</p>
+      <p class:list={["bp-bio", bioUppercase && "is-uppercase"]}>{bio}</p>
     </div>
 
     <div class="bp-right">
@@ -44,6 +61,34 @@ const textScale = Math.min(1.4, Math.max(0.5, (props.bioTextScale ?? 100) / 100)
     .bp {
       padding: 72px 0;
     }
+    .bp-section-intro {
+      max-width: 72rem;
+      margin: 0 auto clamp(2rem, 5vw, 3rem);
+      padding: 0 1rem;
+    }
+
+    .bp-kicker {
+      margin: 0 0 10px 0;
+      color: var(--color-brand-secondary);
+      font-size: 0.95rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      opacity: 0.68;
+    }
+
+    .bp-title {
+      margin: 0;
+      max-width: 12ch;
+      font-family: var(--font-bebas, "Bebas Neue", sans-serif);
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 0.92;
+      font-weight: 400;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--color-brand-secondary);
+      overflow-wrap: break-word;
+    }
+
     .bp-inner {
       max-width: 72rem;
       margin: 0 auto;
@@ -71,6 +116,10 @@ const textScale = Math.min(1.4, Math.max(0.5, (props.bioTextScale ?? 100) / 100)
       color: var(--color-brand-secondary);
       max-width: 28ch;
       white-space: pre-line;
+    }
+
+    .bp-bio.is-uppercase {
+      text-transform: uppercase;
     }
     @media (max-width: 900px) {
       .bp-inner {

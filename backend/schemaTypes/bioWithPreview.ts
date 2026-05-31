@@ -22,8 +22,9 @@ export const bioWithPreview = defineType({
     defineField({
       name: 'heroTitle',
       title: 'Hero title',
-      description: 'Shown over the About page video banner.',
-      type: 'string',
+      description: 'Shown over the About page video banner. Use Enter for line breaks.',
+      type: 'text',
+      rows: 2,
       validation: (r) => r.required(),
     }),
     defineField({
@@ -69,6 +70,31 @@ export const bioWithPreview = defineType({
       rows: 4,
     }),
     defineField({
+      name: 'bioIntro',
+      title: 'Bio section intro',
+      description: 'Optional small label and heading shown above the bio/video block. Leave both fields empty to hide it.',
+      type: 'object',
+      initialValue: {
+        kicker: 'Bio',
+        title: 'Behind the camera',
+      },
+      fields: [
+        defineField({
+          name: 'kicker',
+          title: 'Small label',
+          description: 'Small uppercase label above the heading.',
+          type: 'string',
+        }),
+        defineField({
+          name: 'title',
+          title: 'Heading',
+          description: 'Use Enter for line breaks.',
+          type: 'text',
+          rows: 2,
+        }),
+      ],
+    }),
+    defineField({
       name: 'mirrorLayout',
       title: 'Put video on the left',
       description: 'Switches the text and video sides.',
@@ -82,6 +108,13 @@ export const bioWithPreview = defineType({
       type: 'number',
       initialValue: 100,
       validation: (r) => r.min(50).max(140),
+    }),
+    defineField({
+      name: 'bioUppercase',
+      title: 'Uppercase bio text',
+      description: 'Turn off to preserve normal casing.',
+      type: 'boolean',
+      initialValue: true,
     }),
     defineField({
       name: 'previewVideo',
@@ -136,7 +169,9 @@ export const bioWithPreview = defineType({
         defineField({
           name: 'title',
           title: 'Heading',
-          type: 'string',
+          description: 'Use Enter for line breaks.',
+          type: 'text',
+          rows: 3,
         }),
         defineField({
           name: 'body',
@@ -169,7 +204,9 @@ export const bioWithPreview = defineType({
         defineField({
           name: 'title',
           title: 'Heading',
-          type: 'string',
+          description: 'Use Enter for line breaks.',
+          type: 'text',
+          rows: 3,
         }),
         defineField({
           name: 'items',
@@ -177,7 +214,13 @@ export const bioWithPreview = defineType({
           description: 'Each item becomes one bullet in the About page section.',
           type: 'array',
           of: [{type: 'string'}],
-          validation: (r) => r.min(1),
+        }),
+        defineField({
+          name: 'mirrorLayout',
+          title: 'Flip columns',
+          description: 'Switches the heading and reasons columns.',
+          type: 'boolean',
+          initialValue: false,
         }),
       ],
     }),

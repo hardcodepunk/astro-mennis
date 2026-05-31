@@ -160,7 +160,7 @@ const mailHref = `mailto:${email}`
 
   .contact-page__meta-label {
     flex: 0 0 auto;
-    color: #fff;
+    color: var(--color-brand-secondary);
     font-size: 0.78rem;
     font-weight: 800;
     letter-spacing: 0.13em;
@@ -183,11 +183,27 @@ const mailHref = `mailto:${email}`
   }
 
   .contact-page__mail strong {
-    transition: color 160ms ease;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.08em;
   }
 
-  .contact-page__mail:hover strong {
-    color: #fff;
+  .contact-page__mail strong::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 0.05em;
+    background: var(--color-brand-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 220ms ease;
+  }
+
+  .contact-page__mail:hover strong::after,
+  .contact-page__mail:focus-visible strong::after {
+    transform: scaleX(1);
   }
 
   @keyframes contact-cursor {

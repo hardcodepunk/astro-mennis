@@ -1,0 +1,13 @@
+---
+type Props = {
+  text?: string
+}
+
+const { text = "" } = Astro.props as Props
+const lines = text
+  .split(/\r?\n/)
+  .map(line => line.trim())
+  .filter(Boolean)
+---
+
+{lines.map((line, index) => <>{index > 0 ? <br /> : null}{line}</>)}
