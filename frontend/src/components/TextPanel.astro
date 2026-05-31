@@ -6,18 +6,35 @@ type Props = {
   title: string
   body: string
   fullWidth?: boolean
+  bleedBackground?: boolean
   flushTop?: boolean
   mirrorLayout?: boolean
 }
 
-const { kicker, title, body, fullWidth = false, flushTop = false, mirrorLayout = false } = Astro.props as Props
+const {
+  kicker,
+  title,
+  body,
+  fullWidth = false,
+  bleedBackground = false,
+  flushTop = false,
+  mirrorLayout = false,
+} = Astro.props as Props
 const paragraphs = body
   .split(/\n{2,}/)
   .map(paragraph => paragraph.trim())
   .filter(Boolean)
 ---
 
-<section class:list={["tp", fullWidth && "is-full", flushTop && "is-flush", mirrorLayout && "is-mirrored"]}>
+<section
+  class:list={[
+    "tp",
+    fullWidth && "is-full",
+    bleedBackground && "is-bleed",
+    flushTop && "is-flush",
+    mirrorLayout && "is-mirrored",
+  ]}
+>
   <div class="tp-inner">
     <div class="tp-col">
       {kicker ? <p class="tp-kicker">{kicker}</p> : null}
@@ -44,6 +61,12 @@ const paragraphs = body
       background: transparent;
     }
 
+    .tp.is-bleed {
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      background: var(--color-brand-secondary);
+    }
+
     .tp-inner {
       display: grid;
       grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -60,6 +83,13 @@ const paragraphs = body
       max-width: 90rem;
       background: transparent;
       color: var(--color-brand-secondary);
+      padding-block: clamp(3rem, 7vw, 6rem);
+      padding-inline: clamp(1.5rem, 5vw, 4rem);
+    }
+
+    .tp.is-bleed .tp-inner {
+      max-width: 90rem;
+      background: transparent;
       padding-block: clamp(3rem, 7vw, 6rem);
       padding-inline: clamp(1.5rem, 5vw, 4rem);
     }
