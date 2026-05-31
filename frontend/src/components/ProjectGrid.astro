@@ -1,5 +1,4 @@
 ---
-import ThumbnailVideoController from "./ThumbnailVideoController.astro"
 import WorkThumbnailCard from "./WorkThumbnailCard.astro"
 import type { WorkItem } from "../lib/sanity.queries"
 
@@ -47,8 +46,6 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
       {items.map(work => <WorkThumbnailCard work={work} headingTag="h2" />)}
     </div>
   </div>
-
-  <ThumbnailVideoController />
 
   <style>
     .pg {

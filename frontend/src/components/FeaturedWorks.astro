@@ -1,5 +1,4 @@
 ---
-import ThumbnailVideoController from "./ThumbnailVideoController.astro"
 import WorkThumbnailCard from "./WorkThumbnailCard.astro"
 import type { WorkItem } from "../lib/sanity.queries"
 
@@ -27,8 +26,6 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
         <a class="fw-cta" href="/projects">View all projects</a>
       </div>
     </div>
-
-    <ThumbnailVideoController />
 
     <style>
       .fw {

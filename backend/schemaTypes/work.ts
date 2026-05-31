@@ -1,9 +1,8 @@
 import {defineField, defineType} from 'sanity'
 import {
-  defineCloudinaryVideoFields,
-  defineDocumentSeoFields,
   youtubeUrl,
 } from './validation'
+import {defineCloudinaryVideoFields, defineDocumentSeoFields} from './shared'
 
 type HeroMediaParent = {mode?: 'preview' | 'single' | 'slider'}
 

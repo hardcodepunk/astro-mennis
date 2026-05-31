@@ -6,28 +6,14 @@ import { getFeaturedWorks, getSeoSettings, getSiteSettings } from "../lib/sanity
 import FeaturedWorks from "../components/FeaturedWorks.astro"
 import { formatTitle, metaDescription, organizationJsonLd, personJsonLd, socialImage, websiteJsonLd } from "../lib/seo"
 import { imageAttributes, safePosterUrl } from "../lib/media"
+import { DEFAULT_WORKFLOW_PANEL, resolveTextPanel } from "../lib/contentDefaults"
 
 const featuredWorks = await getFeaturedWorks(3)
 const siteSettings = await getSiteSettings()
 const seoSettings = await getSeoSettings()
-const DEFAULT_WORKFLOW_PANEL = {
-  kicker: "Workflow",
-  title: "Playful process, bold ideas, thoughtful results",
-  body: [
-    "We live in a world of acceleration, chasing the end goal, forgetting to enjoy the ride. At De Mennis, we slow down just enough to capture the magic in between: the boldness, the play, the small details that get lost when there is no room to breathe.",
-    "We believe that when passionate people come together and actually enjoy the process, something extraordinary happens.",
-    "And what cannot be put into words, we put into visuals.",
-  ].join("\n\n"),
-  mirrorLayout: false,
-}
 const seoH1 = seoSettings?.homeH1 ?? siteSettings?.homeSeoH1 ?? "De Mennis"
 const heroSettings = siteSettings?.videoHero
-const workflowPanel = {
-  kicker: siteSettings?.workflowPanel?.kicker?.trim() || DEFAULT_WORKFLOW_PANEL.kicker,
-  title: siteSettings?.workflowPanel?.title?.trim() || DEFAULT_WORKFLOW_PANEL.title,
-  body: siteSettings?.workflowPanel?.body?.trim() || DEFAULT_WORKFLOW_PANEL.body,
-  mirrorLayout: siteSettings?.workflowPanel?.mirrorLayout ?? DEFAULT_WORKFLOW_PANEL.mirrorLayout,
-}
+const workflowPanel = resolveTextPanel(siteSettings?.workflowPanel, DEFAULT_WORKFLOW_PANEL)
 const heroPoster = heroSettings?.poster ? safePosterUrl(heroSettings.poster, featuredWorks[0]?.preview.poster ?? "") : undefined
 const title = formatTitle(seoSettings, seoSettings?.homeTitle ?? "De Mennis", true)
 const description = metaDescription(seoSettings, seoSettings?.homeDescription)

@@ -1,18 +1,12 @@
 import {defineField, defineType} from 'sanity'
-import {defineCloudinaryVideoFields, defaultCloudinaryVideoUrls} from './shared'
-
-const contactReasonsInitialValue = {
-  kicker: 'What to contact me for',
-  title: 'Built for bold projects with movement, edge and energy.',
-  items: [
-    'Edgy & daring branding: commercials and promos that break the rules.',
-    'Lifestyle & community culture: highlighting the people, the movement, and the vibe behind your brand.',
-    'High-motion content: music videos, sports, and events that require speed, flow, and kinetic energy.',
-    'Freelance rollerblade camera operator & editor.',
-    'Aerial filmography.',
-    'Ideas.',
-  ],
-}
+import {
+  defineCloudinaryVideoFields,
+  defineContactReasonsPanelFields,
+  defineTextPanelFields,
+  defaultApproachPanel,
+  defaultContactReasonsPanel,
+  defaultCloudinaryVideoUrls,
+} from './shared'
 
 export const bioWithPreview = defineType({
   name: 'bioWithPreview',
@@ -80,80 +74,18 @@ export const bioWithPreview = defineType({
       title: 'Approach panel',
       description: 'Green text panel shown below the bio/video block on the About page.',
       type: 'object',
-      initialValue: {
-        kicker: 'Approach',
-        title: 'Clean frames. Strong pacing. Calm process.',
-        body: [
-          'I make visual work that feels sharp, deliberate and human. The focus is on tone, movement and structure, with a process that stays clear from first idea to final delivery.',
-          'That can mean branded content, campaign visuals, portraits, event films or short-form edits. The output changes depending on the project, but the standard stays the same.',
-          'I care about images that carry weight without feeling overworked. Clean direction, strong editing and the right energy on set matter just as much as the final look.',
-        ].join('\n\n'),
-        mirrorLayout: false,
-      },
-      fields: [
-        defineField({
-          name: 'kicker',
-          title: 'Small label',
-          description: 'Small uppercase label above the heading.',
-          type: 'string',
-        }),
-        defineField({
-          name: 'title',
-          title: 'Heading',
-          description: 'Use Enter for line breaks.',
-          type: 'text',
-          rows: 3,
-        }),
-        defineField({
-          name: 'body',
-          title: 'Body text',
-          description: 'Separate paragraphs with a blank line.',
-          type: 'text',
-          rows: 8,
-        }),
-        defineField({
-          name: 'mirrorLayout',
-          title: 'Flip columns',
-          description: 'Switches the heading and body text columns.',
-          type: 'boolean',
-          initialValue: false,
-        }),
-      ],
+      initialValue: defaultApproachPanel,
+      fields: defineTextPanelFields({
+        titleRows: 3,
+      }),
     }),
     defineField({
       name: 'contactReasons',
       title: 'Contact reasons',
       description: 'Separate editable bullet section shown below the Approach panel on the About page.',
       type: 'object',
-      initialValue: contactReasonsInitialValue,
-      fields: [
-        defineField({
-          name: 'kicker',
-          title: 'Small label',
-          type: 'string',
-        }),
-        defineField({
-          name: 'title',
-          title: 'Heading',
-          description: 'Use Enter for line breaks.',
-          type: 'text',
-          rows: 3,
-        }),
-        defineField({
-          name: 'items',
-          title: 'Reasons',
-          description: 'Each item becomes one bullet in the About page section.',
-          type: 'array',
-          of: [{type: 'string'}],
-        }),
-        defineField({
-          name: 'mirrorLayout',
-          title: 'Flip columns',
-          description: 'Switches the heading and reasons columns.',
-          type: 'boolean',
-          initialValue: false,
-        }),
-      ],
+      initialValue: defaultContactReasonsPanel,
+      fields: defineContactReasonsPanelFields(),
     }),
   ],
   preview: {

@@ -1,5 +1,4 @@
 ---
-import ThumbnailVideoController from "./ThumbnailVideoController.astro"
 import WorkThumbnailCard from "./WorkThumbnailCard.astro"
 import type { WorkItem } from "../lib/sanity.queries"
 
@@ -14,8 +13,6 @@ const { items = [] } = Astro.props as { items: WorkItem[] }
       {items.map(work => <WorkThumbnailCard work={work} headingTag="h3" />)}
     </div>
   </div>
-
-  <ThumbnailVideoController />
 
   <style>
     .rw {

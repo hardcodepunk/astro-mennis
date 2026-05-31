@@ -8,56 +8,20 @@ import TextPanel from "../components/TextPanel.astro"
 import { getBioWithPreview, getSeoSettings } from "../lib/sanity.queries"
 import { breadcrumbJsonLd, formatTitle, metaDescription, socialImage } from "../lib/seo"
 import { cloudinaryImage, defaultHeroMedia, imageAttributes, safePosterUrl } from "../lib/media"
+import { DEFAULT_APPROACH_PANEL, DEFAULT_CONTACT_REASONS, resolveContactReasons, resolveTextPanel } from "../lib/contentDefaults"
 
 const aboutDoc = await getBioWithPreview()
 const seoSettings = await getSeoSettings()
 
 const {mp4: DEFAULT_HERO_MP4, webm: DEFAULT_HERO_WEBM, poster: DEFAULT_HERO_POSTER} = defaultHeroMedia
-const DEFAULT_APPROACH = {
-  kicker: "Approach",
-  title: "Clean frames. Strong pacing. Calm process.",
-  body: [
-    "I make visual work that feels sharp, deliberate and human. The focus is on tone, movement and structure, with a process that stays clear from first idea to final delivery.",
-    "That can mean branded content, campaign visuals, portraits, event films or short-form edits. The output changes depending on the project, but the standard stays the same.",
-    "I care about images that carry weight without feeling overworked. Clean direction, strong editing and the right energy on set matter just as much as the final look.",
-  ].join("\n\n"),
-  mirrorLayout: false,
-}
-const DEFAULT_CONTACT_REASONS = {
-  kicker: "What to contact me for",
-  title: "Built for bold projects with movement, edge and energy.",
-  items: [
-    "Edgy & daring branding: commercials and promos that break the rules.",
-    "Lifestyle & community culture: highlighting the people, the movement, and the vibe behind your brand.",
-    "High-motion content: music videos, sports, and events that require speed, flow, and kinetic energy.",
-    "Freelance rollerblade camera operator & editor.",
-    "Aerial filmography.",
-    "Ideas.",
-  ],
-  mirrorLayout: false,
-}
-
 const heroTitle = aboutDoc?.heroTitle ?? aboutDoc?.seoH1 ?? "Filmmaking with clarity, rhythm and feel."
 const heroMp4 = aboutDoc?.heroVideo?.mp4 ?? DEFAULT_HERO_MP4
 const heroWebm = aboutDoc?.heroVideo?.webm ?? DEFAULT_HERO_WEBM
 const heroPoster = safePosterUrl(aboutDoc?.heroVideo?.poster, DEFAULT_HERO_POSTER)
 const optimizedHeroPoster = cloudinaryImage(heroPoster, 1920)
 const heroTitleScale = Math.min(1.8, Math.max(0.6, (aboutDoc?.heroTitleTextScale ?? 100) / 100))
-const approach = {
-  kicker: aboutDoc?.approach?.kicker?.trim() || DEFAULT_APPROACH.kicker,
-  title: aboutDoc?.approach?.title?.trim() || DEFAULT_APPROACH.title,
-  body: aboutDoc?.approach?.body?.trim() || DEFAULT_APPROACH.body,
-  mirrorLayout: aboutDoc?.approach?.mirrorLayout ?? DEFAULT_APPROACH.mirrorLayout,
-}
-const contactReasonItems = aboutDoc?.contactReasons
-  ? (aboutDoc.contactReasons.items?.map(item => item.trim()).filter(Boolean) ?? [])
-  : DEFAULT_CONTACT_REASONS.items
-const contactReasons = {
-  kicker: aboutDoc?.contactReasons ? (aboutDoc.contactReasons.kicker?.trim() ?? "") : DEFAULT_CONTACT_REASONS.kicker,
-  title: aboutDoc?.contactReasons ? (aboutDoc.contactReasons.title?.trim() ?? "") : DEFAULT_CONTACT_REASONS.title,
-  items: contactReasonItems,
-  mirrorLayout: aboutDoc?.contactReasons?.mirrorLayout ?? DEFAULT_CONTACT_REASONS.mirrorLayout,
-}
+const approach = resolveTextPanel(aboutDoc?.approach, DEFAULT_APPROACH_PANEL)
+const contactReasons = resolveContactReasons(aboutDoc?.contactReasons, DEFAULT_CONTACT_REASONS)
 const title = formatTitle(seoSettings, seoSettings?.aboutTitle ?? "About")
 const description = metaDescription(seoSettings, seoSettings?.aboutDescription)
 const heroPosterImage = heroPoster.includes("/video/upload/") ? DEFAULT_HERO_POSTER : heroPoster
@@ -143,54 +107,8 @@ const jsonLd = breadcrumbJsonLd(
       mirrorLayout={contactReasons.mirrorLayout}
     />
 
-    <LogosMarquee />
+  <LogosMarquee />
   </main>
-
-  <script>
-    ;(() => {
-      const win = window as Window & { __aboutAutoplayBooted?: boolean }
-      if (win.__aboutAutoplayBooted) return
-      win.__aboutAutoplayBooted = true
-
-      const prepareVideo = (video: HTMLVideoElement) => {
-        video.muted = true
-        video.defaultMuted = true
-        video.playsInline = true
-        video.setAttribute("muted", "")
-        video.setAttribute("playsinline", "")
-        video.setAttribute("webkit-playsinline", "")
-      }
-
-      const bootAboutVideo = () => {
-        const videos = document.querySelectorAll("[data-about-autoplay-video]")
-
-        videos.forEach(video => {
-          if (!(video instanceof HTMLVideoElement)) return
-
-          prepareVideo(video)
-
-          const play = () => {
-            if (!document.body.contains(video) || !video.paused) return
-            video.play().catch(() => {
-              video.addEventListener("loadeddata", play, { once: true })
-              video.addEventListener("canplay", play, { once: true })
-            })
-          }
-
-          play()
-          window.setTimeout(play, 120)
-        })
-      }
-
-      bootAboutVideo()
-      window.addEventListener("pageshow", bootAboutVideo)
-      document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) bootAboutVideo()
-      })
-      document.addEventListener("astro:page-load", bootAboutVideo)
-      document.addEventListener("astro:after-swap", bootAboutVideo)
-    })()
-  </script>
 
   <style>
     .about-page {

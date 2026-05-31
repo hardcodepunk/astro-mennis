@@ -16,17 +16,26 @@ export type SiteSettings = {
     captionTextScale?: number
     captionUppercase?: boolean
   }
-  workflowPanel?: {
-    kicker?: string
-    title?: string
-    body?: string
-    mirrorLayout?: boolean
-  }
   legalDocument?: {
     label?: string
     url?: string
     filename?: string
   }
+  workflowPanel?: TextPanel
+}
+
+export type TextPanel = {
+  kicker?: string
+  title?: string
+  body?: string
+  mirrorLayout?: boolean
+}
+
+export type ContactReasonsPanel = {
+  kicker?: string
+  title?: string
+  items?: string[]
+  mirrorLayout?: boolean
 }
 
 export type SeoSettings = {
@@ -112,18 +121,8 @@ export type BioWithPreviewDoc = {
     webm?: string
     poster?: string
   }
-  approach?: {
-    kicker?: string
-    title?: string
-    body?: string
-    mirrorLayout?: boolean
-  }
-  contactReasons?: {
-    kicker?: string
-    title?: string
-    items?: string[]
-    mirrorLayout?: boolean
-  }
+  approach?: TextPanel
+  contactReasons?: ContactReasonsPanel
 }
 
 export type Category = {
@@ -175,12 +174,7 @@ export function validateSiteSettings(value: unknown, path: string): SiteSettings
     homeSeoH1: optionalString(obj.homeSeoH1, `${path}.homeSeoH1`),
     projectsSeoH1: optionalString(obj.projectsSeoH1, `${path}.projectsSeoH1`),
     videoHero: optionalMediaUrls(obj.videoHero, `${path}.videoHero`),
-    workflowPanel: optionalObject(obj.workflowPanel, `${path}.workflowPanel`, workflow => ({
-      kicker: optionalString(workflow.kicker, `${path}.workflowPanel.kicker`),
-      title: optionalString(workflow.title, `${path}.workflowPanel.title`),
-      body: optionalString(workflow.body, `${path}.workflowPanel.body`),
-      mirrorLayout: optionalBoolean(workflow.mirrorLayout, `${path}.workflowPanel.mirrorLayout`),
-    })),
+    workflowPanel: optionalTextPanel(obj.workflowPanel, `${path}.workflowPanel`),
     legalDocument: optionalObject(obj.legalDocument, `${path}.legalDocument`, legalDocument => ({
       label: optionalString(legalDocument.label, `${path}.legalDocument.label`),
       url: optionalString(legalDocument.url, `${path}.legalDocument.url`),
@@ -257,18 +251,8 @@ export function validateBioWithPreview(value: unknown, path: string): BioWithPre
     mirrorLayout: optionalBoolean(obj.mirrorLayout, `${path}.mirrorLayout`),
     bioTextScale: optionalNumber(obj.bioTextScale, `${path}.bioTextScale`),
     previewVideo: optionalMediaUrls(obj.previewVideo, `${path}.previewVideo`),
-    approach: optionalObject(obj.approach, `${path}.approach`, approach => ({
-      kicker: optionalString(approach.kicker, `${path}.approach.kicker`),
-      title: optionalString(approach.title, `${path}.approach.title`),
-      body: optionalString(approach.body, `${path}.approach.body`),
-      mirrorLayout: optionalBoolean(approach.mirrorLayout, `${path}.approach.mirrorLayout`),
-    })),
-    contactReasons: optionalObject(obj.contactReasons, `${path}.contactReasons`, contactReasons => ({
-      kicker: optionalString(contactReasons.kicker, `${path}.contactReasons.kicker`),
-      title: optionalString(contactReasons.title, `${path}.contactReasons.title`),
-      items: optionalStringArray(contactReasons.items, `${path}.contactReasons.items`),
-      mirrorLayout: optionalBoolean(contactReasons.mirrorLayout, `${path}.contactReasons.mirrorLayout`),
-    })),
+    approach: optionalTextPanel(obj.approach, `${path}.approach`),
+    contactReasons: optionalContactReasonsPanel(obj.contactReasons, `${path}.contactReasons`),
   }
 }
 
@@ -368,6 +352,24 @@ function optionalMediaUrls(value: unknown, path: string) {
     caption: optionalString(obj.caption, `${path}.caption`),
     captionTextScale: optionalNumber(obj.captionTextScale, `${path}.captionTextScale`),
     captionUppercase: optionalBoolean(obj.captionUppercase, `${path}.captionUppercase`),
+  }))
+}
+
+function optionalTextPanel(value: unknown, path: string) {
+  return optionalObject(value, path, panel => ({
+    kicker: optionalString(panel.kicker, `${path}.kicker`),
+    title: optionalString(panel.title, `${path}.title`),
+    body: optionalString(panel.body, `${path}.body`),
+    mirrorLayout: optionalBoolean(panel.mirrorLayout, `${path}.mirrorLayout`),
+  }))
+}
+
+function optionalContactReasonsPanel(value: unknown, path: string) {
+  return optionalObject(value, path, panel => ({
+    kicker: optionalString(panel.kicker, `${path}.kicker`),
+    title: optionalString(panel.title, `${path}.title`),
+    items: optionalStringArray(panel.items, `${path}.items`),
+    mirrorLayout: optionalBoolean(panel.mirrorLayout, `${path}.mirrorLayout`),
   }))
 }
 

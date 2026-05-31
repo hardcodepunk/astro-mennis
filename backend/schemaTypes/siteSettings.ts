@@ -1,5 +1,9 @@
 import {defineField, defineType} from 'sanity'
-import {defineCloudinaryVideoFields} from './shared'
+import {
+  defaultWorkflowPanel,
+  defineCloudinaryVideoFields,
+  defineTextPanelFields,
+} from './shared'
 
 export const siteSettings = defineType({
   name: 'siteSettings',
@@ -46,42 +50,11 @@ export const siteSettings = defineType({
       title: 'Homepage mission section',
       description: 'Mission text section shown between the homepage video hero and contact reasons.',
       type: 'object',
-      initialValue: {
-        kicker: 'Workflow',
-        title:
-          'Whether I’m on rollerblades capturing ultra-smooth tracking shots at high speeds, or climbing structures to rig cameras for daring perspectives, I capture the raw energy of your project without the bloat of a massive crew.',
-        body: 'I shape visual work around rhythm, movement and the energy of the people in front of the camera. The process stays lean, direct and built around the project.',
-        mirrorLayout: false,
-      },
-      fields: [
-        defineField({
-          name: 'kicker',
-          title: 'Small label',
-          description: 'Small uppercase label above the heading.',
-          type: 'string',
-        }),
-        defineField({
-          name: 'title',
-          title: 'Heading',
-          description: 'Use Enter for line breaks.',
-          type: 'text',
-          rows: 4,
-        }),
-        defineField({
-          name: 'body',
-          title: 'Body text',
-          description: 'Separate paragraphs with a blank line.',
-          type: 'text',
-          rows: 8,
-        }),
-        defineField({
-          name: 'mirrorLayout',
-          title: 'Flip columns',
-          description: 'Switches the heading and body text columns.',
-          type: 'boolean',
-          initialValue: false,
-        }),
-      ],
+      initialValue: defaultWorkflowPanel,
+      fields: defineTextPanelFields({
+        titleRows: 4,
+        bodyRows: 8,
+      }),
     }),
     defineField({
       name: 'legalDocument',

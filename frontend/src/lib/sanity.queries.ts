@@ -30,10 +30,7 @@ export async function getSiteSettings() {
       captionUppercase
     },
     workflowPanel{
-      kicker,
-      title,
-      body,
-      mirrorLayout
+      ${textPanelSelection}
     },
     legalDocument{
       label,
@@ -128,17 +125,9 @@ export async function getBioWithPreview() {
     bioTextScale,
     previewVideo{ ${mediaSelection} },
     approach{
-      kicker,
-      title,
-      body,
-      mirrorLayout
+      ${textPanelSelection}
     },
-    contactReasons{
-      kicker,
-      title,
-      items,
-      mirrorLayout
-    }
+    contactReasons{${contactReasonsSelection}}
   }`
   const data = await sanity.fetch<unknown>(q)
   return nullable(data, "getBioWithPreview", validateBioWithPreview)
@@ -154,7 +143,9 @@ const seoSelection = `seo{
   focusKeyword
 }`
 const previewSelection = `preview{ poster, webm, mp4 }`
+const textPanelSelection = `kicker, title, body, mirrorLayout`
 const mediaSelection = `mp4, webm, poster`
+const contactReasonsSelection = `kicker, title, items, mirrorLayout`
 
 // Reusable media selection fragments used by list queries.
 
