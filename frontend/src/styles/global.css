@@ -245,7 +245,7 @@ html {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: var(--ds-progress-offset, 0.04em);
     height: var(--ds-progress-height, 2px);
     background: var(--ds-progress-color, var(--color-brand-accent));
     transform: scaleX(0);

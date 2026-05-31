@@ -24,7 +24,7 @@ const legalDownloadUrl = legalUrl
 
       <div class="footer-contact">
         <p class="footer-label ds-kicker ds-kicker--xsmall">Shoot at</p>
-        <a href="mailto:hello@demennis.be" class="footer-mail ds-progress-link ds-title ds-title--tiny">HELLO@DEMENNIS.BE</a>
+        <a href="mailto:hello@demennis.be" class="footer-mail footer-link ds-progress-link ds-title ds-title--tiny">HELLO@DEMENNIS.BE</a>
       </div>
     </div>
 
@@ -32,7 +32,7 @@ const legalDownloadUrl = legalUrl
       {
         legalDownloadUrl ? (
           <a
-            class="footer-legal ds-progress-link"
+            class="footer-legal footer-link ds-progress-link"
             href={legalDownloadUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -46,7 +46,7 @@ const legalDownloadUrl = legalUrl
       }
 
       <a
-        class="footer-instagram-link ds-progress-link"
+        class="footer-instagram-link footer-link ds-progress-link"
         href="https://www.instagram.com/demennis_/"
         target="_blank"
         rel="noopener noreferrer"
@@ -118,6 +118,10 @@ const legalDownloadUrl = legalUrl
     .footer-meta {
       align-items: center;
       min-height: 1.25rem;
+    }
+
+    .footer-link {
+      --ds-progress-offset: 0.2em;
     }
 
     .footer-instagram-link {
