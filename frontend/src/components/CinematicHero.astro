@@ -51,8 +51,10 @@ const posterAttrs = imageAttributes({
 
   <video
     class="vh-video"
+    autoplay
     muted
     playsinline
+    webkit-playsinline
     preload="none"
     poster={posterAttrs.src}
     loop
@@ -99,12 +101,19 @@ const posterAttrs = imageAttributes({
         window.setTimeout(reveal, delay)
       }
 
-      const motionAllowed = !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      const desktopViewport = window.matchMedia("(min-width: 768px)").matches
+      const prepareVideo = () => {
+        video.muted = true
+        video.defaultMuted = true
+        video.playsInline = true
+        video.setAttribute("muted", "")
+        video.setAttribute("playsinline", "")
+        video.setAttribute("webkit-playsinline", "")
+      }
 
-      if (!motionAllowed || !desktopViewport) {
+      const motionAllowed = !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+      if (!motionAllowed) {
         root.dataset.reduced = "1"
-        reveal()
         return
       }
 
@@ -115,13 +124,6 @@ const posterAttrs = imageAttributes({
         const webm = video.dataset.webm
         const mp4 = video.dataset.mp4
 
-        if (webm) {
-          const source = document.createElement("source")
-          source.src = webm
-          source.type = "video/webm"
-          video.append(source)
-        }
-
         if (mp4) {
           const source = document.createElement("source")
           source.src = mp4
@@ -129,33 +131,67 @@ const posterAttrs = imageAttributes({
           video.append(source)
         }
 
+        if (webm) {
+          const source = document.createElement("source")
+          source.src = webm
+          source.type = "video/webm"
+          video.append(source)
+        }
+
         video.load()
-        video.play().catch(revealWithMin)
       }
 
-      const onPlaying = () => revealWithMin()
-      const onLoadedData = () => revealWithMin()
+      let playing = false
+      let pendingStart = false
 
-      video.addEventListener("playing", onPlaying, { signal })
-      video.addEventListener("loadeddata", onLoadedData, { signal })
+      const scheduleStart = () => {
+        if (pendingStart || playing) return
+        pendingStart = true
 
-      window.setTimeout(revealWithMin, 1500)
+        const retry = () => {
+          pendingStart = false
+          startVideo()
+        }
 
-      const loadVideo = () => {
-        const requestIdle = window.requestIdleCallback
+        video.addEventListener("loadeddata", retry, { once: true, signal })
+        video.addEventListener("canplay", retry, { once: true, signal })
+        window.setTimeout(retry, 180)
+      }
 
-        if (typeof requestIdle === "function") {
-          requestIdle(attachVideoSources, { timeout: 1200 })
-        } else {
-          globalThis.setTimeout(attachVideoSources, 350)
+      const startVideo = async () => {
+        if (playing) return
+        pendingStart = false
+        attachVideoSources()
+        prepareVideo()
+
+        try {
+          await video.play()
+          playing = true
+          revealWithMin()
+        } catch {
+          playing = false
+          if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) scheduleStart()
         }
       }
 
-      if (document.readyState === "complete") {
-        loadVideo()
-      } else {
-        window.addEventListener("load", loadVideo, { once: true, signal })
+      const onPlaying = () => {
+        playing = true
+        revealWithMin()
       }
+
+      video.addEventListener("playing", onPlaying, { signal })
+
+      startVideo()
+      window.addEventListener("pageshow", startVideo, { signal })
+      document.addEventListener(
+        "visibilitychange",
+        () => {
+          if (!document.hidden) startVideo()
+        },
+        { signal },
+      )
+
+      window.setTimeout(startVideo, 450)
 
       let cleanedUp = false
       const cleanup = () => {
@@ -179,6 +215,7 @@ const posterAttrs = imageAttributes({
     }
 
     document.addEventListener("astro:page-load", bootCinematicHero)
+    document.addEventListener("astro:after-swap", bootCinematicHero)
   </script>
 
   <style>

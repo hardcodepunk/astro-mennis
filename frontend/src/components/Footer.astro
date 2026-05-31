@@ -12,43 +12,127 @@ const legalDownloadUrl = legalUrl
 
 ---
 
-<footer id="contact" class="w-full py-20">
-  <div class="flex flex-col items-center justify-center px-6 text-center gap-4">
-    <picture>
-      <source srcset="/logo.webp" type="image/webp" />
-      <img src="/logo.png" width="96" height="96" alt="De Mennis logo" class="w-20 md:w-24 opacity-70" loading="lazy" decoding="async" />
-    </picture>
+<footer id="contact" class="footer">
+  <div class="footer-inner">
+    <div class="footer-main">
+      <a class="footer-brand" href="/" aria-label="De Mennis home">
+        <picture>
+          <source srcset="/logo.webp" type="image/webp" />
+          <img src="/logo.png" width="96" height="96" alt="De Mennis logo" loading="lazy" decoding="async" />
+        </picture>
+      </a>
 
-    <a href="mailto:hello@demennis.be" class="font-display text-2xl tracking-widest text-brand-primary">
-      HELLO@DEMENNIS.BE
-    </a>
+      <div class="footer-contact">
+        <p class="footer-label">Shoot at</p>
+        <a href="mailto:hello@demennis.be" class="footer-mail">HELLO@DEMENNIS.BE</a>
+      </div>
+    </div>
 
-    <a
-      class="footer-instagram-link"
-      href="https://www.instagram.com/demennis_/"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Instagram"
-    >
-      <picture>
-        <source srcset="/icons/instagram.webp" type="image/webp" />
-        <img src="/icons/instagram.png" width="24" height="24" alt="" class="w-6 h-6 object-contain footer-instagram" loading="lazy" decoding="async" />
-      </picture>
-    </a>
-
-    {
-      legalDownloadUrl ? (
-        <p class="footer-legal">
-          <a href={legalDownloadUrl} target="_blank" rel="noopener noreferrer" download={legalFilename}>
+    <div class="footer-meta">
+      {
+        legalDownloadUrl ? (
+          <a class="footer-legal" href={legalDownloadUrl} target="_blank" rel="noopener noreferrer" download={legalFilename}>
             {legalLabel}
           </a>
-        </p>
-      ) : null
-    }
+        ) : (
+          <span></span>
+        )
+      }
+
+      <a
+        class="footer-instagram-link"
+        href="https://www.instagram.com/demennis_/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Instagram"
+      >
+        <picture>
+          <source srcset="/icons/instagram.webp" type="image/webp" />
+          <img src="/icons/instagram.png" width="24" height="24" alt="" class="footer-instagram" loading="lazy" decoding="async" />
+        </picture>
+      </a>
+    </div>
   </div>
 
   <style>
+    .footer {
+      width: 100%;
+      padding: clamp(3.5rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem);
+      background: var(--color-brand-secondary);
+      color: var(--color-brand-primary);
+    }
+
+    .footer-inner {
+      display: grid;
+      gap: clamp(2.25rem, 6vw, 4.5rem);
+      width: min(100%, 90rem);
+      margin: 0 auto;
+    }
+
+    .footer-main,
+    .footer-meta {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+
+    .footer-brand {
+      display: inline-flex;
+      width: clamp(4.2rem, 8vw, 6rem);
+      opacity: 0.78;
+      transition: opacity 160ms ease;
+    }
+
+    .footer-brand:hover {
+      opacity: 1;
+    }
+
+    .footer-brand img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .footer-contact {
+      display: grid;
+      gap: 0.45rem;
+      text-align: right;
+    }
+
+    .footer-label {
+      margin: 0;
+      color: color-mix(in srgb, var(--color-brand-primary) 72%, transparent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .footer-mail {
+      color: var(--color-brand-primary);
+      font-family: var(--font-display, "Bebas Neue", sans-serif);
+      font-size: clamp(2rem, 4.8vw, 4rem);
+      letter-spacing: 0.03em;
+      line-height: 0.9;
+      text-decoration: none;
+      transition: color 160ms ease;
+    }
+
+    .footer-mail:hover {
+      color: #fff;
+    }
+
+    .footer-meta {
+      align-items: center;
+      min-height: 1.5rem;
+    }
+
     .footer-instagram {
+      display: block;
+      width: 1.5rem;
+      height: 1.5rem;
       filter: brightness(0) saturate(100%) invert(96%) sepia(4%) saturate(1313%) hue-rotate(204deg) brightness(105%)
         contrast(99%);
       transition: filter 160ms ease;
@@ -59,26 +143,46 @@ const legalDownloadUrl = legalUrl
     }
 
     .footer-legal {
-      margin: 0.85rem 0 0;
-      font-size: 0.72rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      line-height: 1.2;
-      text-transform: uppercase;
-    }
-
-    .footer-legal a {
+      position: relative;
+      display: inline-block;
+      padding-bottom: 0.25rem;
       color: var(--color-brand-primary);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1.2;
       text-decoration: none;
-      opacity: 0.74;
-      transition:
-        opacity 160ms ease,
-        color 160ms ease;
+      transition: color 160ms ease;
     }
 
-    .footer-legal a:hover {
-      color: #fff;
-      opacity: 1;
+    .footer-legal::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: var(--color-brand-accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 220ms ease;
+    }
+
+    .footer-legal:hover::after,
+    .footer-legal:focus-visible::after {
+      transform: scaleX(1);
+    }
+
+    @media (max-width: 700px) {
+      .footer-main,
+      .footer-meta {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .footer-contact {
+        text-align: left;
+      }
     }
   </style>
 </footer>

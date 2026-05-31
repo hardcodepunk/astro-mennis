@@ -6,6 +6,11 @@ const NAV = [
 ]
 
 const { transparentOnTop = false, transparentPaths = [] } = Astro.props
+const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/"
+const isActiveNav = (href: string) => {
+  if (href === "/projects") return currentPath === "/projects" || currentPath.startsWith("/projects/") || currentPath.startsWith("/works/")
+  return currentPath === href || currentPath.startsWith(`${href}/`)
+}
 ---
 
 <header class:list={["site-header fixed top-0 z-50 w-full", !transparentOnTop && "is-solid"]} data-header>
@@ -23,7 +28,11 @@ const { transparentOnTop = false, transparentPaths = [] } = Astro.props
     <nav class="desktop-nav hidden md:flex items-center gap-8 text-sm font-bold">
       {
         NAV.map(item => (
-          <a href={item.href} class="desktop-link transition-colors">
+          <a
+            href={item.href}
+            class:list={["desktop-link transition-colors", isActiveNav(item.href) && "is-active"]}
+            aria-current={isActiveNav(item.href) ? "page" : undefined}
+          >
             {item.label}
           </a>
         ))
@@ -55,7 +64,12 @@ const { transparentOnTop = false, transparentPaths = [] } = Astro.props
       <div class="mobile-menu__stack font-display text-2xl tracking-widest">
         {
           NAV.map(item => (
-            <a href={item.href} class="mobile-link" data-menu-link>
+            <a
+              href={item.href}
+              class:list={["mobile-link", isActiveNav(item.href) && "is-active"]}
+              aria-current={isActiveNav(item.href) ? "page" : undefined}
+              data-menu-link
+            >
               {item.label}
             </a>
           ))
@@ -143,8 +157,10 @@ const { transparentOnTop = false, transparentPaths = [] } = Astro.props
   }
 
   .desktop-link:hover::after,
+  .desktop-link.is-active::after,
   .mobile-link:hover::after,
-  .mobile-link:focus-visible::after {
+  .mobile-link:focus-visible::after,
+  .mobile-link.is-active::after {
     transform: scaleX(1);
   }
 

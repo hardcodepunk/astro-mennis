@@ -9,18 +9,84 @@ const optimizedPoster = cloudinaryImage(safePoster, 1280)
 <div class="pp">
   <video
     class="pp-video"
+    data-preview-autoplay-video
+    autoplay
+    muted
+    loop
     playsinline
+    webkit-playsinline
     preload="metadata"
     poster={optimizedPoster}
-    muted
-    autoplay
-    loop
     width="1280"
     height="720"
+    disableRemotePlayback
+    aria-hidden="true"
   >
-    {webm ? <source src={webm} type="video/webm" /> : null}
     {mp4 ? <source src={mp4} type="video/mp4" /> : null}
+    {webm ? <source src={webm} type="video/webm" /> : null}
   </video>
+
+  <script>
+    ;(() => {
+      const win = window as Window & { __previewVideoControllerBooted?: boolean }
+      if (win.__previewVideoControllerBooted) return
+      win.__previewVideoControllerBooted = true
+
+      const prepareVideo = (video: HTMLVideoElement) => {
+        video.muted = true
+        video.defaultMuted = true
+        video.playsInline = true
+        video.setAttribute("muted", "")
+        video.setAttribute("playsinline", "")
+        video.setAttribute("webkit-playsinline", "")
+      }
+
+      const startPreviewVideo = (video: HTMLVideoElement) => {
+        if (!document.body.contains(video) || !video.paused) return
+        prepareVideo(video)
+
+        video.play().then(() => {
+          video.dataset.previewPlayAttempts = "0"
+          video.dataset.previewPlayPending = "false"
+        }).catch(() => {
+          const attempts = Number(video.dataset.previewPlayAttempts || "0")
+          if (attempts >= 6 || video.dataset.previewPlayPending === "true") return
+
+          video.dataset.previewPlayAttempts = String(attempts + 1)
+          video.dataset.previewPlayPending = "true"
+
+          const retry = () => {
+            video.dataset.previewPlayPending = "false"
+            startPreviewVideo(video)
+          }
+
+          video.addEventListener("loadeddata", retry, { once: true })
+          video.addEventListener("canplay", retry, { once: true })
+          window.setTimeout(retry, video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ? 180 : 600)
+        })
+      }
+
+      const bootPreviewVideos = () => {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
+        document.querySelectorAll("[data-preview-autoplay-video]").forEach(video => {
+          if (!(video instanceof HTMLVideoElement)) return
+
+          prepareVideo(video)
+          startPreviewVideo(video)
+          window.setTimeout(() => startPreviewVideo(video), 240)
+        })
+      }
+
+      bootPreviewVideos()
+      window.addEventListener("pageshow", bootPreviewVideos)
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) bootPreviewVideos()
+      })
+      document.addEventListener("astro:page-load", bootPreviewVideos)
+      document.addEventListener("astro:after-swap", bootPreviewVideos)
+    })()
+  </script>
 
   <style>
     .pp {
