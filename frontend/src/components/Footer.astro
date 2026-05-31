@@ -63,15 +63,19 @@ const legalDownloadUrl = legalUrl
       padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 4rem);
       background: var(--color-brand-secondary);
       color: var(--color-brand-primary);
+      min-height: clamp(16rem, 34vh, 20rem);
     }
 
     .footer-inner {
-      display: grid;
-      justify-items: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100%;
       gap: 1rem;
       width: min(100%, 44rem);
       margin: 0 auto;
       text-align: center;
+      justify-content: flex-start;
     }
 
     .footer-main,
@@ -117,7 +121,8 @@ const legalDownloadUrl = legalUrl
 
     .footer-meta {
       align-items: center;
-      min-height: 1.25rem;
+      margin-top: auto;
+      padding-top: clamp(1.25rem, 4vw, 2rem);
     }
 
     .footer-instagram-link {
