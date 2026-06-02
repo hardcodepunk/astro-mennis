@@ -10,7 +10,9 @@ const { speed = 28, height = 96 } = Astro.props
 const duration = Math.max(8, Number(speed) || 28)
 const h = Math.max(48, Number(height) || 96)
 const safeItems = items.filter(i => i?.image?.url)
-const repeatedRows = [0, 1, 2, 3]
+const repeatCount = 12
+const repeatedRows = Array.from({ length: repeatCount }, (_, index) => index)
+const marqueeShift = `${-100 / repeatCount}%`
 const logoImage = (url: string) =>
   imageAttributes({
     src: url,
@@ -26,7 +28,7 @@ const logoItems = safeItems.map(item => ({
 
 {
   safeItems.length > 0 && (
-    <section class="lm" style={`--lm-duration:${duration}s;--lm-h:${h}px;`}>
+    <section class="lm" style={`--lm-duration:${duration}s;--lm-h:${h}px;--lm-shift:${marqueeShift};`}>
       <div class="lm-mask">
         <div class="lm-track" aria-label="Client logos">
           {repeatedRows.map(rowIndex => (
@@ -107,7 +109,7 @@ const logoItems = safeItems.map(item => ({
       transform: translateX(0);
     }
     to {
-      transform: translateX(-25%);
+      transform: translateX(var(--lm-shift));
     }
   }
 
