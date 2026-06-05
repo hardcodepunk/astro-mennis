@@ -10,7 +10,7 @@ const { speed = 28, height = 96 } = Astro.props
 const duration = Math.max(8, Number(speed) || 28)
 const h = Math.max(48, Number(height) || 96)
 const logoHeight = Math.round(h * 0.68)
-const logoWidth = Math.round(logoHeight * 3.4)
+const logoMaxWidth = Math.round(logoHeight * 3.8)
 const safeItems = items.filter(i => i?.image?.url)
 const repeatCount = 12
 const repeatedRows = Array.from({ length: repeatCount }, (_, index) => index)
@@ -18,7 +18,7 @@ const marqueeShift = `${-100 / repeatCount}%`
 const logoImage = (item: (typeof safeItems)[number]) =>
   sanityImageUrl({
     src: item.image.url,
-    width: logoWidth * 2,
+    width: logoMaxWidth * 2,
     height: logoHeight * 2,
     crop: item.image.crop,
     dimensions: item.image.dimensions,
@@ -33,7 +33,7 @@ const logoItems = safeItems.map(item => ({
   safeItems.length > 0 && (
     <section
       class="lm"
-      style={`--lm-duration:${duration}s;--lm-h:${h}px;--lm-logo-h:${logoHeight}px;--lm-logo-w:${logoWidth}px;--lm-shift:${marqueeShift};`}
+      style={`--lm-duration:${duration}s;--lm-h:${h}px;--lm-logo-h:${logoHeight}px;--lm-logo-max-w:${logoMaxWidth}px;--lm-shift:${marqueeShift};`}
     >
       <div class="lm-mask">
         <div class="lm-track" aria-label="Client logos">
@@ -44,7 +44,7 @@ const logoItems = safeItems.map(item => ({
                   <img
                     class="lm-logo"
                     src={item.imageSrc}
-                    width={logoWidth}
+                    width={logoMaxWidth}
                     height={logoHeight}
                     alt={rowIndex === 0 ? item.alt || item.name || "Client logo" : ""}
                     loading="lazy"
@@ -98,14 +98,14 @@ const logoItems = safeItems.map(item => ({
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    width: var(--lm-logo-w);
     height: var(--lm-logo-h);
   }
 
   .lm-logo {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: auto;
+    height: var(--lm-logo-h);
+    max-width: var(--lm-logo-max-w);
     object-fit: contain;
     filter: grayscale(1) saturate(0);
   }
