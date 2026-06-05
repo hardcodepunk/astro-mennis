@@ -97,6 +97,12 @@ export type LogoItem = {
   alt?: string
   image: {
     url: string
+    crop?: {
+      top?: number
+      bottom?: number
+      left?: number
+      right?: number
+    }
     dimensions?: {
       width?: number
       height?: number
@@ -296,9 +302,19 @@ function validateLogoItem(value: unknown, path: string): LogoItem {
     alt: optionalString(obj.alt, `${path}.alt`),
     image: {
       url: requiredString(image.url, `${path}.image.url`),
+      crop: optionalCrop(image.crop, `${path}.image.crop`),
       dimensions: optionalDimensions(image.dimensions, `${path}.image.dimensions`),
     },
   }
+}
+
+function optionalCrop(value: unknown, path: string) {
+  return optionalObject(value, path, obj => ({
+    top: optionalNumber(obj.top, `${path}.top`),
+    bottom: optionalNumber(obj.bottom, `${path}.bottom`),
+    left: optionalNumber(obj.left, `${path}.left`),
+    right: optionalNumber(obj.right, `${path}.right`),
+  }))
 }
 
 function validateDocumentSeo(value: unknown, path: string): DocumentSeo {

@@ -245,7 +245,7 @@ export const seo = defineType({
       name: 'contactTitle',
       title: 'Contact page title',
       type: 'string',
-      initialValue: 'Contact Videographer & Editor in Gent',
+      initialValue: 'Contact Videographer & Editor in Ghent',
       group: 'pages',
       validation: (r) => r.required().max(70),
     }),
@@ -255,7 +255,7 @@ export const seo = defineType({
       type: 'text',
       rows: 3,
       initialValue:
-        'Contact De Mennis, a videographer and editor based in Gent, Belgium, for brand films, music videos, event recaps and creative production.',
+        'Contact De Mennis, a videographer and editor based in Ghent, Belgium, for brand films, music videos, event recaps and creative production.',
       group: 'pages',
       validation: (r) => r.max(170),
     }),

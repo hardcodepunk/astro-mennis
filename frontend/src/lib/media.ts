@@ -1,6 +1,17 @@
 const CLOUDINARY_UPLOAD = "/upload/"
 
 type CloudinaryQuality = "auto" | "auto:eco"
+type SanityCrop = {
+  top?: number
+  bottom?: number
+  left?: number
+  right?: number
+}
+
+type ImageDimensions = {
+  width?: number
+  height?: number
+}
 
 export function cloudinaryImage(url: string | undefined, width: number, quality: CloudinaryQuality = "auto") {
   if (!url) return undefined
@@ -59,6 +70,52 @@ export function imageAttributes(options: {
     srcset: imageSrcset(src, widths, quality),
     sizes,
   }
+}
+
+export function sanityImageUrl(options: {
+  src: string | undefined
+  width: number
+  height?: number
+  crop?: SanityCrop
+  dimensions?: ImageDimensions
+}) {
+  const { src, width, height, crop, dimensions } = options
+  if (!src || !src.includes("cdn.sanity.io/images/")) return src
+
+  const params = new URLSearchParams({
+    auto: "format",
+    fit: "max",
+    w: String(width),
+  })
+
+  if (height) params.set("h", String(height))
+
+  const rect = sanityCropRect(crop, dimensions)
+  if (rect) params.set("rect", rect)
+
+  return `${src}${src.includes("?") ? "&" : "?"}${params.toString()}`
+}
+
+function sanityCropRect(crop: SanityCrop | undefined, dimensions: ImageDimensions | undefined) {
+  const width = dimensions?.width
+  const height = dimensions?.height
+  if (!crop || !width || !height) return undefined
+
+  const left = clampUnit(crop.left)
+  const right = clampUnit(crop.right)
+  const top = clampUnit(crop.top)
+  const bottom = clampUnit(crop.bottom)
+  const rectX = Math.round(width * left)
+  const rectY = Math.round(height * top)
+  const rectW = Math.round(width * Math.max(0.01, 1 - left - right))
+  const rectH = Math.round(height * Math.max(0.01, 1 - top - bottom))
+
+  return `${rectX},${rectY},${rectW},${rectH}`
+}
+
+function clampUnit(value: number | undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0
+  return Math.min(1, Math.max(0, value))
 }
 
 export function youtubeId(input?: string | null) {

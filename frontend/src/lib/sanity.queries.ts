@@ -106,6 +106,7 @@ export async function getLogoMarquee() {
       alt,
       "image": {
         "url": image.asset->url,
+        "crop": image.crop,
         "dimensions": image.asset->metadata.dimensions
       }
     }

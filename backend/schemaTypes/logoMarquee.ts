@@ -22,6 +22,8 @@ export const logoMarquee = defineType({
             defineField({
               name: 'image',
               title: 'Logo',
+              description:
+                'Displayed in a fixed-size logo box on the website. Use the image crop to trim empty whitespace around the logo.',
               type: 'image',
               options: {hotspot: true},
               validation: (Rule) => Rule.required(),
