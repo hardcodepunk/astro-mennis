@@ -60,9 +60,30 @@ const poster = imageAttributes({
       loading="lazy"
       decoding="async"
     />
-    <video class="work-card-vid" muted loop playsinline webkit-playsinline preload={shouldAutoplay ? "metadata" : "none"} aria-hidden="true">
-      {work.preview.mp4 ? <source data-src={work.preview.mp4} type="video/mp4" /> : null}
-      {work.preview.webm ? <source data-src={work.preview.webm} type="video/webm" /> : null}
+    <video
+      class="work-card-vid"
+      autoplay={shouldAutoplay}
+      muted
+      loop
+      playsinline
+      webkit-playsinline
+      preload={shouldAutoplay ? "auto" : "none"}
+      aria-hidden="true"
+    >
+      {work.preview.mp4 ? (
+        <source
+          src={shouldAutoplay ? work.preview.mp4 : undefined}
+          data-src={shouldAutoplay ? undefined : work.preview.mp4}
+          type="video/mp4"
+        />
+      ) : null}
+      {work.preview.webm ? (
+        <source
+          src={shouldAutoplay ? work.preview.webm : undefined}
+          data-src={shouldAutoplay ? undefined : work.preview.webm}
+          type="video/webm"
+        />
+      ) : null}
     </video>
   </div>
 

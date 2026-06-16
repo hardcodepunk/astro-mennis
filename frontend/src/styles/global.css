@@ -299,7 +299,7 @@ html {
   width: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity 0.8s ease-out;
+  transition: opacity 180ms ease-out;
 }
 .vh-grad {
   pointer-events: none;

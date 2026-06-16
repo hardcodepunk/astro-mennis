@@ -15,7 +15,7 @@ const {
   caption = settings?.caption,
   captionTextScale = settings?.captionTextScale ?? 100,
   captionUppercase = settings?.captionUppercase ?? true,
-  minRevealMs = 600,
+  minRevealMs = 0,
 } = props
 const safePoster = safePosterUrl(poster, defaultHeroMedia.poster)
 const heroCaption = typeof caption === "string" && caption.trim() ? caption.trim() : DEFAULT_CAPTION
@@ -49,16 +49,16 @@ const posterAttrs = imageAttributes({
     muted
     playsinline
     webkit-playsinline
-    preload="none"
+    preload="auto"
     poster={posterAttrs.src}
     loop
     width="1920"
     height="1080"
     disableRemotePlayback
     aria-hidden="true"
-    data-webm={webm}
-    data-mp4={mp4}
   >
+    {mp4 ? <source src={mp4} type="video/mp4" /> : null}
+    {webm ? <source src={webm} type="video/webm" /> : null}
   </video>
 
   <div class="vh-overlay" aria-hidden="true"></div>
@@ -79,7 +79,7 @@ const posterAttrs = imageAttributes({
       height: 100%;
       object-fit: cover;
       opacity: 1;
-      transition: opacity 0.8s ease-out;
+      transition: opacity 180ms ease-out;
     }
 
     .vh-hero.is-playing .vh-poster {

@@ -33,38 +33,48 @@ function makeAutoplayController(
     resetOnStop = false,
   } = callbacks
 
+  const markPlaying = () => {
+    attempts = 0
+    retryScheduled = false
+    onPlay?.()
+  }
+
+  const scheduleRetry = () => {
+    if (!startRequested) return
+    if (attempts >= maxAttempts) return
+
+    attempts += 1
+    if (retryScheduled) return
+
+    retryScheduled = true
+    const delay = video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ? 180 : 600
+    const retry = () => {
+      retryScheduled = false
+      tryStart()
+    }
+
+    video.addEventListener("loadeddata", retry, { once: true })
+    video.addEventListener("canplay", retry, { once: true })
+    window.setTimeout(retry, delay)
+  }
+
   const tryStart = () => {
     if (!startRequested) return
-    if (!document.body.contains(video) || !video.paused) return
+    if (!document.body.contains(video)) return
 
     hydrate?.()
     prepareVideo(video)
 
-    video.play().then(
-      () => {
-        attempts = 0
-        retryScheduled = false
-        onPlay?.()
-      },
-    ).catch(() => {
-      if (!startRequested) return
-      if (attempts >= maxAttempts) return
+    if (!video.paused && !video.ended) {
+      markPlaying()
+      return
+    }
 
-      attempts += 1
-      if (retryScheduled) return
-
-      retryScheduled = true
-      const delay = video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ? 180 : 600
-      const retry = () => {
-        retryScheduled = false
-        tryStart()
-      }
-
-      video.addEventListener("loadeddata", retry, { once: true })
-      video.addEventListener("canplay", retry, { once: true })
-      window.setTimeout(retry, delay)
-    })
+    video.play().then(markPlaying).catch(scheduleRetry)
   }
+
+  video.addEventListener("playing", markPlaying)
+  video.addEventListener("play", markPlaying)
 
   return {
     start() {
@@ -102,10 +112,13 @@ function makeAutoplayController(
 
 function attachHeroSources(video: HTMLVideoElement) {
   if (video.dataset.heroSourcesAttached === "1") return
-  video.dataset.heroSourcesAttached = "1"
+  if (video.querySelector("source[src]")) return
 
   const webm = video.dataset.webm
   const mp4 = video.dataset.mp4
+  if (!mp4 && !webm) return
+
+  video.dataset.heroSourcesAttached = "1"
 
   if (mp4) {
     const source = document.createElement("source")
@@ -150,7 +163,12 @@ function bindResumeListeners(start: () => void) {
     start()
   }
 
-  window.addEventListener("pageshow", start, { signal: abort.signal })
+  window.addEventListener("pageshow", startWhenVisible, { signal: abort.signal })
+  window.addEventListener("focus", startWhenVisible, { signal: abort.signal })
+  window.addEventListener("load", startWhenVisible, { signal: abort.signal })
+  window.addEventListener("pointerdown", startWhenVisible, { passive: true, signal: abort.signal })
+  window.addEventListener("touchstart", startWhenVisible, { passive: true, signal: abort.signal })
+  window.addEventListener("keydown", startWhenVisible, { signal: abort.signal })
   document.addEventListener("visibilitychange", startWhenVisible, { signal: abort.signal })
   document.addEventListener("astro:before-swap", () => abort.abort(), { once: true, signal: abort.signal })
 }
@@ -164,9 +182,11 @@ function bootHeroVideos() {
 
   roots.forEach(root => {
     if (!isMotionAllowed()) {
-      root.dataset.vhHeroMotionReduced = "1"
+      root.dataset.reduced = "1"
       return
     }
+
+    root.removeAttribute("data-reduced")
 
     const video = root.querySelector<HTMLVideoElement>("video")
     if (!video) return
