@@ -32,7 +32,7 @@ const hasHeading = Boolean(safeKicker || safeTitle)
           ) : null
         }
 
-        <ul class="cr-list ds-copy-list">
+        <ul class="cr-list ds-copy-body">
           {safeItems.map(item => (
             <li class="cr-item">
               <span class="cr-dot" aria-hidden="true"></span>
@@ -86,6 +86,10 @@ const hasHeading = Boolean(safeKicker || safeTitle)
     margin: 0;
     padding: 0;
     list-style: none;
+    max-width: 42rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.8;
   }
 
   .cr-item {
