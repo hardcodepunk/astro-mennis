@@ -145,6 +145,50 @@ html {
     --ds-title-size: clamp(1.5rem, 2.4vw, 2.2rem);
   }
 
+  :where(h2, h3, h4, h5, h6).ds-title {
+    font-size: var(--ds-heading-title-size, clamp(1.667rem, 3.333vw, 2.833rem));
+  }
+
+  :where(h2, h3, h4, h5, h6).ds-title--xl {
+    --ds-heading-title-size: clamp(1.833rem, 3.833vw, 3.5rem);
+  }
+
+  :where(h2, h3, h4, h5, h6).ds-title--tiny {
+    --ds-heading-title-size: clamp(0.958rem, 1.75vw, 1.292rem);
+  }
+
+  :where(h2, h3, h4, h5, h6).ds-title--hero {
+    --ds-heading-title-size: clamp(2.167rem, 5.167vw, 4.5rem);
+  }
+
+  :where(h2, h3, h4, h5, h6).ds-title--large {
+    --ds-heading-title-size: clamp(1.75rem, 4.167vw, 3.5rem);
+  }
+
+  :where(h2, h3, h4, h5, h6).ds-title--card {
+    --ds-heading-title-size: clamp(1.333rem, 2vw, 2.083rem);
+  }
+
+  :where(h2, h3, h4, h5, h6).ds-title--card-featured {
+    --ds-heading-title-size: clamp(2.083rem, 3.333vw, 3.333rem);
+  }
+
+  :where(h2, h3, h4, h5, h6).ds-title--card-muted {
+    --ds-heading-title-size: clamp(1.25rem, 2.167vw, 2rem);
+  }
+
+  :where(h2, h3, h4, h5, h6).ds-title--work {
+    --ds-heading-title-size: clamp(2.833rem, 7.5vw, 6rem);
+  }
+
+  :where(h2, h3, h4, h5, h6).ds-title--section {
+    --ds-heading-title-size: clamp(1.708rem, 2.583vw, 2.292rem);
+  }
+
+  :where(h2, h3, h4, h5, h6).ds-title--subsection {
+    --ds-heading-title-size: clamp(1.25rem, 2vw, 1.833rem);
+  }
+
   .ds-copy {
     margin: 0;
     font-family: var(--font-body);
@@ -225,15 +269,15 @@ html {
   }
 
   .ds-richtext h2 {
-    font-size: clamp(2rem, 3.4vw, 3.2rem);
+    font-size: clamp(1.667rem, 2.833vw, 2.667rem);
   }
 
   .ds-richtext h3 {
-    font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+    font-size: clamp(1.25rem, 2vw, 1.833rem);
   }
 
   .ds-richtext h4 {
-    font-size: 1.25rem;
+    font-size: 1.042rem;
   }
 
   .ds-progress-link {

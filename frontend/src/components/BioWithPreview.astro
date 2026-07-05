@@ -34,7 +34,7 @@ const textScale = Math.min(1.4, Math.max(0.5, (props.bioTextScale ?? 100) / 100)
 <section class:list={["bp", mirrorLayout && "is-mirrored"]} style={`--bio-scale: ${textScale};`}>
   <div class="bp-inner">
     <div class="bp-left">
-      <p class="bp-bio ds-copy ds-copy--strong">{bio}</p>
+      <p class="bp-bio ds-copy">{bio}</p>
     </div>
 
     <div class="bp-right">
@@ -69,6 +69,7 @@ const textScale = Math.min(1.4, Math.max(0.5, (props.bioTextScale ?? 100) / 100)
       margin: 0;
       max-width: 42rem;
       font-size: clamp(calc(1rem * var(--bio-scale)), calc(1.7vw * var(--bio-scale)), calc(1.25rem * var(--bio-scale)));
+      font-weight: 400;
       line-height: 1.65;
       letter-spacing: 0;
       color: var(--color-brand-secondary);

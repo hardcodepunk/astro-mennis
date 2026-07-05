@@ -19,9 +19,9 @@ const mailHref = `mailto:${email}`
           <strong class="ds-title ds-title--card">Ghent, Belgium</strong>
         </p>
 
-        <a class="contact-page__meta contact-page__mail ds-progress-link" href={mailHref}>
+        <a class="contact-page__meta contact-page__mail" href={mailHref}>
           <span class="contact-page__meta-label ds-kicker ds-kicker--small">{mailSentence}</span>
-          <strong class="ds-title ds-title--card">{email}</strong>
+          <strong class="contact-page__mail-address ds-title ds-title--card ds-progress-link">{email}</strong>
         </a>
       </div>
     </div>
@@ -160,6 +160,11 @@ const mailHref = `mailto:${email}`
 
   .contact-page__mail {
     color: var(--color-brand-secondary);
+  }
+
+  .contact-page__mail:hover .contact-page__mail-address::after,
+  .contact-page__mail:focus-visible .contact-page__mail-address::after {
+    transform: scaleX(1) translateY(var(--ds-progress-offset, 0.14em));
   }
 
   @keyframes contact-cursor {
