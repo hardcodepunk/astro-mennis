@@ -182,12 +182,16 @@ const poster = imageAttributes({
       aspect-ratio: 4 / 5;
     }
 
+    .work-card--featured .work-card-title {
+      --ds-heading-title-size: clamp(1.5rem, 3.2vw, 2.25rem);
+    }
+
     .work-card--featured-primary .work-card-overlay {
       padding: 1.25rem;
     }
 
     .work-card--featured-primary .work-card-title {
-      font-size: clamp(1.25rem, 2.167vw, 2rem);
+      font-size: clamp(1.5rem, 3.2vw, 2.25rem);
     }
   }
 </style>
