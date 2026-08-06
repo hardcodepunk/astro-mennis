@@ -211,7 +211,7 @@ export type PortableTextInlineImage = {
 
 export type PortableTextBody = Array<PortableTextBlock | PortableTextInlineImage>
 
-export type WorkItem = {
+export type WorkSummary = {
   slug: string
   title: string
   category: string
@@ -222,12 +222,16 @@ export type WorkItem = {
   year?: string
   publishedAt?: string
   updatedAt?: string
-  overviewTitle?: string
-  body?: PortableTextBody
-  media?: WorkMedia
   featuredOnHome?: boolean
   featuredOrder?: number
   seo?: DocumentSeo
+}
+
+export type WorkDetail = Omit<WorkSummary, "year"> & {
+  year: string
+  overviewTitle?: string
+  body?: PortableTextBody
+  media?: WorkMedia
 }
 
 type Validator<T> = (value: unknown, path: string) => T
@@ -340,7 +344,7 @@ export function validateCategory(value: unknown, path: string): Category {
   }
 }
 
-export function validateWorkItem(value: unknown, path: string): WorkItem {
+export function validateWorkSummary(value: unknown, path: string): WorkSummary {
   const obj = objectAt(value, path)
   return {
     slug: requiredString(obj.slug, `${path}.slug`),
@@ -353,12 +357,23 @@ export function validateWorkItem(value: unknown, path: string): WorkItem {
     year: optionalString(obj.year, `${path}.year`),
     publishedAt: optionalString(obj.publishedAt, `${path}.publishedAt`),
     updatedAt: optionalString(obj.updatedAt, `${path}.updatedAt`),
-    overviewTitle: optionalString(obj.overviewTitle, `${path}.overviewTitle`),
-    body: obj.body === null || obj.body === undefined ? undefined : validatePortableTextBody(obj.body, `${path}.body`),
-    media: optionalObject(obj.media, `${path}.media`, validateWorkMedia),
     featuredOnHome: optionalBoolean(obj.featuredOnHome, `${path}.featuredOnHome`),
     featuredOrder: optionalNumber(obj.featuredOrder, `${path}.featuredOrder`),
     seo: optionalObject(obj.seo, `${path}.seo`, validateDocumentSeo),
+  }
+}
+
+export function validateWorkDetail(value: unknown, path: string): WorkDetail {
+  const obj = objectAt(value, path)
+  const summary = validateWorkSummary(obj, path)
+  return {
+    ...summary,
+    year: requiredString(obj.year, `${path}.year`),
+    overviewTitle: optionalString(obj.overviewTitle, `${path}.overviewTitle`),
+    body: obj.body === null || obj.body === undefined
+      ? undefined
+      : validatePortableTextBody(obj.body, `${path}.body`),
+    media: optionalObject(obj.media, `${path}.media`, validateWorkMedia),
   }
 }
 
@@ -398,7 +413,7 @@ function validateDocumentSeo(value: unknown, path: string): DocumentSeo {
   }
 }
 
-function validatePreview(value: unknown, path: string): WorkItem["preview"] {
+function validatePreview(value: unknown, path: string): WorkSummary["preview"] {
   const obj = objectAt(value, path)
   const poster = requiredString(obj.poster, `${path}.poster`)
   const webm = optionalString(obj.webm, `${path}.webm`)

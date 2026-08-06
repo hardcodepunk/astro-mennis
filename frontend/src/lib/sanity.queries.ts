@@ -8,13 +8,15 @@ import {
   validateLogoMarquee,
   validateSeoSettings,
   validateSiteSettings,
-  validateWorkItem,
+  validateWorkDetail,
+  validateWorkSummary,
 } from "./sanity.contract"
 
 export type {
   Category,
   SeoSettings,
-  WorkItem,
+  WorkDetail,
+  WorkSummary,
 } from "./sanity.contract"
 
 export async function getSiteSettings() {
@@ -166,7 +168,7 @@ export async function getFeaturedWorks(limit = 3) {
       featuredOrder
     }`
   const data = await sanity.fetch<unknown>(q, { limit })
-  return arrayOf(data, "getFeaturedWorks", validateWorkItem)
+  return arrayOf(data, "getFeaturedWorks", validateWorkSummary)
 }
 
 export async function getAllWorksForGrid() {
@@ -182,7 +184,7 @@ export async function getAllWorksForGrid() {
     thumbnailAutoplay
   }`
   const data = await sanity.fetch<unknown>(q)
-  return arrayOf(data, "getAllWorksForGrid", validateWorkItem)
+  return arrayOf(data, "getAllWorksForGrid", validateWorkSummary)
 }
 
 export async function getCategories() {
@@ -209,7 +211,7 @@ export async function getWorks() {
     ${seoSelection}
   }`
   const data = await sanity.fetch<unknown>(q)
-  return arrayOf(data, "getWorks", validateWorkItem)
+  return arrayOf(data, "getWorks", validateWorkSummary)
 }
 
 export async function getWorksByCategorySlug(slug: string) {
@@ -226,7 +228,7 @@ export async function getWorksByCategorySlug(slug: string) {
     ${seoSelection}
   }`
   const data = await sanity.fetch<unknown>(q, { slug })
-  return arrayOf(data, "getWorksByCategorySlug", validateWorkItem)
+  return arrayOf(data, "getWorksByCategorySlug", validateWorkSummary)
 }
 
 export async function getWorkBySlug(slug: string) {
@@ -262,7 +264,7 @@ export async function getWorkBySlug(slug: string) {
     }
   }`
   const data = await sanity.fetch<unknown>(q, { slug })
-  return nullable(data, "getWorkBySlug", validateWorkItem)
+  return nullable(data, "getWorkBySlug", validateWorkDetail)
 }
 
 export async function getRecentWorks(limit = 2, excludeSlug?: string) {
@@ -277,5 +279,5 @@ export async function getRecentWorks(limit = 2, excludeSlug?: string) {
     thumbnailAutoplay
   }`
   const data = await sanity.fetch<unknown>(q, { limit, excludeSlug })
-  return arrayOf(data, "getRecentWorks", validateWorkItem)
+  return arrayOf(data, "getRecentWorks", validateWorkSummary)
 }

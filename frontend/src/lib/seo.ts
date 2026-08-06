@@ -1,4 +1,4 @@
-import type { Category, SeoSettings, WorkItem } from "./sanity.queries"
+import type { Category, SeoSettings, WorkDetail, WorkSummary } from "./sanity.queries"
 import { parseYouTubeId } from "@astro-mennis/media-contract"
 
 export const DEFAULT_SITE_URL = "https://www.demennis.be"
@@ -132,7 +132,7 @@ export function categorySeoDescription(
   return metaDescription(seo, description)
 }
 
-export function workSeoTitle(seo: SeoSettings | null | undefined, work: WorkItem) {
+export function workSeoTitle(seo: SeoSettings | null | undefined, work: WorkSummary | WorkDetail) {
   if (work.seo?.title) return formatTitle(seo, work.seo.title)
 
   const title = replaceSeoTokens(seo?.workTitleTemplate || "%title%", {
@@ -144,7 +144,7 @@ export function workSeoTitle(seo: SeoSettings | null | undefined, work: WorkItem
   return formatTitle(seo, title || work.title)
 }
 
-export function workSeoDescription(seo: SeoSettings | null | undefined, work: WorkItem) {
+export function workSeoDescription(seo: SeoSettings | null | undefined, work: WorkSummary | WorkDetail) {
   if (work.seo?.description) return metaDescription(seo, work.seo.description)
 
   const client = meaningfulSeoValue(work.client)
@@ -235,7 +235,7 @@ export function collectionPageJsonLd(params: {
   title: string
   description: string
   path: string
-  works: WorkItem[]
+  works: WorkSummary[]
   category?: Category | null
 }) {
   const { seo, title, description, path, works, category } = params
@@ -296,7 +296,7 @@ export function contactPageJsonLd(params: {
 
 export function creativeWorkJsonLd(params: {
   seo: SeoSettings | null | undefined
-  work: WorkItem
+  work: WorkDetail
   title: string
   description: string
   path: string
@@ -340,7 +340,7 @@ export function creativeWorkJsonLd(params: {
 
 export function videoObjectJsonLd(params: {
   seo: SeoSettings | null | undefined
-  work: WorkItem
+  work: WorkDetail
   title: string
   description: string
   image?: string

@@ -1,5 +1,5 @@
 ---
-import type { WorkItem } from "../lib/sanity.queries"
+import type { WorkSummary } from "../lib/sanity.queries"
 import { imageAttributes } from "../lib/media"
 
 type HeadingTag = "h2" | "h3"
@@ -10,7 +10,7 @@ const {
   headingTag = "h2",
   variant = "default",
 } = Astro.props as {
-  work: WorkItem
+  work: WorkSummary
   headingTag?: HeadingTag
   variant?: CardVariant
 }
