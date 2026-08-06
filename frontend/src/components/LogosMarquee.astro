@@ -12,7 +12,7 @@ const h = Math.max(48, Number(height) || 96)
 const logoHeight = Math.round(h * 0.68)
 const logoMaxWidth = Math.round(logoHeight * 3.8)
 const safeItems = items.filter(i => i?.image?.url)
-const repeatCount = 12
+const repeatCount = 2
 const repeatedRows = Array.from({ length: repeatCount }, (_, index) => index)
 const marqueeShift = `${-100 / repeatCount}%`
 const logoImage = (item: (typeof safeItems)[number]) =>
@@ -86,10 +86,10 @@ const logoItems = safeItems.map(item => ({
     display: flex;
     align-items: center;
     gap: 72px;
-    padding-right: 72px;
+    min-width: 100vw;
+    padding: 0 36px;
     list-style: none;
     margin: 0;
-    padding-left: 0;
     flex: 0 0 auto;
   }
 
@@ -123,11 +123,32 @@ const logoItems = safeItems.map(item => ({
     .lm-track {
       animation: none;
       transform: none;
+      display: block;
+      width: 100%;
     }
 
     .lm-mask {
+      height: auto;
+      overflow: visible;
       mask-image: none;
       -webkit-mask-image: none;
+    }
+
+    .lm-row:first-child {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr));
+      width: 100%;
+      min-width: 0;
+      gap: clamp(2rem, 6vw, 4.5rem);
+      padding: 0 1.5rem;
+    }
+
+    .lm-row + .lm-row {
+      display: none;
+    }
+
+    .lm-item {
+      min-width: 0;
     }
   }
 </style>
