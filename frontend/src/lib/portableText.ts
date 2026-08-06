@@ -20,7 +20,6 @@ import {
 // every supported mark and one hard break at the deepest level.
 const PORTABLE_TEXT_MAX_HTML_NESTING =
   PORTABLE_TEXT_MAX_LIST_LEVEL * 3 + PORTABLE_TEXT_MAX_MARKS_PER_SPAN + 1
-
 const renderInlineImage: PortableTextTypeComponent<PortableTextInlineImage> = ({ value }) => {
   const url = value?.asset?.url
   if (!url || !isSafeSanityImageUrl(url)) return ""

@@ -519,7 +519,6 @@ function validatePortableTextMarks(value: unknown, path: string, markDefKeys: Se
     return name
   })
 }
-
 function validatePortableTextLinkMark(value: unknown, path: string): PortableTextLinkMark {
   const obj = objectAt(value, path)
   const type = requiredString(obj._type, `${path}._type`)
