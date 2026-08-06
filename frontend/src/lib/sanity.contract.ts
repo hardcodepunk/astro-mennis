@@ -12,6 +12,7 @@ class SanityContractError extends Error {
 }
 
 export type SiteSettings = {
+  homepageWorkIds?: string[]
   homeSeoH1?: string
   projectsSeoH1?: string
   videoHero?: {
@@ -211,6 +212,7 @@ export type PortableTextInlineImage = {
 export type PortableTextBody = Array<PortableTextBlock | PortableTextInlineImage>
 
 export type WorkSummary = {
+  _id: string
   slug: string
   title: string
   category: string
@@ -248,6 +250,7 @@ export function arrayOf<T>(value: unknown, path: string, validator: Validator<T>
 export function validateSiteSettings(value: unknown, path: string): SiteSettings {
   const obj = objectAt(value, path)
   return {
+    homepageWorkIds: optionalStringArray(obj.homepageWorkIds, `${path}.homepageWorkIds`),
     homeSeoH1: optionalString(obj.homeSeoH1, `${path}.homeSeoH1`),
     projectsSeoH1: optionalString(obj.projectsSeoH1, `${path}.projectsSeoH1`),
     videoHero: optionalMediaUrls(obj.videoHero, `${path}.videoHero`),
@@ -346,6 +349,7 @@ export function validateCategory(value: unknown, path: string): Category {
 export function validateWorkSummary(value: unknown, path: string): WorkSummary {
   const obj = objectAt(value, path)
   return {
+    _id: requiredString(obj._id, `${path}._id`),
     slug: requiredString(obj.slug, `${path}.slug`),
     title: requiredString(obj.title, `${path}.title`),
     category: requiredString(obj.category, `${path}.category`),

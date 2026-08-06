@@ -7,6 +7,7 @@ import {
 } from "../src/lib/sanity.contract.ts"
 
 const summary = {
+  _id: "work-example",
   slug: "example",
   title: "Example",
   category: "Brand",

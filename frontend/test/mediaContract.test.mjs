@@ -4,6 +4,7 @@ import test from "node:test"
 import { validateWorkDetail, validateWorkSummary } from "../src/lib/sanity.contract.ts"
 
 const baseWork = {
+  _id: "work-example",
   slug: "example",
   title: "Example",
   category: "Brand",

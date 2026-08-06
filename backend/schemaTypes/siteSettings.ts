@@ -4,12 +4,14 @@ import {
   defineCloudinaryVideoFields,
   defineTextPanelFields,
 } from './shared'
+import {homepageWorksField} from './homepageWorks'
 
 export const siteSettings = defineType({
   name: 'siteSettings',
   title: 'Site settings',
   type: 'document',
   fields: [
+    homepageWorksField,
     defineField({
       name: 'videoHero',
       title: 'Video hero',

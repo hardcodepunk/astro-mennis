@@ -3,6 +3,7 @@ import {
   youtubeUrl,
 } from './validation'
 import {defineCloudinaryVideoFields, defineDocumentSeoFields} from './shared'
+import {legacyFeaturedOnHomeField, legacyFeaturedOrderField} from './homepageWorks'
 
 type HeroMediaParent = {mode?: 'preview' | 'single' | 'slider'}
 
@@ -53,22 +54,9 @@ export const work = defineType({
       validation: (r) => r.required(),
     }),
 
-    defineField({
-      name: 'featuredOnHome',
-      title: 'Show on homepage project grid',
-      description: 'Adds this project to the homepage featured work section.',
-      type: 'boolean',
-      initialValue: false,
-    }),
+    legacyFeaturedOnHomeField,
 
-    defineField({
-      name: 'featuredOrder',
-      title: 'Homepage order',
-      description: 'Optional. Lower numbers appear first on the homepage.',
-      type: 'number',
-      hidden: ({document}) => !document?.featuredOnHome,
-      validation: (r) => r.integer().positive().max(3),
-    }),
+    legacyFeaturedOrderField,
 
     defineField({
       name: 'preview',

@@ -32,6 +32,7 @@ const contactReasonsSelection = `kicker, title, items, mirrorLayout`
 
 export const CONTENT_SNAPSHOT_QUERY = `{
   "siteSettings": *[_id == "siteSettings"][0]{
+    "homepageWorkIds": homepageWorks[]._ref,
     homeSeoH1,
     projectsSeoH1,
     videoHero{
@@ -122,6 +123,7 @@ export const CONTENT_SNAPSHOT_QUERY = `{
       ${seoSelection}
     },
   "works": *[_type == "work"] | order(publishedAt desc, _createdAt desc){
+    _id,
     "slug": slug.current,
     title,
     "category": category->title,
@@ -215,6 +217,15 @@ export function validateContentSnapshot(value: unknown): ContentSnapshot {
 }
 
 export function selectFeaturedWorks(snapshot: ContentSnapshot, limit = 3) {
+  const configuredWorkIds = snapshot.siteSettings?.homepageWorkIds
+  if (configuredWorkIds !== undefined) {
+    const worksById = new Map(snapshot.works.map(work => [work._id, work]))
+    return configuredWorkIds
+      .map(workId => worksById.get(workId))
+      .filter((work): work is WorkDetail => work !== undefined)
+      .slice(0, normalizeLimit(limit))
+  }
+
   return snapshot.works
     .filter(work => work.featuredOnHome)
     .sort((left, right) =>

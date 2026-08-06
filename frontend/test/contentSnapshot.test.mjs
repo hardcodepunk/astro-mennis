@@ -40,6 +40,7 @@ test("validates and freezes a complete build snapshot", () => {
   assert.equal(snapshot.works.length, 3)
   assert.match(CONTENT_SNAPSHOT_QUERY, /"works": \*\[_type == "work"\]/)
   assert.match(CONTENT_SNAPSHOT_QUERY, /"siteSettings": \*\[_id == "siteSettings"\]\[0\]/)
+  assert.match(CONTENT_SNAPSHOT_QUERY, /"homepageWorkIds": homepageWorks\[\]._ref/)
 })
 
 test("all repository getters share one in-flight load", async () => {
@@ -85,6 +86,30 @@ test("pure selectors preserve snapshot order while filtering", () => {
     selectRecentWorks(snapshot, 2, "fixture-preview").map(work => work.slug),
     ["fixture-single", "fixture-slider"],
   )
+})
+
+test("configured homepage references preserve exact editorial order", () => {
+  const snapshot = validateContentSnapshot({
+    ...fixture,
+    siteSettings: {
+      ...fixture.siteSettings,
+      homepageWorkIds: ["work-fixture-slider", "work-fixture-preview"],
+    },
+  })
+
+  assert.deepEqual(
+    selectFeaturedWorks(snapshot, 3).map(work => work.slug),
+    ["fixture-slider", "fixture-preview"],
+  )
+})
+
+test("an explicit empty homepage selection does not use legacy flags", () => {
+  const snapshot = validateContentSnapshot({
+    ...fixture,
+    siteSettings: {...fixture.siteSettings, homepageWorkIds: []},
+  })
+
+  assert.deepEqual(selectFeaturedWorks(snapshot, 3), [])
 })
 
 test("nullable singletons remain explicit", () => {

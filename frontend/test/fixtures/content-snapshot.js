@@ -100,6 +100,7 @@ export default {
   ],
   works: [
     {
+      _id: "work-fixture-preview",
       slug: "fixture-preview",
       title: "Fixture Preview",
       category: "Film",
@@ -137,6 +138,7 @@ export default {
       ],
     },
     {
+      _id: "work-fixture-single",
       slug: "fixture-single",
       title: "Fixture Single",
       category: "Film",
@@ -157,6 +159,7 @@ export default {
       body: [],
     },
     {
+      _id: "work-fixture-slider",
       slug: "fixture-slider",
       title: "Fixture Slider",
       category: "Events",
