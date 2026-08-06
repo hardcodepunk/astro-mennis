@@ -46,6 +46,7 @@ npm run dev
 
 Frontend:
 
+- `SANITY_CONTENT_SOURCE`: `sanity` by default. The checked-in `fixture` source is for CI only and is rejected on Vercel.
 - `PUBLIC_SANITY_PROJECT_ID`: Sanity project id. Current project: `454gxa26`.
 - `PUBLIC_SANITY_DATASET`: Sanity dataset. Current dataset: `production`.
 
@@ -59,6 +60,12 @@ Backend:
 Deployment commands require their target values explicitly in `.env.staging` or `.env.production`;
 copy the corresponding checked example file before deploying.
 
+## Content Snapshots
+
+`npm run dev` and `npm run build` each prepare one validated, published Sanity snapshot before Astro starts. Every page and static route in that invocation reads the same atomic `.content-snapshot.json` artifact, so a concurrent CMS edit cannot mix content versions within a build. Restart the development server to refresh CMS content.
+
+CI sets `SANITY_CONTENT_SOURCE=fixture` and builds from synthetic checked-in content without Sanity credentials or network access. Fixture mode fails closed on Vercel. Run the npm scripts rather than invoking `astro dev` or `astro build` directly; the direct commands intentionally bypass snapshot preparation.
+
 ## Quality Gates
 
 Run these before pushing changes:
@@ -71,8 +78,7 @@ cd ../backend
 npm run check
 ```
 
-The frontend check runs Astro diagnostics and a production static build. The backend check runs
-ESLint, TypeScript, deployment safety and bundle tests, and a Sanity Studio build.
+The frontend check runs unit tests, Astro diagnostics, and a production static build; CI supplies the synthetic fixture. The backend check runs ESLint, TypeScript, deployment safety and bundle tests, and a Sanity Studio build.
 
 GitHub Actions runs the same checks on pushes and pull requests targeting `main`.
 

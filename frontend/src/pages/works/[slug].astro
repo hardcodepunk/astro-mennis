@@ -1,6 +1,12 @@
 ---
 import Layout from "../../layouts/Layout.astro"
-import { getWorkBySlug, getWorks, getRecentWorks, getSeoSettings } from "../../lib/sanity.queries"
+import {
+  getContentSnapshot,
+  selectRecentWorks,
+  type SeoSettings,
+  type WorkDetail,
+  type WorkSummary,
+} from "../../lib/sanity.queries"
 import { portableTextToHtml } from "../../lib/portableText"
 import RecentWorks from "../../components/RecentWorks.astro"
 import WorkMediaDisplay from "../../components/WorkMediaDisplay.astro"
@@ -15,16 +21,24 @@ import {
 import { imageAttributes } from "../../lib/media"
 
 export async function getStaticPaths() {
-  const works = await getWorks()
-  return works.map(w => ({ params: { slug: w.slug } }))
+  const snapshot = await getContentSnapshot()
+  return snapshot.works.map(work => ({
+    params: {slug: work.slug},
+    props: {
+      work,
+      recent: selectRecentWorks(snapshot, 3, work.slug),
+      seoSettings: snapshot.seoSettings,
+    },
+  }))
 }
 
-const { slug } = Astro.params
-const work = await getWorkBySlug(slug)
-if (!work) throw new Error(`Work not found: ${slug}`)
+type Props = {
+  work: WorkDetail
+  recent: WorkSummary[]
+  seoSettings: SeoSettings | null
+}
 
-const seoSettings = await getSeoSettings()
-const recent = await getRecentWorks(3, slug)
+const {work, recent, seoSettings} = Astro.props as Props
 const bodyHtml = portableTextToHtml(work.body)
 const title = workSeoTitle(seoSettings, work)
 const description = workSeoDescription(seoSettings, work)

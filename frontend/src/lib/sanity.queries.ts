@@ -1,16 +1,7 @@
-import { sanity } from "./sanity"
-import {
-  arrayOf,
-  nullable,
-  validateBioWithPreview,
-  validateCategory,
-  validateContactPage,
-  validateLogoMarquee,
-  validateSeoSettings,
-  validateSiteSettings,
-  validateWorkDetail,
-  validateWorkSummary,
-} from "./sanity.contract"
+import {readFile} from "node:fs/promises"
+import {resolve} from "node:path"
+
+import {createContentRepository} from "./contentSnapshot"
 
 export type {
   Category,
@@ -18,265 +9,53 @@ export type {
   WorkDetail,
   WorkSummary,
 } from "./sanity.contract"
+export type {ContentSnapshot} from "./contentSnapshot"
+export {
+  selectFeaturedWorks,
+  selectRecentWorks,
+  selectWorksByCategorySlug,
+} from "./contentSnapshot"
 
-export async function getSiteSettings() {
-  const q = `*[_id == "siteSettings"][0]{
-    homeSeoH1,
-    projectsSeoH1,
-    videoHero{
-      mp4,
-      webm,
-      poster,
-      caption,
-      captionTextScale,
-      captionUppercase
-    },
-    workflowPanel{
-      ${textPanelSelection}
-    },
-    legalDocument{
-      label,
-      "url": file.asset->url,
-      "filename": file.asset->originalFilename
+const snapshotPath = resolve(process.cwd(), ".content-snapshot.json")
+
+async function loadPreparedSnapshot() {
+  let source: string
+  try {
+    source = await readFile(snapshotPath, "utf8")
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new Error(
+        "Content snapshot is missing. Start the frontend with `npm run dev` or build it with `npm run build`.",
+        {cause: error},
+      )
     }
-  }`
-  const data = await sanity.fetch<unknown>(q)
-  return nullable(data, "getSiteSettings", validateSiteSettings)
+    throw error
+  }
+
+  try {
+    return JSON.parse(source) as unknown
+  } catch (error) {
+    throw new Error("Content snapshot is not valid JSON. Run the content preparation step again.", {
+      cause: error,
+    })
+  }
 }
 
-export async function getSeoSettings() {
-  const q = `*[_id == "seo"][0]{
-    siteUrl,
-    defaultTitle,
-    titleTemplate,
-    defaultDescription,
-    defaultSocialImage,
-    defaultSocialImageAlt,
-    twitterHandle,
-    brandName,
-    personName,
-    baseCity,
-    baseCountry,
-    sameAs,
-    homeH1,
-    homeTitle,
-    homeDescription,
-    homeSocialImage,
-    homeNoindex,
-    projectsH1,
-    projectsTitle,
-    projectsDescription,
-    projectsSocialImage,
-    projectsNoindex,
-    aboutTitle,
-    aboutDescription,
-    aboutSocialImage,
-    aboutNoindex,
-    contactH1,
-    contactTitle,
-    contactDescription,
-    contactSocialImage,
-    contactNoindex,
-    categoryTitleTemplate,
-    categoryDescriptionTemplate,
-    workTitleTemplate,
-    workDescriptionTemplate
-  }`
-  const data = await sanity.fetch<unknown>(q)
-  return nullable(data, "getSeoSettings", validateSeoSettings)
-}
+const repository = createContentRepository(loadPreparedSnapshot)
 
-export async function getContactPage() {
-  const q = `*[_id == "contactPage"][0]{
-    animatedSentences,
-    mailSentence,
-    email
-  }`
-  const data = await sanity.fetch<unknown>(q)
-  return nullable(data, "getContactPage", validateContactPage)
-}
-
-export async function getVideoHeroSettings() {
-  const settings = await getSiteSettings()
-  return settings?.videoHero ?? null
-}
-
-export async function getLogoMarquee() {
-  const q = `*[_id == "logoMarquee"][0]{
-    logos[]{
-      name,
-      alt,
-      "image": {
-        "url": image.asset->url,
-        "crop": image.crop,
-        "dimensions": image.asset->metadata.dimensions
-      }
-    }
-  }`
-  const data = await sanity.fetch<unknown>(q)
-  return nullable(data, "getLogoMarquee", validateLogoMarquee)
-}
-
-export async function getBioWithPreview() {
-  const q = `*[_id == "bioWithPreview"][0]{
-    heroTitle,
-    heroTitleTextScale,
-    seoH1,
-    heroVideo{ ${mediaSelection} },
-    bio,
-    mirrorLayout,
-    bioTextScale,
-    previewVideo{ ${mediaSelection} },
-    approach{
-      ${textPanelSelection}
-    },
-    contactReasons{${contactReasonsSelection}}
-  }`
-  const data = await sanity.fetch<unknown>(q)
-  return nullable(data, "getBioWithPreview", validateBioWithPreview)
-}
-
-const seoSelection = `seo{
-  title,
-  description,
-  socialImage,
-  socialImageAlt,
-  canonicalUrl,
-  noindex
-}`
-const previewSelection = `preview{ poster, webm, mp4 }`
-const textPanelSelection = `kicker, title, body, mirrorLayout`
-const mediaSelection = `mp4, webm, poster`
-const contactReasonsSelection = `kicker, title, items, mirrorLayout`
-
-// Reusable media selection fragments used by list queries.
-
-export async function getFeaturedWorks(limit = 3) {
-  const q = `*[_type == "work" && featuredOnHome == true]
-    | order(featuredOrder asc, publishedAt desc, _createdAt desc)[0...$limit]{
-      "slug": slug.current,
-      title,
-      "category": category->title,
-      "categorySlug": category->slug.current,
-      client,
-      publishedAt,
-      "updatedAt": _updatedAt,
-    ${previewSelection},
-      thumbnailAutoplay,
-      featuredOnHome,
-      featuredOrder
-    }`
-  const data = await sanity.fetch<unknown>(q, { limit })
-  return arrayOf(data, "getFeaturedWorks", validateWorkSummary)
-}
-
-export async function getAllWorksForGrid() {
-  const q = `*[_type == "work"] | order(publishedAt desc, _createdAt desc){
-    "slug": slug.current,
-    title,
-    "category": category->title,
-    "categorySlug": category->slug.current,
-    client,
-    publishedAt,
-    "updatedAt": _updatedAt,
-    ${previewSelection},
-    thumbnailAutoplay
-  }`
-  const data = await sanity.fetch<unknown>(q)
-  return arrayOf(data, "getAllWorksForGrid", validateWorkSummary)
-}
-
-export async function getCategories() {
-  const q = `*[_type == "category"] | order(coalesce(sortOrder, 9999) asc, title asc){
-    "slug": slug.current,
-    title,
-    sortOrder,
-    ${seoSelection}
-  }`
-  const data = await sanity.fetch<unknown>(q)
-  return arrayOf(data, "getCategories", validateCategory)
-}
-
-export async function getWorks() {
-  const q = `*[_type == "work"] | order(publishedAt desc, _createdAt desc){
-    "slug": slug.current,
-    title,
-    "category": category->title,
-    "categorySlug": category->slug.current,
-    client,
-    ${previewSelection},
-    thumbnailAutoplay,
-    overviewTitle,
-    ${seoSelection}
-  }`
-  const data = await sanity.fetch<unknown>(q)
-  return arrayOf(data, "getWorks", validateWorkSummary)
-}
-
-export async function getWorksByCategorySlug(slug: string) {
-  const q = `*[_type == "work" && category->slug.current == $slug]
-  | order(publishedAt desc, _createdAt desc){
-    "slug": slug.current,
-    title,
-    "category": category->title,
-    "categorySlug": category->slug.current,
-    client,
-    ${previewSelection},
-    thumbnailAutoplay,
-    overviewTitle,
-    ${seoSelection}
-  }`
-  const data = await sanity.fetch<unknown>(q, { slug })
-  return arrayOf(data, "getWorksByCategorySlug", validateWorkSummary)
-}
-
-export async function getWorkBySlug(slug: string) {
-  const q = `*[_type == "work" && slug.current == $slug][0]{
-    "slug": slug.current,
-    title,
-    "category": category->title,
-    "categorySlug": category->slug.current,
-    client,
-    year,
-    publishedAt,
-    "updatedAt": _updatedAt,
-    ${previewSelection},
-    thumbnailAutoplay,
-    ${seoSelection},
-
-    media{
-      mode,
-      youtubeUrl,
-      reels
-    },
-
-    overviewTitle,
-    body[]{
-      ...,
-      _type == "inlineImage" => {
-        ...,
-        "asset": asset->{
-          url,
-          metadata{ dimensions{ width, height } }
-        }
-      }
-    }
-  }`
-  const data = await sanity.fetch<unknown>(q, { slug })
-  return nullable(data, "getWorkBySlug", validateWorkDetail)
-}
-
-export async function getRecentWorks(limit = 2, excludeSlug?: string) {
-  const q = `*[_type == "work" && (!defined($excludeSlug) || slug.current != $excludeSlug)]
-  | order(publishedAt desc, _createdAt desc)[0...$limit]{
-    "slug": slug.current,
-    title,
-    "category": category->title,
-    "categorySlug": category->slug.current,
-    client,
-    ${previewSelection},
-    thumbnailAutoplay
-  }`
-  const data = await sanity.fetch<unknown>(q, { limit, excludeSlug })
-  return arrayOf(data, "getRecentWorks", validateWorkSummary)
-}
+export const {
+  getAllWorksForGrid,
+  getBioWithPreview,
+  getCategories,
+  getContactPage,
+  getContentSnapshot,
+  getFeaturedWorks,
+  getLogoMarquee,
+  getRecentWorks,
+  getSeoSettings,
+  getSiteSettings,
+  getVideoHeroSettings,
+  getWorkBySlug,
+  getWorks,
+  getWorksByCategorySlug,
+} = repository

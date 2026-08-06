@@ -7,7 +7,10 @@
     "npm": ">=11"
   },
   "scripts": {
+    "content:prepare": "node --env-file-if-exists=.env scripts/prepare-content-snapshot.mjs",
+    "predev": "npm run content:prepare",
     "dev": "astro dev",
+    "prebuild": "npm run content:prepare",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",

@@ -19,8 +19,7 @@ jobs:
       run:
         working-directory: frontend
     env:
-      PUBLIC_SANITY_PROJECT_ID: 454gxa26
-      PUBLIC_SANITY_DATASET: production
+      SANITY_CONTENT_SOURCE: fixture
     steps:
       - name: Checkout
         uses: actions/checkout@v4

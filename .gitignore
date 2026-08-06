@@ -1,5 +1,7 @@
 # build output
 dist/
+frontend/.content-snapshot.json
+frontend/.content-snapshot.json.*.tmp
 
 # generated types
 .astro/
