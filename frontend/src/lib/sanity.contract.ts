@@ -95,7 +95,6 @@ type DocumentSeo = {
   socialImageAlt?: string
   canonicalUrl?: string
   noindex?: boolean
-  focusKeyword?: string
 }
 
 export type LogoItem = {
@@ -409,7 +408,6 @@ function validateDocumentSeo(value: unknown, path: string): DocumentSeo {
     socialImageAlt: optionalString(obj.socialImageAlt, `${path}.socialImageAlt`),
     canonicalUrl: optionalString(obj.canonicalUrl, `${path}.canonicalUrl`),
     noindex: optionalBoolean(obj.noindex, `${path}.noindex`),
-    focusKeyword: optionalString(obj.focusKeyword, `${path}.focusKeyword`),
   }
 }
 

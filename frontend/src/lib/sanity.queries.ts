@@ -142,8 +142,7 @@ const seoSelection = `seo{
   socialImage,
   socialImageAlt,
   canonicalUrl,
-  noindex,
-  focusKeyword
+  noindex
 }`
 const previewSelection = `preview{ poster, webm, mp4 }`
 const textPanelSelection = `kicker, title, body, mirrorLayout`
