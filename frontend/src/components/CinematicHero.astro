@@ -1,6 +1,7 @@
 ---
 import { getVideoHeroSettings } from "../lib/sanity.queries"
 import { imageAttributes, safePosterUrl, defaultHeroMedia } from "../lib/media"
+import LineBreakText from "./LineBreakText.astro"
 
 const DEFAULT_CAPTION = "wild concepts captured by edgy and atypical video production"
 
@@ -18,7 +19,8 @@ const {
   minRevealMs = 0,
 } = props
 const safePoster = safePosterUrl(poster, defaultHeroMedia.poster)
-const heroCaption = typeof caption === "string" && caption.trim() ? caption.trim() : DEFAULT_CAPTION
+const rawHeroCaption = typeof caption === "string" && caption.trim() ? caption.trim() : DEFAULT_CAPTION
+const heroCaption = rawHeroCaption.replace(/[ \t]{2,}/g, "\n")
 const captionScale = Math.min(1.8, Math.max(0.6, Number(captionTextScale) / 100 || 1))
 const posterAttrs = imageAttributes({
   src: safePoster,
@@ -65,7 +67,9 @@ const posterAttrs = imageAttributes({
 
   <div class="vh-bottom-left" style={`--vh-caption-scale: ${captionScale};`}>
     {heroCaption ? (
-      <p class:list={["vh-caption ds-title", !captionUppercase && "is-lowercase"]}>{heroCaption}</p>
+      <p class:list={["vh-caption ds-title", !captionUppercase && "is-lowercase"]}>
+        <LineBreakText text={heroCaption} />
+      </p>
     ) : null}
   </div>
 
@@ -97,7 +101,7 @@ const posterAttrs = imageAttributes({
 
     .vh-caption {
       margin: 0;
-      max-width: min(28rem, calc(100vw - 3rem));
+      max-width: min(calc(28rem * var(--vh-caption-scale)), calc(100vw - 3rem));
       --ds-title-size: clamp(
         calc(2rem * var(--vh-caption-scale)),
         calc(4.2vw * var(--vh-caption-scale)),

@@ -24,8 +24,9 @@ export const siteSettings = defineType({
         defineField({
           name: 'caption',
           title: 'Text above email',
-          description: 'Optional line shown above the email link in the homepage video hero.',
-          type: 'string',
+          description: 'Homepage video hero text. Use Enter to choose where each line starts on every screen size.',
+          type: 'text',
+          rows: 4,
           initialValue: 'wild concepts captured by edgy and atypical video production',
         }),
         defineField({
