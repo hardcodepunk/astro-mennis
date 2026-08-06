@@ -4,6 +4,7 @@ import {readSanityEnvironmentFromProcess} from './sanity.environment'
 const singletonTypes = [
   'seo',
   'siteSettings',
+  'deploymentStatus',
   'bioWithPreview',
   'contactPage',
   'logoMarquee',
@@ -14,6 +15,7 @@ export const singletonTypeNames = new Set<string>(singletonTypes)
 const singletonTitles: Record<(typeof singletonTypes)[number], string> = {
   seo: 'SEO',
   siteSettings: 'Site settings',
+  deploymentStatus: 'Frontend deployment',
   bioWithPreview: 'About page',
   contactPage: 'Contact page',
   logoMarquee: 'Logo marquee',
@@ -54,6 +56,7 @@ export function productionUrlForDocument(document: {_type?: string; slug?: {curr
   if (
     document._type === 'seo' ||
     document._type === 'siteSettings' ||
+    document._type === 'deploymentStatus' ||
     document._type === 'logoMarquee'
   ) {
     return siteUrl

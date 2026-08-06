@@ -1,0 +1,180 @@
+name: CMS content deploy
+
+on:
+  repository_dispatch:
+    types:
+      - sanity-content-published
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: cms-content-production-deploy
+  cancel-in-progress: ${{ github.event_name == 'repository_dispatch' }}
+
+jobs:
+  request-deployment:
+    name: Debounce and request Vercel deployment
+    if: vars.CMS_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EVENT_KEY: ${{ github.event.client_payload.event_key }}
+      CLAIM_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      STATUS_URL: ${{ vars.CMS_DEPLOY_STATUS_URL }}
+      STATUS_SECRET: ${{ secrets.CMS_DEPLOY_STATUS_SECRET }}
+      VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+      WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Validate signed event handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$CLAIM_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$ ]]
+          if [[ "$GITHUB_EVENT_NAME" == "repository_dispatch" ]]; then
+            [[ "$EVENT_KEY" =~ ^[a-f0-9]{64}$ ]]
+          else
+            [[ -z "$EVENT_KEY" ]]
+          fi
+          [[ "$STATUS_URL" == https://* ]]
+          [[ -n "$STATUS_SECRET" ]]
+
+      - name: Wait for a quiet content window
+        if: github.event_name == 'repository_dispatch'
+        shell: bash
+        run: sleep 60
+
+      - name: Claim the latest content event
+        id: claim
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e '
+            const fs = require("node:fs")
+            const body = {
+              claimId: process.env.CLAIM_ID,
+              state: "claim",
+              workflowUrl: process.env.WORKFLOW_URL,
+            }
+            if (process.env.EVENT_KEY) body.eventKey = process.env.EVENT_KEY
+            fs.writeFileSync(process.argv[1], JSON.stringify(body))
+          ' "$RUNNER_TEMP/deploy-claim.json"
+
+          status_code="$(curl --silent --show-error --retry 2 --retry-all-errors \
+            --request POST \
+            --header "Authorization: Bearer $STATUS_SECRET" \
+            --header "Content-Type: application/json" \
+            --data-binary "@$RUNNER_TEMP/deploy-claim.json" \
+            --output "$RUNNER_TEMP/deploy-claim-response.json" \
+            --write-out '%{http_code}' \
+            "$STATUS_URL" || true)"
+
+          if [[ "$status_code" == "202" || "$status_code" == "409" ]]; then
+            echo "No deployable event was acquired; it is stale, leased, or already complete."
+            echo "claimed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          [[ "$status_code" == "200" ]]
+          claimed_event_key="$(node -e '
+            const fs = require("node:fs")
+            const response = JSON.parse(fs.readFileSync(process.argv[1], "utf8"))
+            if (response.updated !== true) process.exit(1)
+            if (typeof response.eventKey !== "string" || !/^[a-f0-9]{64}$/.test(response.eventKey)) {
+              process.exit(1)
+            }
+            process.stdout.write(response.eventKey)
+          ' "$RUNNER_TEMP/deploy-claim-response.json")"
+          if [[ "$GITHUB_EVENT_NAME" == "repository_dispatch" ]]; then
+            [[ "$claimed_event_key" == "$EVENT_KEY" ]]
+          fi
+          echo "claimed=true" >> "$GITHUB_OUTPUT"
+          echo "event_key=$claimed_event_key" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger the Vercel deploy hook
+        id: deploy
+        if: steps.claim.outputs.claimed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$VERCEL_DEPLOY_HOOK_URL" == https://api.vercel.com/* ]]
+
+          status_code="$(curl --silent --show-error \
+            --request POST \
+            --output "$RUNNER_TEMP/vercel-deploy-response.json" \
+            --write-out '%{http_code}' \
+            "$VERCEL_DEPLOY_HOOK_URL" || true)"
+          [[ "$status_code" =~ ^2[0-9][0-9]$ ]]
+
+          deploy_job_id="$(node -e '
+            const fs = require("node:fs")
+            const response = JSON.parse(fs.readFileSync(process.argv[1], "utf8"))
+            if (!response.job || typeof response.job.id !== "string") process.exit(1)
+            process.stdout.write(response.job.id)
+          ' "$RUNNER_TEMP/vercel-deploy-response.json")"
+          [[ "$deploy_job_id" =~ ^[A-Za-z0-9_-]+$ ]]
+          echo "job_id=$deploy_job_id" >> "$GITHUB_OUTPUT"
+
+      - name: Record the accepted deploy request
+        if: steps.claim.outputs.claimed == 'true' && steps.deploy.outcome == 'success'
+        shell: bash
+        env:
+          CLAIMED_EVENT_KEY: ${{ steps.claim.outputs.event_key }}
+          DEPLOY_JOB_ID: ${{ steps.deploy.outputs.job_id }}
+        run: |
+          set -euo pipefail
+          node -e '
+            const fs = require("node:fs")
+            fs.writeFileSync(process.argv[1], JSON.stringify({
+              eventKey: process.env.CLAIMED_EVENT_KEY,
+              claimId: process.env.CLAIM_ID,
+              state: "requested",
+              deployJobId: process.env.DEPLOY_JOB_ID,
+              workflowUrl: process.env.WORKFLOW_URL,
+            }))
+          ' "$RUNNER_TEMP/deploy-requested.json"
+
+          status_code="$(curl --silent --show-error --retry 2 --retry-all-errors \
+            --request POST \
+            --header "Authorization: Bearer $STATUS_SECRET" \
+            --header "Content-Type: application/json" \
+            --data-binary "@$RUNNER_TEMP/deploy-requested.json" \
+            --output "$RUNNER_TEMP/deploy-requested-response.json" \
+            --write-out '%{http_code}' \
+            "$STATUS_URL" || true)"
+          if [[ "$status_code" == "409" ]]; then
+            echo "A newer content event superseded this status update."
+            exit 0
+          fi
+          [[ "$status_code" == "200" ]]
+          node -e '
+            const fs = require("node:fs")
+            const response = JSON.parse(fs.readFileSync(process.argv[1], "utf8"))
+            if (response.updated !== true) process.exit(1)
+          ' "$RUNNER_TEMP/deploy-requested-response.json"
+
+      - name: Record a safe failure state
+        if: failure() && steps.claim.outputs.claimed == 'true'
+        shell: bash
+        env:
+          CLAIMED_EVENT_KEY: ${{ steps.claim.outputs.event_key }}
+        run: |
+          node -e '
+            const fs = require("node:fs")
+            fs.writeFileSync(process.argv[1], JSON.stringify({
+              eventKey: process.env.CLAIMED_EVENT_KEY,
+              claimId: process.env.CLAIM_ID,
+              state: "failed",
+              message: "The deploy-hook workflow failed. Inspect the linked GitHub run.",
+              workflowUrl: process.env.WORKFLOW_URL,
+            }))
+          ' "$RUNNER_TEMP/deploy-failed.json"
+
+          curl --silent --show-error --retry 2 --retry-all-errors \
+            --request POST \
+            --header "Authorization: Bearer $STATUS_SECRET" \
+            --header "Content-Type: application/json" \
+            --data-binary "@$RUNNER_TEMP/deploy-failed.json" \
+            --output /dev/null \
+            "$STATUS_URL" || true

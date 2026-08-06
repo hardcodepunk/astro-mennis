@@ -5,5 +5,15 @@ import {contactPage} from './contactPage'
 import {work} from './work'
 import {category} from './category'
 import {seo} from './seo'
+import {deploymentStatus} from './deploymentStatus'
 
-export const schemaTypes = [siteSettings, seo, logoMarquee, bioWithPreview, contactPage, work, category]
+export const schemaTypes = [
+  siteSettings,
+  seo,
+  logoMarquee,
+  bioWithPreview,
+  contactPage,
+  deploymentStatus,
+  work,
+  category,
+]

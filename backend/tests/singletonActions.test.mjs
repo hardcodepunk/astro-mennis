@@ -9,10 +9,15 @@ import {
 const singletonTypeNames = [
   'seo',
   'siteSettings',
+  'deploymentStatus',
   'bioWithPreview',
   'contactPage',
   'logoMarquee',
 ]
+
+const editorialSingletonTypeNames = singletonTypeNames.filter(
+  (schemaType) => schemaType !== 'deploymentStatus',
+)
 
 const expectedActionNames = ['publish', 'discardChanges', 'restore']
 
@@ -39,7 +44,7 @@ test('allows only the safe singleton document actions', () => {
   assert.deepEqual([...singletonActionNames], expectedActionNames)
 })
 
-for (const schemaType of singletonTypeNames) {
+for (const schemaType of editorialSingletonTypeNames) {
   test(`protects the ${schemaType} singleton`, () => {
     const resolver = createSingletonDocumentActionsResolver(new Set(singletonTypeNames))
     const actions = allDocumentActions()
@@ -55,6 +60,12 @@ for (const schemaType of singletonTypeNames) {
     assert.equal(resolved[2], actions[5])
   })
 }
+
+test('exposes no document actions for the automation-owned deployment status', () => {
+  const resolver = createSingletonDocumentActionsResolver(new Set(singletonTypeNames))
+
+  assert.deepEqual(resolver(allDocumentActions(), {schemaType: 'deploymentStatus'}), [])
+})
 
 test('leaves non-singleton document actions unchanged', () => {
   const resolver = createSingletonDocumentActionsResolver(new Set(singletonTypeNames))
