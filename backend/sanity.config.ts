@@ -3,6 +3,7 @@ import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {schemaTypes} from './schemaTypes'
 import {readSanityEnvironmentFromProcess} from './sanity.environment'
+import {createSingletonDocumentActionsResolver} from './singletonActions'
 import {productionUrlForDocument, singletonTypeNames, structure} from './structure'
 
 const environment = readSanityEnvironmentFromProcess()
@@ -23,6 +24,7 @@ export default defineConfig({
   },
 
   document: {
+    actions: createSingletonDocumentActionsResolver(singletonTypeNames),
     newDocumentOptions: (options) =>
       options.filter((option) => !singletonTypeNames.has(option.templateId)),
     productionUrl: async (_prev, context) => productionUrlForDocument(context.document),
