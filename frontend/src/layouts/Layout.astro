@@ -4,6 +4,7 @@ import "@fontsource/bebas-neue/400.css"
 import { ClientRouter } from "astro:transitions"
 import Header from "../components/Header.astro"
 import Footer from "../components/Footer.astro"
+import { serializeJsonLd } from "../lib/jsonLd"
 import { absoluteUrl, DEFAULT_DESCRIPTION, DEFAULT_SITE_URL, DEFAULT_TITLE, normalizeSiteUrl } from "../lib/seo"
 
 const transparentHeaderPaths = ["/", "/about"]
@@ -31,10 +32,6 @@ const baseUrl = normalizeSiteUrl(siteUrl)
 const canonicalUrl = absoluteUrl(canonical ?? canonicalPath ?? Astro.url.pathname, baseUrl)
 const socialImageUrl = absoluteUrl(image, baseUrl)
 const jsonLdItems = Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []
-
-function escapeJsonLd(value: unknown) {
-  return JSON.stringify(value).replaceAll("</script", "<\\/script")
-}
 ---
 
 <!doctype html>
@@ -85,7 +82,7 @@ function escapeJsonLd(value: unknown) {
     <meta name="theme-color" content="#f7f3fe" />
     <ClientRouter />
 
-    {jsonLdItems.map(item => <script is:inline type="application/ld+json" set:html={escapeJsonLd(item)} />)}
+    {jsonLdItems.map(item => <script is:inline type="application/ld+json" set:html={serializeJsonLd(item)} />)}
     <slot name="jsonLd" />
     <slot name="head" />
   </head>
