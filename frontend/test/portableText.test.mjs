@@ -5,7 +5,11 @@ import {
   portableTextToHtml,
   sanitizePortableTextHtml,
 } from "../src/lib/portableText.ts"
-import { validatePortableTextBody } from "../src/lib/sanity.contract.ts"
+import {
+  PORTABLE_TEXT_MAX_LIST_LEVEL,
+  PORTABLE_TEXT_MAX_MARKS_PER_SPAN,
+  validatePortableTextBody,
+} from "../src/lib/sanity.contract.ts"
 
 const sanityImageUrl = "https://cdn.sanity.io/images/454gxa26/production/example-1200x800.jpg"
 
@@ -66,6 +70,100 @@ test("validates and renders the supported Portable Text allowlist", () => {
   assert.deepEqual(body[1].hotspot, { x: 0.5, y: 0.5, width: 0.4, height: 0.4 })
   assert.match(html, /alt="Portrait &quot;detail&quot; &lt;test&gt;"/)
   assert.match(html, /Caption &lt;script&gt;alert\(1\)&lt;\/script&gt;/)
+})
+
+test("preserves every supported mark at Sanity's maximum list depth", () => {
+  const body = validatePortableTextBody(
+    Array.from({ length: PORTABLE_TEXT_MAX_LIST_LEVEL }, (_, index) => ({
+      _key: `block-${index + 1}`,
+      _type: "block",
+      style: index === PORTABLE_TEXT_MAX_LIST_LEVEL - 1 ? "h6" : "normal",
+      listItem: "bullet",
+      level: index + 1,
+      markDefs: index === PORTABLE_TEXT_MAX_LIST_LEVEL - 1
+        ? [{ _key: "link-1", _type: "link", href: "https://example.com/deep" }]
+        : [],
+      children: [{
+        _key: `span-${index + 1}`,
+        _type: "span",
+        text: index === PORTABLE_TEXT_MAX_LIST_LEVEL - 1 ? "Deep\nlink" : `Level ${index + 1}`,
+        marks: index === PORTABLE_TEXT_MAX_LIST_LEVEL - 1
+          ? ["strong", "em", "code", "underline", "strike-through", "link-1"]
+          : [],
+      }],
+    })),
+    "work.body",
+  )
+
+  const html = portableTextToHtml(body)
+
+  assert.equal((html.match(/<ul>/g) ?? []).length, PORTABLE_TEXT_MAX_LIST_LEVEL)
+  assert.equal((html.match(/<li>/g) ?? []).length, PORTABLE_TEXT_MAX_LIST_LEVEL)
+  assert.match(html, /<h6>/)
+  assert.match(html, /<strong>/)
+  assert.match(html, /<em>/)
+  assert.match(html, /<code>/)
+  assert.match(html, /<u>/)
+  assert.match(html, /<del>/)
+  assert.match(html, /href="https:\/\/example\.com\/deep"/)
+  assert.match(html, /<br\s*\/?>/)
+})
+
+test("rejects Portable Text structures that can exceed renderer nesting bounds", () => {
+  const tooDeep = [textBlock({ listItem: "bullet", level: PORTABLE_TEXT_MAX_LIST_LEVEL + 1 })]
+  const tooManyMarks = [
+    textBlock({
+      children: [{
+        _key: "span-1",
+        _type: "span",
+        text: "Too many marks",
+        marks: Array(PORTABLE_TEXT_MAX_MARKS_PER_SPAN + 1).fill("strong"),
+      }],
+    }),
+  ]
+  const duplicateMarks = [
+    textBlock({
+      children: [{ _key: "span-1", _type: "span", text: "Duplicate", marks: ["strong", "strong"] }],
+    }),
+  ]
+  const multipleAnnotations = [
+    textBlock({
+      markDefs: [
+        { _key: "link-1", _type: "link", href: "https://example.com/one" },
+        { _key: "link-2", _type: "link", href: "https://example.com/two" },
+      ],
+      children: [{ _key: "span-1", _type: "span", text: "Nested links", marks: ["link-1", "link-2"] }],
+    }),
+  ]
+
+  assert.throws(() => validatePortableTextBody(tooDeep, "work.body"), /safe integer from 1 to 10/)
+  assert.throws(() => validatePortableTextBody(tooManyMarks, "work.body"), /at most 6 marks/)
+  assert.throws(() => validatePortableTextBody(duplicateMarks, "work.body"), /duplicates mark "strong"/)
+  assert.throws(() => validatePortableTextBody(multipleAnnotations, "work.body"), /at most 1 annotation mark/)
+
+  const renderAtBoundary = value => portableTextToHtml(validatePortableTextBody(value, "work.body"))
+  const deepList = Array.from({ length: 1000 }, (_, index) =>
+    textBlock({ _key: `block-${index + 1}`, listItem: "bullet", level: index + 1 }))
+  const repeatedMarks = [
+    textBlock({
+      children: [{
+        _key: "span-1",
+        _type: "span",
+        text: "Repeated marks",
+        marks: Array(2000).fill("strong"),
+      }],
+    }),
+  ]
+
+  for (const invalidBody of [deepList, repeatedMarks]) {
+    assert.throws(
+      () => renderAtBoundary(invalidBody),
+      error => {
+        assert.equal(error.name, "SanityContractError")
+        return true
+      },
+    )
+  }
 })
 
 test("rejects and safely drops unknown top-level types", () => {

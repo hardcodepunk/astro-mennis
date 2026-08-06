@@ -146,6 +146,11 @@ type WorkMedia =
 const PORTABLE_TEXT_STYLES = new Set(["normal", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"])
 const PORTABLE_TEXT_LIST_ITEMS = new Set(["bullet", "number"])
 const PORTABLE_TEXT_DECORATORS = new Set(["strong", "em", "code", "underline", "strike-through"])
+const PORTABLE_TEXT_MAX_ANNOTATIONS_PER_SPAN = 1
+
+export const PORTABLE_TEXT_MAX_LIST_LEVEL = 10
+export const PORTABLE_TEXT_MAX_MARKS_PER_SPAN =
+  PORTABLE_TEXT_DECORATORS.size + PORTABLE_TEXT_MAX_ANNOTATIONS_PER_SPAN
 
 export type PortableTextLinkMark = {
   _key: string
@@ -450,7 +455,7 @@ function validatePortableTextBlock(obj: Record<string, unknown>, path: string): 
     : allowedString(obj.listItem, `${path}.listItem`, PORTABLE_TEXT_LIST_ITEMS)
   const level = obj.level === null || obj.level === undefined
     ? undefined
-    : positiveSafeInteger(obj.level, `${path}.level`)
+    : portableTextListLevel(obj.level, `${path}.level`)
   const children = arrayOf(obj.children, `${path}.children`, (child, childPath) =>
     validatePortableTextSpan(child, childPath, markDefKeys),
   )
@@ -471,15 +476,7 @@ function validatePortableTextSpan(value: unknown, path: string, markDefKeys: Set
   const type = requiredString(obj._type, `${path}._type`)
   if (type !== "span") throw contractError(`${path}._type`, '"span"', type)
 
-  const marks = obj.marks === null || obj.marks === undefined
-    ? []
-    : arrayOf(obj.marks, `${path}.marks`, (mark, markPath) => {
-        const name = requiredString(mark, markPath)
-        if (!PORTABLE_TEXT_DECORATORS.has(name) && !markDefKeys.has(name)) {
-          throw new SanityContractError(`${markPath} references an unknown mark; received ${JSON.stringify(name)}`)
-        }
-        return name
-      })
+  const marks = validatePortableTextMarks(obj.marks, `${path}.marks`, markDefKeys)
 
   return {
     _key: requiredString(obj._key, `${path}._key`),
@@ -487,6 +484,40 @@ function validatePortableTextSpan(value: unknown, path: string, markDefKeys: Set
     text: typeof obj.text === "string" ? obj.text : requiredString(obj.text, `${path}.text`),
     marks,
   }
+}
+
+function validatePortableTextMarks(value: unknown, path: string, markDefKeys: Set<string>): string[] {
+  if (value === null || value === undefined) return []
+  if (!Array.isArray(value)) throw contractError(path, "array", value)
+  if (value.length > PORTABLE_TEXT_MAX_MARKS_PER_SPAN) {
+    throw new SanityContractError(
+      `${path} must contain at most ${PORTABLE_TEXT_MAX_MARKS_PER_SPAN} marks; received ${value.length}`,
+    )
+  }
+
+  const seenMarks = new Set<string>()
+  let annotationCount = 0
+
+  return arrayOf(value, path, (mark, markPath) => {
+    const name = requiredString(mark, markPath)
+    if (seenMarks.has(name)) {
+      throw new SanityContractError(`${markPath} duplicates mark ${JSON.stringify(name)}`)
+    }
+
+    const isDecorator = PORTABLE_TEXT_DECORATORS.has(name)
+    const isAnnotation = markDefKeys.has(name)
+    if (!isDecorator && !isAnnotation) {
+      throw new SanityContractError(`${markPath} references an unknown mark; received ${JSON.stringify(name)}`)
+    }
+    if (isAnnotation && ++annotationCount > PORTABLE_TEXT_MAX_ANNOTATIONS_PER_SPAN) {
+      throw new SanityContractError(
+        `${path} must reference at most ${PORTABLE_TEXT_MAX_ANNOTATIONS_PER_SPAN} annotation mark`,
+      )
+    }
+
+    seenMarks.add(name)
+    return name
+  })
 }
 
 function validatePortableTextLinkMark(value: unknown, path: string): PortableTextLinkMark {
@@ -657,9 +688,16 @@ function positiveUnitNumber(value: unknown, path: string) {
   throw contractError(path, "number greater than 0 and at most 1", value)
 }
 
-function positiveSafeInteger(value: unknown, path: string) {
-  if (typeof value === "number" && Number.isSafeInteger(value) && value > 0) return value
-  throw contractError(path, "positive safe integer", value)
+function portableTextListLevel(value: unknown, path: string) {
+  if (
+    typeof value === "number"
+    && Number.isSafeInteger(value)
+    && value >= 1
+    && value <= PORTABLE_TEXT_MAX_LIST_LEVEL
+  ) {
+    return value
+  }
+  throw contractError(path, `safe integer from 1 to ${PORTABLE_TEXT_MAX_LIST_LEVEL}`, value)
 }
 
 function allowedString(value: unknown, path: string, allowed: Set<string>) {

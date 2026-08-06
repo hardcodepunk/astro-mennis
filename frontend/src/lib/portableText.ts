@@ -7,12 +7,18 @@ import {
 } from "@portabletext/to-html"
 import { sanityImageUrl } from "./media.ts"
 import {
+  PORTABLE_TEXT_MAX_LIST_LEVEL,
+  PORTABLE_TEXT_MAX_MARKS_PER_SPAN,
   isSafePortableTextHref,
   isSafeSanityImageUrl,
   type PortableTextBody,
   type PortableTextInlineImage,
   type PortableTextLinkMark,
 } from "./sanity.contract.ts"
+
+// Nested list pairs, one block-style wrapper, every supported mark, and one hard break.
+const PORTABLE_TEXT_MAX_HTML_NESTING =
+  PORTABLE_TEXT_MAX_LIST_LEVEL * 2 + PORTABLE_TEXT_MAX_MARKS_PER_SPAN + 2
 
 const renderInlineImage: PortableTextTypeComponent<PortableTextInlineImage> = ({ value }) => {
   const url = value?.asset?.url
@@ -99,7 +105,7 @@ const portableTextSanitizeOptions: sanitizeHtml.IOptions = {
     img: ["https"],
   },
   allowProtocolRelative: false,
-  nestingLimit: 20,
+  nestingLimit: PORTABLE_TEXT_MAX_HTML_NESTING,
   parseStyleAttributes: false,
   exclusiveFilter: frame => frame.tag === "img" && !isSafeSanityImageUrl(frame.attribs.src || ""),
 }
