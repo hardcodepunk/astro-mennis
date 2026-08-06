@@ -7,6 +7,7 @@ type Props = {
 
 const { sentences, mailSentence, email } = Astro.props as Props
 const firstSentence = sentences[0] ?? ""
+const accessibleSentences = sentences.map(sentence => sentence.trim()).filter(Boolean).join(" ")
 const mailHref = `mailto:${email}`
 ---
 
@@ -26,8 +27,11 @@ const mailHref = `mailto:${email}`
       </div>
     </div>
 
-    <div class="contact-page__headline" aria-live="polite">
-      <span data-contact-typewriter>{firstSentence}</span><span class="contact-page__cursor" aria-hidden="true">|</span>
+    <div class="contact-page__headline">
+      <span class="sr-only">{accessibleSentences || firstSentence}</span>
+      <span aria-hidden="true">
+        <span data-contact-typewriter>{firstSentence}</span><span class="contact-page__cursor">|</span>
+      </span>
     </div>
   </div>
 </section>
