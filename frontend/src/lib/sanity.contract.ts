@@ -1,3 +1,9 @@
+import {
+  isCloudinaryPosterUrl,
+  isCloudinaryVideoUrl,
+  parseYouTubeId,
+} from "@astro-mennis/media-contract"
+
 class SanityContractError extends Error {
   constructor(message: string) {
     super(message)
@@ -394,10 +400,22 @@ function validateDocumentSeo(value: unknown, path: string): DocumentSeo {
 
 function validatePreview(value: unknown, path: string): WorkItem["preview"] {
   const obj = objectAt(value, path)
+  const poster = requiredString(obj.poster, `${path}.poster`)
+  const webm = optionalString(obj.webm, `${path}.webm`)
+  const mp4 = optionalString(obj.mp4, `${path}.mp4`)
+  if (!isCloudinaryPosterUrl(poster)) {
+    throw new SanityContractError(`${path}.poster must be a Cloudinary image delivery URL`)
+  }
+  if (webm && !isCloudinaryVideoUrl(webm, "webm")) {
+    throw new SanityContractError(`${path}.webm must be a Cloudinary WEBM delivery URL`)
+  }
+  if (mp4 && !isCloudinaryVideoUrl(mp4, "mp4")) {
+    throw new SanityContractError(`${path}.mp4 must be a Cloudinary MP4 delivery URL`)
+  }
   return {
-    poster: requiredString(obj.poster, `${path}.poster`),
-    webm: optionalString(obj.webm, `${path}.webm`),
-    mp4: optionalString(obj.mp4, `${path}.mp4`),
+    poster,
+    webm,
+    mp4,
   }
 }
 
@@ -407,15 +425,28 @@ function validateWorkMedia(value: unknown, path: string): WorkMedia {
 
   if (mode === "preview") return { mode }
   if (mode === "single") {
+    const youtubeUrl = requiredString(obj.youtubeUrl, `${path}.youtubeUrl`)
+    if (!parseYouTubeId(youtubeUrl)) {
+      throw new SanityContractError(`${path}.youtubeUrl must be a supported YouTube URL`)
+    }
     return {
       mode,
-      youtubeUrl: optionalString(obj.youtubeUrl, `${path}.youtubeUrl`),
+      youtubeUrl,
     }
   }
   if (mode === "slider") {
+    const reels = optionalStringArray(obj.reels, `${path}.reels`) ?? []
+    if (reels.length < 1 || reels.length > 4) {
+      throw new SanityContractError(`${path}.reels must contain between 1 and 4 YouTube URLs`)
+    }
+    reels.forEach((url, index) => {
+      if (!parseYouTubeId(url)) {
+        throw new SanityContractError(`${path}.reels[${index}] must be a supported YouTube URL`)
+      }
+    })
     return {
       mode,
-      reels: optionalStringArray(obj.reels, `${path}.reels`),
+      reels,
     }
   }
 

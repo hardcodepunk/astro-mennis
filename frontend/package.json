@@ -17,6 +17,7 @@
     "check": "npm test && npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {
+    "@astro-mennis/media-contract": "file:../shared/media-contract",
     "@astrojs/sitemap": "^3.7.2",
     "@fontsource/bebas-neue": "^5.2.7",
     "@portabletext/to-html": "^5.0.1",

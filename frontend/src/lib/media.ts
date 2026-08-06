@@ -1,3 +1,8 @@
+import {
+  isImageDeliveryUrl,
+  parseYouTubeId,
+} from "@astro-mennis/media-contract"
+
 const CLOUDINARY_UPLOAD = "/upload/"
 
 type CloudinaryQuality = "auto" | "auto:eco"
@@ -15,7 +20,7 @@ type ImageDimensions = {
 
 export function cloudinaryImage(url: string | undefined, width: number, quality: CloudinaryQuality = "auto") {
   if (!url) return undefined
-  if (!isImageUrl(url)) return url
+  if (!isImageDeliveryUrl(url)) return url
   if (!url.includes("res.cloudinary.com") || !url.includes(CLOUDINARY_UPLOAD)) return url
 
   const markerIndex = url.indexOf(CLOUDINARY_UPLOAD)
@@ -31,14 +36,8 @@ export function cloudinaryImage(url: string | undefined, width: number, quality:
   return `${beforeUpload}${transforms.join(",")}/${assetPath}`
 }
 
-function isImageUrl(url: string | undefined) {
-  if (!url) return false
-  const cleanUrl = url.split("?")[0].toLowerCase()
-  return /\.(avif|gif|jpe?g|png|svg|webp)$/.test(cleanUrl)
-}
-
 export function safePosterUrl(url: string | undefined, fallback: string): string {
-  return url && isImageUrl(url) ? url : fallback
+  return url && isImageDeliveryUrl(url) ? url : fallback
 }
 
 function imageSrcset(url: string | undefined, widths: number[], quality: CloudinaryQuality = "auto") {
@@ -119,23 +118,7 @@ function clampUnit(value: number | undefined) {
 }
 
 export function youtubeId(input?: string | null) {
-  if (!input) return undefined
-  const s = String(input).trim()
-  if (!s) return undefined
-
-  const patterns = [
-    /(?:youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/,
-    /(?:youtu\.be\/)([A-Za-z0-9_-]{6,})/,
-    /[?&]v=([A-Za-z0-9_-]{6,})/,
-    /^([A-Za-z0-9_-]{6,})$/,
-  ]
-
-  for (const pattern of patterns) {
-    const match = s.match(pattern)
-    if (match?.[1]) return match[1]
-  }
-
-  return undefined
+  return parseYouTubeId(input)
 }
 
 export function youtubePoster(id: string | undefined, quality: "maxres" | "hq" = "maxres") {

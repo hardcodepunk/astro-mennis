@@ -1,4 +1,5 @@
 import type { Category, SeoSettings, WorkItem } from "./sanity.queries"
+import { parseYouTubeId } from "@astro-mennis/media-contract"
 
 export const DEFAULT_SITE_URL = "https://www.demennis.be"
 export const DEFAULT_TITLE = "De Mennis"
@@ -381,26 +382,6 @@ export function videoObjectJsonLd(params: {
 }
 
 function youtubeEmbedUrl(input?: string) {
-  const id = youtubeId(input)
+  const id = parseYouTubeId(input)
   return id ? `https://www.youtube.com/embed/${id}` : undefined
-}
-
-function youtubeId(input?: string) {
-  if (!input) return undefined
-  const s = input.trim()
-  if (!s) return undefined
-
-  const patterns = [
-    /(?:youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/,
-    /(?:youtu\.be\/)([A-Za-z0-9_-]{6,})/,
-    /[?&]v=([A-Za-z0-9_-]{6,})/,
-    /^([A-Za-z0-9_-]{6,})$/,
-  ]
-
-  for (const pattern of patterns) {
-    const match = s.match(pattern)
-    if (match?.[1]) return match[1]
-  }
-
-  return undefined
 }

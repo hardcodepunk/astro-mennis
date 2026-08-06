@@ -26,6 +26,7 @@
     "sanity"
   ],
   "dependencies": {
+    "@astro-mennis/media-contract": "file:../shared/media-contract",
     "@sanity/vision": "^5.26.0",
     "react": "^19.1",
     "react-dom": "^19.1",
