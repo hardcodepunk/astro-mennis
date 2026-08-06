@@ -12,6 +12,7 @@
     "dev": "astro dev",
     "prebuild": "npm run content:prepare",
     "build": "astro build",
+    "postbuild": "node scripts/verify-built-sitemap.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "test": "node --test",
@@ -21,7 +22,6 @@
   },
   "dependencies": {
     "@astro-mennis/media-contract": "file:../shared/media-contract",
-    "@astrojs/sitemap": "^3.7.3",
     "@fontsource/bebas-neue": "^5.2.7",
     "@portabletext/to-html": "^5.0.1",
     "@sanity/client": "^7.15.0",
