@@ -1,6 +1,13 @@
 import type {StructureResolver} from 'sanity/structure'
+import {readSanityEnvironmentFromProcess} from './sanity.environment'
 
-const singletonTypes = ['seo', 'siteSettings', 'bioWithPreview', 'contactPage', 'logoMarquee'] as const
+const singletonTypes = [
+  'seo',
+  'siteSettings',
+  'bioWithPreview',
+  'contactPage',
+  'logoMarquee',
+] as const
 
 export const singletonTypeNames = new Set<string>(singletonTypes)
 
@@ -20,7 +27,9 @@ export const structure: StructureResolver = (S) =>
         S.listItem()
           .id(type)
           .title(singletonTitles[type])
-          .child(S.document().id(type).schemaType(type).documentId(type).title(singletonTitles[type])),
+          .child(
+            S.document().id(type).schemaType(type).documentId(type).title(singletonTitles[type]),
+          ),
       ),
       S.divider(),
       ...S.documentTypeListItems().filter((item) => {
@@ -30,7 +39,7 @@ export const structure: StructureResolver = (S) =>
     ])
 
 export function productionUrlForDocument(document: {_type?: string; slug?: {current?: string}}) {
-  const siteUrl = (process.env.SANITY_STUDIO_SITE_URL || 'https://www.demennis.be').replace(/\/+$/, '')
+  const {siteUrl} = readSanityEnvironmentFromProcess()
 
   if (document._type === 'work' && document.slug?.current) {
     return `${siteUrl}/works/${document.slug.current}`
@@ -42,7 +51,11 @@ export function productionUrlForDocument(document: {_type?: string; slug?: {curr
 
   if (document._type === 'bioWithPreview') return `${siteUrl}/about`
   if (document._type === 'contactPage') return `${siteUrl}/contact`
-  if (document._type === 'seo' || document._type === 'siteSettings' || document._type === 'logoMarquee') {
+  if (
+    document._type === 'seo' ||
+    document._type === 'siteSettings' ||
+    document._type === 'logoMarquee'
+  ) {
     return siteUrl
   }
 
