@@ -30,6 +30,7 @@ const reelIds =
 const hasYouTube = Boolean(youtubeId)
 const hasSlider = reelIds.length > 0
 const hasSliderNav = reelIds.length > 1
+const singleMediaLabel = work.title?.trim() ? `video for ${work.title.trim()}` : "project video"
 
 function ytPoster(id: string) {
   return youtubePoster(id, "maxres")!
@@ -49,10 +50,13 @@ function ytPosterFallback(id: string) {
             class="plyr__video-embed yt-embed"
             data-yt-embed
             data-yt-ratio="16:9"
+            data-yt-title={singleMediaLabel}
             data-plyr-provider="youtube"
             data-plyr-embed-id={youtubeId}
+            inert
+            aria-hidden="true"
           />
-          <button class="yt-overlay" type="button" aria-label="Play video" data-yt-overlay>
+          <button class="yt-overlay" type="button" aria-label={`Play ${singleMediaLabel}`} data-yt-overlay>
             <img
               class="yt-overlay__img"
               alt=""
@@ -84,10 +88,18 @@ function ytPosterFallback(id: string) {
                   class="plyr__video-embed yt-embed"
                   data-yt-embed
                   data-yt-ratio="9:16"
+                  data-yt-title={`reel ${index + 1} of ${reelIds.length}`}
                   data-plyr-provider="youtube"
                   data-plyr-embed-id={id}
+                  inert
+                  aria-hidden="true"
                 />
-                <button class="yt-overlay" type="button" aria-label="Play reel" data-yt-overlay>
+                <button
+                  class="yt-overlay"
+                  type="button"
+                  aria-label={`Play reel ${index + 1} of ${reelIds.length}`}
+                  data-yt-overlay
+                >
                   <img
                     class="yt-overlay__img"
                     alt=""
@@ -217,6 +229,16 @@ function ytPosterFallback(id: string) {
     display: none;
   }
 
+  .yt-frame :global(.plyr[data-yt-player-locked]) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .yt-frame :global(.plyr[data-yt-player-unlocking] .plyr__control),
+  .yt-frame :global(.plyr[data-yt-player-unlocking] .plyr__controls) {
+    transition: none;
+  }
+
   .yt-overlay {
     position: absolute;
     inset: 0;
@@ -225,6 +247,10 @@ function ytPosterFallback(id: string) {
     background: transparent;
     cursor: pointer;
     z-index: 5;
+  }
+
+  .yt-overlay[hidden] {
+    display: none;
   }
 
   .yt-overlay__img {
@@ -257,10 +283,10 @@ function ytPosterFallback(id: string) {
     border-bottom: 12px solid transparent;
   }
 
-  .yt-frame.is-playing .yt-overlay {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 120ms ease;
+  .yt-frame :global(.plyr--video.plyr--hide-controls:focus-within .plyr__controls) {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 
   @media (min-width: 900px) {
