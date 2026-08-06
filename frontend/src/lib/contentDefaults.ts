@@ -77,12 +77,21 @@ export function resolveTextPanel(
   fallback: TextPanelDefaults,
   options: PanelOptions = {},
 ) {
+  if (!panel) {
+    return {
+      kicker: fallback.kicker,
+      title: fallback.title,
+      body: fallback.body,
+      mirrorLayout: fallback.mirrorLayout,
+    }
+  }
+
   const useFallbackOnBlankText = options.useFallbackOnBlankText ?? true
   return {
-    kicker: normalizeText(panel?.kicker, fallback.kicker, useFallbackOnBlankText),
-    title: normalizeText(panel?.title, fallback.title, useFallbackOnBlankText),
-    body: normalizeText(panel?.body, fallback.body, useFallbackOnBlankText),
-    mirrorLayout: panel?.mirrorLayout ?? fallback.mirrorLayout,
+    kicker: normalizeText(panel.kicker, fallback.kicker, useFallbackOnBlankText),
+    title: normalizeText(panel.title, fallback.title, useFallbackOnBlankText),
+    body: normalizeText(panel.body, fallback.body, useFallbackOnBlankText),
+    mirrorLayout: panel.mirrorLayout ?? fallback.mirrorLayout,
   }
 }
 
