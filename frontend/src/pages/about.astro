@@ -63,19 +63,18 @@ const jsonLd = breadcrumbJsonLd(
           <video
             class="about-page__hero-video"
             data-about-autoplay-video
-            autoplay
             muted
             loop
             playsinline
             webkit-playsinline
-            preload="auto"
+            preload="none"
             poster={optimizedHeroPoster}
             width="1920"
             height="1080"
             aria-hidden="true"
           >
-            {heroMp4 ? <source src={heroMp4} type="video/mp4" /> : null}
-            {heroWebm ? <source src={heroWebm} type="video/webm" /> : null}
+            {heroWebm ? <source data-src={heroWebm} type="video/webm" /> : null}
+            {heroMp4 ? <source data-src={heroMp4} type="video/mp4" /> : null}
           </video>
           <div class="about-page__hero-shade" aria-hidden="true"></div>
       <div class="about-page__hero-content">

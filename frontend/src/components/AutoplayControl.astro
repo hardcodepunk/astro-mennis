@@ -1,0 +1,43 @@
+<button
+  class="autoplay-control"
+  type="button"
+  data-autoplay-control
+  hidden
+>
+  <span data-autoplay-control-label>Play background videos</span>
+</button>
+
+<style>
+  .autoplay-control {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 80;
+    min-height: 2.75rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--color-brand-primary) 55%, transparent);
+    border-radius: 0;
+    background: color-mix(in srgb, var(--color-brand-secondary) 92%, transparent);
+    color: var(--color-brand-primary);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.2);
+  }
+
+  .autoplay-control:hover,
+  .autoplay-control:focus-visible {
+    background: var(--color-brand-secondary);
+  }
+
+  .autoplay-control:disabled {
+    cursor: not-allowed;
+    opacity: 0.78;
+  }
+
+  .autoplay-control[hidden] {
+    display: none;
+  }
+</style>

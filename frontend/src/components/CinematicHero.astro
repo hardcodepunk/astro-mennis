@@ -47,11 +47,11 @@ const posterAttrs = imageAttributes({
 
   <video
     class="vh-video"
-    autoplay
+    data-hero-autoplay-video
     muted
     playsinline
     webkit-playsinline
-    preload="auto"
+    preload="none"
     poster={posterAttrs.src}
     loop
     width="1920"
@@ -59,8 +59,8 @@ const posterAttrs = imageAttributes({
     disableRemotePlayback
     aria-hidden="true"
   >
-    {mp4 ? <source src={mp4} type="video/mp4" /> : null}
-    {webm ? <source src={webm} type="video/webm" /> : null}
+    {webm ? <source data-src={webm} type="video/webm" /> : null}
+    {mp4 ? <source data-src={mp4} type="video/mp4" /> : null}
   </video>
 
   <div class="vh-overlay" aria-hidden="true"></div>

@@ -4,6 +4,7 @@ import "@fontsource/bebas-neue/400.css"
 import { ClientRouter } from "astro:transitions"
 import Header from "../components/Header.astro"
 import Footer from "../components/Footer.astro"
+import AutoplayControl from "../components/AutoplayControl.astro"
 import { serializeJsonLd } from "../lib/jsonLd"
 import { absoluteUrl, DEFAULT_DESCRIPTION, DEFAULT_SITE_URL, DEFAULT_TITLE, normalizeSiteUrl } from "../lib/seo"
 
@@ -87,6 +88,7 @@ const jsonLdItems = Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []
   </head>
   <body class="min-h-screen flex flex-col">
     <Header transparentOnTop={hasTransparentHeader} transparentPaths={transparentHeaderPaths} />
+    <AutoplayControl />
 
     <main class="flex-1">
       <slot />
