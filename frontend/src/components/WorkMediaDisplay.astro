@@ -1,7 +1,7 @@
 ---
 import "plyr/dist/plyr.css"
 import VideoPreview from "./VideoPreview.astro"
-import { youtubeId as parseYouTubeId, youtubePoster } from "../lib/media"
+import { imageAttributes, youtubeId as parseYouTubeId } from "../lib/media"
 
 type WorkMedia = { mode: "preview" } | { mode: "single"; youtubeUrl?: string } | { mode: "slider"; reels?: string[] }
 
@@ -32,14 +32,16 @@ const hasSlider = reelIds.length > 0
 const hasSliderNav = reelIds.length > 1
 const singleMediaLabel = work.title?.trim() ? `video for ${work.title.trim()}` : "project video"
 const singleStatusId = youtubeId ? `work-media-status-${youtubeId}` : undefined
-
-function ytPoster(id: string) {
-  return youtubePoster(id, "maxres")!
-}
-
-function ytPosterFallback(id: string) {
-  return youtubePoster(id, "hq")!
-}
+const facadeSizes = hasSlider
+  ? "(max-width: 30rem) 86vw, 420px"
+  : "(max-width: 72rem) calc(100vw - 2rem), 72rem"
+const facadePoster = imageAttributes({
+  src: work.preview.poster,
+  widths: [320, 480, 720, 1024, 1280],
+  fallbackWidth: hasSlider ? 720 : 1280,
+  sizes: facadeSizes,
+})
+const facadePosterSrc = facadePoster.src ?? work.preview.poster
 ---
 
 <div data-work-hero>
@@ -60,7 +62,7 @@ function ytPosterFallback(id: string) {
           <button
             class="yt-overlay"
             type="button"
-            aria-label={`Play ${singleMediaLabel}`}
+            aria-label={`Play ${singleMediaLabel} on YouTube`}
             aria-describedby={singleStatusId}
             data-yt-overlay
           >
@@ -72,10 +74,12 @@ function ytPosterFallback(id: string) {
               fetchpriority="high"
               width="1280"
               height="720"
-              src={ytPoster(youtubeId!)}
-              onerror={`this.onerror=null;this.src='${ytPosterFallback(youtubeId!)}'`}
+              src={facadePosterSrc}
+              srcset={facadePoster.srcset}
+              sizes={facadePoster.sizes}
             />
             <span class="yt-overlay__play" aria-hidden="true" />
+            <span class="yt-overlay__provider" aria-hidden="true">Play on YouTube</span>
           </button>
           <div class="yt-feedback">
             <p
@@ -129,7 +133,7 @@ function ytPosterFallback(id: string) {
                   <button
                     class="yt-overlay"
                     type="button"
-                    aria-label={`Play ${mediaLabel}`}
+                    aria-label={`Play ${mediaLabel} on YouTube`}
                     aria-describedby={statusId}
                     data-yt-overlay
                   >
@@ -141,10 +145,12 @@ function ytPosterFallback(id: string) {
                       fetchpriority={index === 0 ? "high" : undefined}
                       width="720"
                       height="1280"
-                      src={ytPoster(id)}
-                      onerror={`this.onerror=null;this.src='${ytPosterFallback(id)}'`}
+                      src={facadePosterSrc}
+                      srcset={facadePoster.srcset}
+                      sizes={facadePoster.sizes}
                     />
                     <span class="yt-overlay__play" aria-hidden="true" />
+                    <span class="yt-overlay__provider" aria-hidden="true">Play on YouTube</span>
                   </button>
                   <div class="yt-feedback">
                     <p
@@ -397,6 +403,20 @@ function ytPosterFallback(id: string) {
     border: 2px solid rgba(255, 255, 255, 0.92);
     cursor: pointer;
     font: inherit;
+  }
+
+  .yt-overlay__provider {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(0.75rem, 3vw, 1.5rem);
+    transform: translateX(-50%);
+    padding: 0.45rem 0.65rem;
+    background: color-mix(in srgb, var(--color-brand-secondary) 88%, transparent);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
   }
 
   .yt-frame :global(.plyr--video.plyr--hide-controls:focus-within .plyr__controls) {

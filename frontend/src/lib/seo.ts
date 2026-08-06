@@ -383,5 +383,5 @@ export function videoObjectJsonLd(params: {
 
 function youtubeEmbedUrl(input?: string) {
   const id = parseYouTubeId(input)
-  return id ? `https://www.youtube.com/embed/${id}` : undefined
+  return id ? `https://www.youtube-nocookie.com/embed/${id}` : undefined
 }

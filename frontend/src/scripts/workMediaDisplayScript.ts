@@ -64,11 +64,22 @@ export type WorkMediaRuntime = {
 const activeCleanups = new Set<() => void>()
 const youtubeApiUrl = "https://www.youtube.com/iframe_api"
 const playerReadyTimeoutMs = 15_000
+const youtubeNoCookieOrigin = "https://www.youtube-nocookie.com"
 const failedYouTubeApiScripts = new WeakSet<HTMLScriptElement>()
 let youtubeApiPromise: Promise<void> | undefined
 
 function hasYouTubeApi(youtubeWindow: YouTubeWindow) {
   return typeof youtubeWindow.YT?.Player === "function"
+}
+
+function ensureYouTubeNoCookiePreconnect() {
+  if (document.querySelector(`link[rel="preconnect"][href="${youtubeNoCookieOrigin}"]`)) return
+
+  const link = document.createElement("link")
+  link.rel = "preconnect"
+  link.href = youtubeNoCookieOrigin
+  link.dataset.workMediaYoutubePreconnect = "1"
+  document.head.append(link)
 }
 
 function ensureYouTubeApi() {
@@ -482,6 +493,8 @@ export function initWorkMediaRoot(
         youtube: {
           rel: 0,
           modestbranding: 1,
+          noCookie: true,
+          widget_referrer: window.location.origin,
         },
       } as Plyr.Options)
       session.player = player
@@ -782,6 +795,7 @@ export function initWorkMediaRoot(
         return
       }
 
+      ensureYouTubeNoCookiePreconnect()
       void runtime
         .loadYouTubeApi()
         .then(() => {
