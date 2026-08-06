@@ -1,4 +1,6 @@
 const MAX_AUTOPLAY_ATTEMPTS = 6
+const MAX_THUMBNAIL_PLAYERS = 2
+const THUMBNAIL_PLAY_THRESHOLD = 0.25
 
 let didInitAutoplayScripts = false
 
@@ -23,6 +25,10 @@ function makeAutoplayController(
 ) {
   let startRequested = false
   let retryScheduled = false
+  let requestGeneration = 0
+  let playPendingGeneration: number | undefined
+  let retryCleanup: (() => void) | undefined
+  let didMarkPlaying = false
   let attempts = 0
 
   const {
@@ -33,33 +39,51 @@ function makeAutoplayController(
     resetOnStop = false,
   } = callbacks
 
-  const markPlaying = () => {
-    attempts = 0
+  const clearRetry = () => {
+    const cleanup = retryCleanup
+    retryCleanup = undefined
     retryScheduled = false
-    onPlay?.()
+    cleanup?.()
   }
 
-  const scheduleRetry = () => {
+  const markPlaying = () => {
     if (!startRequested) return
-    if (attempts >= maxAttempts) return
+    attempts = 0
+    playPendingGeneration = undefined
+    clearRetry()
+    if (!didMarkPlaying) {
+      didMarkPlaying = true
+      onPlay?.()
+    }
+  }
 
-    attempts += 1
+  const scheduleRetry = (generation: number) => {
+    if (!startRequested || generation !== requestGeneration) return
+    if (attempts >= maxAttempts) return
     if (retryScheduled) return
 
+    attempts += 1
     retryScheduled = true
     const delay = video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ? 180 : 600
     const retry = () => {
-      retryScheduled = false
-      tryStart()
+      clearRetry()
+      if (!startRequested || generation !== requestGeneration) return
+      tryStart(generation)
+    }
+    const timer = window.setTimeout(retry, delay)
+
+    retryCleanup = () => {
+      window.clearTimeout(timer)
+      video.removeEventListener("loadeddata", retry)
+      video.removeEventListener("canplay", retry)
     }
 
-    video.addEventListener("loadeddata", retry, { once: true })
-    video.addEventListener("canplay", retry, { once: true })
-    window.setTimeout(retry, delay)
+    video.addEventListener("loadeddata", retry)
+    video.addEventListener("canplay", retry)
   }
 
-  const tryStart = () => {
-    if (!startRequested) return
+  const tryStart = (generation: number) => {
+    if (!startRequested || generation !== requestGeneration) return
     if (!document.body.contains(video)) return
 
     hydrate?.()
@@ -70,7 +94,16 @@ function makeAutoplayController(
       return
     }
 
-    video.play().then(markPlaying).catch(scheduleRetry)
+    if (playPendingGeneration === generation) return
+    playPendingGeneration = generation
+    video.play().then(() => {
+      if (playPendingGeneration === generation) playPendingGeneration = undefined
+      if (!startRequested || generation !== requestGeneration) return
+      markPlaying()
+    }).catch(() => {
+      if (playPendingGeneration === generation) playPendingGeneration = undefined
+      scheduleRetry(generation)
+    })
   }
 
   video.addEventListener("playing", markPlaying)
@@ -79,19 +112,26 @@ function makeAutoplayController(
   return {
     start() {
       if (startRequested) {
-        tryStart()
+        tryStart(requestGeneration)
         return
       }
 
       startRequested = true
-      tryStart()
-      window.setTimeout(tryStart, 120)
+      requestGeneration += 1
+      didMarkPlaying = false
+      attempts = 0
+      const generation = requestGeneration
+      tryStart(generation)
+      window.setTimeout(() => tryStart(generation), 120)
     },
 
     stop() {
       startRequested = false
-      retryScheduled = false
+      requestGeneration += 1
+      playPendingGeneration = undefined
+      didMarkPlaying = false
       attempts = 0
+      clearRetry()
       if (!video.paused) video.pause()
       if (resetOnStop) {
         try {
@@ -104,8 +144,13 @@ function makeAutoplayController(
     },
 
     startNow() {
-      if (!startRequested) startRequested = true
-      tryStart()
+      if (!startRequested) {
+        startRequested = true
+        requestGeneration += 1
+        didMarkPlaying = false
+        attempts = 0
+      }
+      tryStart(requestGeneration)
     },
   }
 }
@@ -138,23 +183,30 @@ function attachHeroSources(video: HTMLVideoElement) {
 }
 
 function hydrateVideoSources(video: HTMLVideoElement) {
-  const sources = Array.from(video.querySelectorAll("source[data-src]")) as HTMLSourceElement[]
+  const sources = Array.from(video.querySelectorAll("source[data-src]:not([src])")) as HTMLSourceElement[]
   if (!sources.length) return
 
   sources.forEach(source => {
     const src = source.getAttribute("data-src")
     if (!src) return
     source.src = src
-    source.removeAttribute("data-src")
   })
 
+  video.load()
+}
+
+function unloadVideoSources(video: HTMLVideoElement) {
+  const sources = Array.from(video.querySelectorAll("source[data-src][src]")) as HTMLSourceElement[]
+  if (!sources.length) return
+
+  sources.forEach(source => source.removeAttribute("src"))
   video.load()
 }
 
 const heroControllers = new WeakMap<HTMLElement, ReturnType<typeof makeAutoplayController>>()
 const aboutControllers = new WeakMap<HTMLVideoElement, ReturnType<typeof makeAutoplayController>>()
 const previewControllers = new WeakMap<HTMLVideoElement, ReturnType<typeof makeAutoplayController>>()
-const thumbnailControllers = new WeakMap<HTMLElement, ReturnType<typeof makeAutoplayController> & { autoplay: boolean }>()
+const thumbnailControllers = new WeakMap<HTMLElement, ReturnType<typeof makeAutoplayController>>()
 
 function bindResumeListeners(start: () => void) {
   const abort = new AbortController()
@@ -273,67 +325,262 @@ function bootPreviewVideos() {
   })
 }
 
-function bootThumbnailVideos() {
-  if (!isMotionAllowed()) return
+type ThumbnailState = {
+  item: HTMLElement
+  container: HTMLElement
+  video: HTMLVideoElement
+  controller: ReturnType<typeof makeAutoplayController>
+  autoplay: boolean
+  index: number
+  nearViewport: boolean
+  proximityDistance: number
+  visibleRatio: number
+  interacting: boolean
+}
 
-  const items = document.querySelectorAll<HTMLElement>("[data-thumbnail-card]")
+type NetworkInformationLike = EventTarget & { saveData?: boolean }
+
+type ThumbnailSession = {
+  root: HTMLElement
+  cleanup: () => void
+  reconcile: () => void
+  isCleaned: () => boolean
+}
+
+let thumbnailSession: ThumbnailSession | undefined
+
+function getNetworkInformation() {
+  return (navigator as Navigator & { connection?: NetworkInformationLike }).connection
+}
+
+function bootThumbnailVideos() {
+  const items = Array.from(document.querySelectorAll<HTMLElement>("[data-thumbnail-card]"))
+  if (!items.length) {
+    thumbnailSession?.cleanup()
+    thumbnailSession = undefined
+    return
+  }
+
+  if (thumbnailSession?.root === items[0] && !thumbnailSession.isCleaned()) {
+    thumbnailSession.reconcile()
+    return
+  }
+
+  thumbnailSession?.cleanup()
+
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)")
   const desktopViewport = window.matchMedia("(min-width: 768px)")
+  const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)")
+  const connection = getNetworkInformation()
 
-  items.forEach(item => {
-    const container = item.querySelector<HTMLElement>('[data-thumbnail-video]')
-    if (!container) return
+  const states = items.flatMap((item, index): ThumbnailState[] => {
+    const container = item.querySelector<HTMLElement>("[data-thumbnail-video]")
+    const video = container?.querySelector<HTMLVideoElement>("video")
+    if (!container || !video) return []
 
-    const video = container.querySelector<HTMLVideoElement>("video")
-    if (!video) return
-
-    const shouldAutoplay = container.dataset.autoplay === "true"
     const existing = thumbnailControllers.get(item)
-
     const controller = existing ?? makeAutoplayController(video, {
       maxAttempts: 8,
       resetOnStop: true,
-      hydrate: () => {
-        hydrateVideoSources(video)
-      },
-      onPlay: () => {
-        container.classList.add("is-playing")
-      },
-      onStop: () => {
-        container.classList.remove("is-playing")
-      },
+      hydrate: () => hydrateVideoSources(video),
+      onPlay: () => container.classList.add("is-playing"),
+      onStop: () => container.classList.remove("is-playing"),
     })
+    if (!existing) thumbnailControllers.set(item, controller)
 
-    if (!existing) {
-      thumbnailControllers.set(item, Object.assign(controller, {autoplay: shouldAutoplay}))
-
-      if (shouldAutoplay) {
-        video.preload = "metadata"
-        controller.start()
-        bindResumeListeners(controller.start)
-      } else {
-        const shouldBindHover = finePointer.matches && desktopViewport.matches
-        if (!shouldBindHover) return
-
-        item.addEventListener("pointerenter", () => {
-          controller.start()
-        })
-        item.addEventListener("pointerleave", () => {
-          controller.stop()
-        })
-        item.addEventListener("focusin", () => {
-          controller.start()
-        })
-        item.addEventListener("focusout", () => {
-          controller.stop()
-        })
-      }
-    }
-
-    if (existing?.autoplay) {
-      controller.start()
-    }
+    return [{
+      item,
+      container,
+      video,
+      controller,
+      autoplay: container.dataset.autoplay === "true",
+      index,
+      nearViewport: false,
+      proximityDistance: Number.POSITIVE_INFINITY,
+      visibleRatio: 0,
+      interacting: false,
+    }]
   })
+
+  let proximityObserver: IntersectionObserver | undefined
+  let visibilityObserver: IntersectionObserver | undefined
+  let cleaned = false
+  const listenerCleanups: Array<() => void> = []
+
+  const listen = (
+    target: EventTarget,
+    type: string,
+    listener: EventListener,
+    options?: AddEventListenerOptions,
+  ) => {
+    target.addEventListener(type, listener, options)
+    listenerCleanups.push(() => target.removeEventListener(type, listener, options))
+  }
+
+  const mediaAllowed = () => !motionPreference.matches && connection?.saveData !== true
+
+  const isWithinLoadMargin = (state: ThumbnailState) => {
+    if (state.nearViewport) return true
+    const rect = state.item.getBoundingClientRect()
+    const margin = window.innerHeight * 0.5
+    return rect.bottom >= -margin && rect.top <= window.innerHeight + margin
+  }
+
+  const stopState = (state: ThumbnailState, unload: boolean) => {
+    state.video.autoplay = false
+    state.controller.stop()
+    if (!unload) return
+    state.video.preload = "none"
+    unloadVideoSources(state.video)
+  }
+
+  const startState = (state: ThumbnailState) => {
+    prepareVideo(state.video)
+    state.video.autoplay = true
+    state.video.preload = "metadata"
+    hydrateVideoSources(state.video)
+    state.controller.start()
+  }
+
+  const reconcile = () => {
+    if (cleaned) return
+
+    if (!mediaAllowed() || document.hidden) {
+      states.forEach(state => stopState(state, true))
+      return
+    }
+
+    const playing = new Set(
+      states
+        .filter(state =>
+          isWithinLoadMargin(state) &&
+          (state.interacting || (state.autoplay && state.visibleRatio >= THUMBNAIL_PLAY_THRESHOLD)),
+        )
+        .sort((left, right) =>
+          Number(right.interacting) - Number(left.interacting) ||
+          right.visibleRatio - left.visibleRatio ||
+          left.index - right.index,
+        )
+        .slice(0, MAX_THUMBNAIL_PLAYERS),
+    )
+
+    const hydrated = new Set(playing)
+    if (hydrated.size < MAX_THUMBNAIL_PLAYERS) {
+      states
+        .filter(state => state.autoplay && state.nearViewport && !hydrated.has(state))
+        .sort((left, right) =>
+          left.proximityDistance - right.proximityDistance || left.index - right.index,
+        )
+        .slice(0, MAX_THUMBNAIL_PLAYERS - hydrated.size)
+        .forEach(state => hydrated.add(state))
+    }
+
+    states.forEach(state => {
+      if (playing.has(state)) {
+        startState(state)
+      } else {
+        stopState(state, !hydrated.has(state))
+        if (hydrated.has(state)) {
+          state.video.preload = "metadata"
+          hydrateVideoSources(state.video)
+        }
+      }
+    })
+  }
+
+  const cleanup = () => {
+    if (cleaned) return
+    cleaned = true
+    proximityObserver?.disconnect()
+    visibilityObserver?.disconnect()
+    listenerCleanups.splice(0).forEach(removeListener => removeListener())
+    states.forEach(state => stopState(state, true))
+  }
+
+  thumbnailSession = {
+    root: items[0],
+    cleanup,
+    reconcile,
+    isCleaned: () => cleaned,
+  }
+
+  listen(document, "astro:before-swap", cleanup, { once: true })
+
+  if (!("IntersectionObserver" in window)) {
+    states.forEach(state => stopState(state, true))
+    return
+  }
+
+  const stateByItem = new Map(states.map(state => [state.item, state]))
+  proximityObserver = new IntersectionObserver(
+    entries => {
+      if (cleaned) return
+      entries.forEach(entry => {
+        const state = stateByItem.get(entry.target as HTMLElement)
+        if (!state) return
+        state.nearViewport = entry.isIntersecting
+        const rect = entry.boundingClientRect
+        state.proximityDistance = rect.bottom < 0
+          ? -rect.bottom
+          : rect.top > window.innerHeight
+            ? rect.top - window.innerHeight
+            : 0
+        if (!entry.isIntersecting) state.interacting = false
+      })
+      reconcile()
+    },
+    { rootMargin: "50% 0px" },
+  )
+  visibilityObserver = new IntersectionObserver(
+    entries => {
+      if (cleaned) return
+      entries.forEach(entry => {
+        const state = stateByItem.get(entry.target as HTMLElement)
+        if (!state) return
+        state.visibleRatio = entry.isIntersecting ? entry.intersectionRatio : 0
+      })
+      reconcile()
+    },
+    { threshold: [0, THUMBNAIL_PLAY_THRESHOLD, 0.6, 1] },
+  )
+
+  states.forEach(state => {
+    proximityObserver?.observe(state.item)
+    visibilityObserver?.observe(state.item)
+
+    const beginInteraction = () => {
+      if (!finePointer.matches || !desktopViewport.matches) return
+      if (!isWithinLoadMargin(state)) return
+      state.interacting = true
+      reconcile()
+    }
+    const endInteraction = () => {
+      state.interacting = false
+      reconcile()
+    }
+
+    listen(state.item, "pointerenter", beginInteraction)
+    listen(state.item, "pointerleave", endInteraction)
+    listen(state.item, "focusin", beginInteraction)
+    listen(state.item, "focusout", endInteraction)
+  })
+
+  const reconcileAfterInputChange = () => {
+    if (!finePointer.matches || !desktopViewport.matches) {
+      states.forEach(state => {
+        state.interacting = false
+      })
+    }
+    reconcile()
+  }
+
+  listen(window, "pageshow", reconcile)
+  listen(window, "focus", reconcile)
+  listen(document, "visibilitychange", reconcile)
+  listen(finePointer, "change", reconcileAfterInputChange)
+  listen(desktopViewport, "change", reconcileAfterInputChange)
+  listen(motionPreference, "change", reconcile)
+  if (connection) listen(connection, "change", reconcile)
 }
 
 function bootAllAutoplay() {
@@ -353,7 +600,6 @@ function initAutoplay() {
     bootAllAutoplay()
   }
 
-  document.addEventListener("astro:page-load", bootAllAutoplay)
   document.addEventListener("astro:after-swap", bootAllAutoplay)
 }
 
