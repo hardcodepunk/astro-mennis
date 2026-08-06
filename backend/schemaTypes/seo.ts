@@ -289,7 +289,7 @@ export const seo = defineType({
       type: 'text',
       rows: 3,
       initialValue:
-        'Explore %category% video projects by De Mennis, a videographer and editor based in Gent, Belgium.',
+        'Explore De Mennis projects in %category%, created by a videographer and editor based in Gent, Belgium.',
       group: 'templates',
       validation: (r) => r.required().max(170),
     }),
@@ -305,11 +305,12 @@ export const seo = defineType({
     defineField({
       name: 'workDescriptionTemplate',
       title: 'Work description template',
-      description: 'Available tokens: %title%, %client%, %category%, %year%.',
+      description:
+        'Available tokens: %title%, %client%, %clientClause%, %category%, %categoryClause%, %year%. Clause tokens include their own connecting words and disappear when the value is blank.',
       type: 'text',
       rows: 3,
       initialValue:
-        '%title% is a %category% video project for %client% by De Mennis, a videographer and editor in Gent, Belgium.',
+        'Explore %title%%categoryClause%%clientClause%, a project by De Mennis, a videographer and editor in Gent, Belgium.',
       group: 'templates',
       validation: (r) => r.required().max(170),
     }),

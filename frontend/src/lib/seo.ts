@@ -10,6 +10,14 @@ const DEFAULT_BASE_CITY = "Gent"
 const DEFAULT_BASE_COUNTRY = "Belgium"
 const DEFAULT_SAME_AS = ["https://www.instagram.com/demennis_/"]
 const DEFAULT_KNOWS_ABOUT = ["Videography", "Video editing", "Brand films", "Music videos", "Event video"]
+const LEGACY_CATEGORY_DESCRIPTION_TEMPLATE =
+  "Explore %category% video projects by De Mennis, a videographer and editor based in Gent, Belgium."
+const DEFAULT_CATEGORY_DESCRIPTION_TEMPLATE =
+  "Explore De Mennis projects in %category%, created by a videographer and editor based in Gent, Belgium."
+const LEGACY_WORK_DESCRIPTION_TEMPLATE =
+  "%title% is a %category% video project for %client% by De Mennis, a videographer and editor in Gent, Belgium."
+const DEFAULT_WORK_DESCRIPTION_TEMPLATE =
+  "Explore %title%%categoryClause%%clientClause%, a project by De Mennis, a videographer and editor in Gent, Belgium."
 
 export function normalizeSiteUrl(siteUrl?: string) {
   return (siteUrl || DEFAULT_SITE_URL).replace(/\/+$/, "")
@@ -86,7 +94,14 @@ function replaceSeoTokens(template: string | undefined, tokens: Record<string, s
   return Object.entries(tokens).reduce(
     (value, [token, replacement]) => value.replaceAll(`%${token}%`, replacement || ""),
     template,
-  )
+  ).replace(/\s+/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim()
+}
+
+function meaningfulSeoValue(value: string | undefined) {
+  const normalized = value?.trim()
+  if (!normalized) return undefined
+  if (/^(?:[-–—]+|n\/?a|none|null|unknown|not applicable)$/i.test(normalized)) return undefined
+  return normalized
 }
 
 export function categorySeoTitle(seo: SeoSettings | null | undefined, categoryTitle: string, titleOverride?: string) {
@@ -106,11 +121,13 @@ export function categorySeoDescription(
 ) {
   if (descriptionOverride) return metaDescription(seo, descriptionOverride)
 
-  const description = replaceSeoTokens(
-    seo?.categoryDescriptionTemplate ||
-      "Explore %category% video projects by De Mennis, a videographer and editor based in Gent, Belgium.",
-    { category: categoryTitle },
-  )
+  const configuredTemplate = seo?.categoryDescriptionTemplate?.trim()
+  const template = !configuredTemplate || configuredTemplate === LEGACY_CATEGORY_DESCRIPTION_TEMPLATE
+    ? DEFAULT_CATEGORY_DESCRIPTION_TEMPLATE
+    : configuredTemplate
+  const description = replaceSeoTokens(template, {
+    category: meaningfulSeoValue(categoryTitle) || "creative video",
+  })
   return metaDescription(seo, description)
 }
 
@@ -129,16 +146,20 @@ export function workSeoTitle(seo: SeoSettings | null | undefined, work: WorkItem
 export function workSeoDescription(seo: SeoSettings | null | undefined, work: WorkItem) {
   if (work.seo?.description) return metaDescription(seo, work.seo.description)
 
-  const description = replaceSeoTokens(
-    seo?.workDescriptionTemplate ||
-      "%title% is a %category% video project for %client% by De Mennis, a videographer and editor in Gent, Belgium.",
-    {
-      title: work.title,
-      client: work.client,
-      category: work.category,
-      year: work.year,
-    },
-  )
+  const client = meaningfulSeoValue(work.client)
+  const category = meaningfulSeoValue(work.category)
+  const configuredTemplate = seo?.workDescriptionTemplate?.trim()
+  const template = !configuredTemplate || configuredTemplate === LEGACY_WORK_DESCRIPTION_TEMPLATE
+    ? DEFAULT_WORK_DESCRIPTION_TEMPLATE
+    : configuredTemplate
+  const description = replaceSeoTokens(template, {
+    title: meaningfulSeoValue(work.title) || "this project",
+    client,
+    clientClause: client ? ` for ${client}` : "",
+    category,
+    categoryClause: category ? ` in the ${category} category` : "",
+    year: meaningfulSeoValue(work.year),
+  })
   return metaDescription(seo, description)
 }
 
