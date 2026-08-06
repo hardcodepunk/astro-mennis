@@ -4,8 +4,8 @@ Astro portfolio frontend with a Sanity Studio backend.
 
 ## Project Structure
 
-- `frontend`: Astro 6 static site.
-- `backend`: Sanity Studio 5 content backend.
+- `frontend`: Astro 7 static site.
+- `backend`: Sanity Studio 6 content backend.
 
 Both apps target Node 24 and npm 11. The repo includes `.node-version` for local runtime selection.
 

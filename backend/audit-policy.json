@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "exceptions": [
+    {
+      "advisoryIds": [1112714, 1121859, 1123912],
+      "package": "js-yaml",
+      "nodes": ["node_modules/@vercel/frameworks/node_modules/js-yaml"],
+      "maxSeverity": "high",
+      "expiresOn": "2026-09-06",
+      "reason": "Pinned by @vercel/frameworks 3.29.0 in @sanity/cli 7.18.0; npm's proposed @sanity/cli 5.14.1 replacement is an unsafe downgrade."
+    },
+    {
+      "advisoryIds": [1115393],
+      "package": "smol-toml",
+      "nodes": ["node_modules/@vercel/frameworks/node_modules/smol-toml"],
+      "maxSeverity": "moderate",
+      "expiresOn": "2026-09-06",
+      "reason": "Pinned by @vercel/frameworks 3.29.0 in @sanity/cli 7.18.0; await an upstream Sanity CLI dependency refresh."
+    },
+    {
+      "advisoryIds": [1130715, 1130718, 1130726, 1130729, 1130731],
+      "package": "undici",
+      "nodes": ["node_modules/@module-federation/dts-plugin/node_modules/undici"],
+      "maxSeverity": "high",
+      "expiresOn": "2026-09-06",
+      "reason": "Pinned by the @sanity/workbench-cli 1.10.0 module-federation toolchain; the affected dependency is isolated to Studio build tooling."
+    },
+    {
+      "advisoryIds": [1119441],
+      "package": "uuid",
+      "nodes": ["node_modules/typeid-js/node_modules/uuid"],
+      "maxSeverity": "moderate",
+      "expiresOn": "2026-09-06",
+      "reason": "typeid-js 1.2.0 in @sanity/cli 7.18.0 still constrains uuid to major 10; await an upstream major-range update."
+    }
+  ]
+}
