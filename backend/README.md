@@ -16,8 +16,30 @@ npm run dev
 - `npm run build`: build Studio.
 - `npm run lint`: run ESLint.
 - `npm run typecheck`: run TypeScript.
-- `npm run check`: run lint, typecheck, and build.
-- `npm run deploy`: deploy Studio to Sanity.
+- `npm test`: run deployment safety tests.
+- `npm run check`: run lint, typecheck, deployment safety tests, and build.
+
+## Deployments
+
+Deployments must go through an explicit guarded command:
+
+- `npm run deploy:staging`: deploy the Studio configured by `.env.staging`.
+- `npm run deploy:production`: deploy the approved production Studio.
+- `npm run deploy-graphql:staging`: deploy GraphQL to the staging content target.
+- `npm run deploy-graphql:production`: deploy GraphQL to the approved production content target.
+
+Copy `.env.staging.example` to `.env.staging` and replace every placeholder before the first
+staging deployment. Copy `.env.production.example` to `.env.production` before a production
+deployment. Deployment values must be present explicitly even though normal local Studio builds
+retain the checked production defaults.
+
+The wrapper validates the project, dataset, hosted Studio application, and preview URL before it
+starts the Sanity CLI. A staging command is rejected if it resolves to a production target. A
+production command prints the resolved target and requires typing `production` before continuing.
+For non-interactive production CI, set `SANITY_DEPLOY_CONFIRM=production` explicitly.
+
+Direct `sanity deploy` and `sanity graphql deploy` calls are blocked by `sanity.cli.ts` so their
+target cannot silently fall back to production.
 
 ## Content Model Notes
 

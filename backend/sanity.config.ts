@@ -2,20 +2,24 @@ import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {schemaTypes} from './schemaTypes'
+import {readSanityEnvironmentFromProcess} from './sanity.environment'
 import {productionUrlForDocument, singletonTypeNames, structure} from './structure'
+
+const environment = readSanityEnvironmentFromProcess()
 
 export default defineConfig({
   name: 'default',
   title: 'Mennis',
 
-  projectId: process.env.SANITY_STUDIO_PROJECT_ID || '454gxa26',
-  dataset: process.env.SANITY_STUDIO_DATASET || 'production',
+  projectId: environment.projectId,
+  dataset: environment.dataset,
 
   plugins: [structureTool({structure}), visionTool()],
 
   schema: {
     types: schemaTypes,
-    templates: (templates) => templates.filter((template) => !singletonTypeNames.has(template.schemaType)),
+    templates: (templates) =>
+      templates.filter((template) => !singletonTypeNames.has(template.schemaType)),
   },
 
   document: {
