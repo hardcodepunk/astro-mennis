@@ -16,9 +16,10 @@ import {
   type PortableTextLinkMark,
 } from "./sanity.contract.ts"
 
-// Nested list pairs, one block-style wrapper, every supported mark, and one hard break.
+// Each list level can add a list, list item, and block-style wrapper, followed by
+// every supported mark and one hard break at the deepest level.
 const PORTABLE_TEXT_MAX_HTML_NESTING =
-  PORTABLE_TEXT_MAX_LIST_LEVEL * 2 + PORTABLE_TEXT_MAX_MARKS_PER_SPAN + 2
+  PORTABLE_TEXT_MAX_LIST_LEVEL * 3 + PORTABLE_TEXT_MAX_MARKS_PER_SPAN + 1
 
 const renderInlineImage: PortableTextTypeComponent<PortableTextInlineImage> = ({ value }) => {
   const url = value?.asset?.url

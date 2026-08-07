@@ -77,7 +77,7 @@ test("preserves every supported mark at Sanity's maximum list depth", () => {
     Array.from({ length: PORTABLE_TEXT_MAX_LIST_LEVEL }, (_, index) => ({
       _key: `block-${index + 1}`,
       _type: "block",
-      style: index === PORTABLE_TEXT_MAX_LIST_LEVEL - 1 ? "h6" : "normal",
+      style: "h6",
       listItem: "bullet",
       level: index + 1,
       markDefs: index === PORTABLE_TEXT_MAX_LIST_LEVEL - 1
@@ -99,14 +99,14 @@ test("preserves every supported mark at Sanity's maximum list depth", () => {
 
   assert.equal((html.match(/<ul>/g) ?? []).length, PORTABLE_TEXT_MAX_LIST_LEVEL)
   assert.equal((html.match(/<li>/g) ?? []).length, PORTABLE_TEXT_MAX_LIST_LEVEL)
-  assert.match(html, /<h6>/)
+  assert.equal((html.match(/<h6>/g) ?? []).length, PORTABLE_TEXT_MAX_LIST_LEVEL)
   assert.match(html, /<strong>/)
   assert.match(html, /<em>/)
   assert.match(html, /<code>/)
   assert.match(html, /<u>/)
   assert.match(html, /<del>/)
   assert.match(html, /href="https:\/\/example\.com\/deep"/)
-  assert.match(html, /<br\s*\/?>/)
+  assert.match(html, /<del>Deep<br\s*\/?>link<\/del>/)
 })
 
 test("rejects Portable Text structures that can exceed renderer nesting bounds", () => {
