@@ -143,6 +143,68 @@ type WorkMedia =
   | { mode: "single"; youtubeUrl?: string }
   | { mode: "slider"; reels?: string[] }
 
+const PORTABLE_TEXT_STYLES = new Set(["normal", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"])
+const PORTABLE_TEXT_LIST_ITEMS = new Set(["bullet", "number"])
+const PORTABLE_TEXT_DECORATORS = new Set(["strong", "em", "code", "underline", "strike-through"])
+const PORTABLE_TEXT_MAX_ANNOTATIONS_PER_SPAN = 1
+
+export const PORTABLE_TEXT_MAX_LIST_LEVEL = 10
+export const PORTABLE_TEXT_MAX_MARKS_PER_SPAN =
+  PORTABLE_TEXT_DECORATORS.size + PORTABLE_TEXT_MAX_ANNOTATIONS_PER_SPAN
+
+export type PortableTextLinkMark = {
+  _key: string
+  _type: "link"
+  href?: string
+}
+
+export type PortableTextSpan = {
+  _key: string
+  _type: "span"
+  text: string
+  marks: string[]
+}
+
+export type PortableTextBlock = {
+  _key: string
+  _type: "block"
+  style: "normal" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote"
+  children: PortableTextSpan[]
+  markDefs: PortableTextLinkMark[]
+  listItem?: "bullet" | "number"
+  level?: number
+}
+
+export type PortableTextInlineImage = {
+  _key: string
+  _type: "inlineImage"
+  alt: string
+  caption?: string
+  crop?: {
+    top: number
+    bottom: number
+    left: number
+    right: number
+  }
+  hotspot?: {
+    x: number
+    y: number
+    width: number
+    height: number
+  }
+  asset: {
+    url: string
+    metadata?: {
+      dimensions?: {
+        width: number
+        height: number
+      }
+    }
+  }
+}
+
+export type PortableTextBody = Array<PortableTextBlock | PortableTextInlineImage>
+
 export type WorkItem = {
   slug: string
   title: string
@@ -155,7 +217,7 @@ export type WorkItem = {
   publishedAt?: string
   updatedAt?: string
   overviewTitle?: string
-  body?: unknown
+  body?: PortableTextBody
   media?: WorkMedia
   featuredOnHome?: boolean
   featuredOrder?: number
@@ -286,7 +348,7 @@ export function validateWorkItem(value: unknown, path: string): WorkItem {
     publishedAt: optionalString(obj.publishedAt, `${path}.publishedAt`),
     updatedAt: optionalString(obj.updatedAt, `${path}.updatedAt`),
     overviewTitle: optionalString(obj.overviewTitle, `${path}.overviewTitle`),
-    body: obj.body === null || obj.body === undefined ? undefined : obj.body,
+    body: obj.body === null || obj.body === undefined ? undefined : validatePortableTextBody(obj.body, `${path}.body`),
     media: optionalObject(obj.media, `${path}.media`, validateWorkMedia),
     featuredOnHome: optionalBoolean(obj.featuredOnHome, `${path}.featuredOnHome`),
     featuredOrder: optionalNumber(obj.featuredOrder, `${path}.featuredOrder`),
@@ -360,6 +422,192 @@ function validateWorkMedia(value: unknown, path: string): WorkMedia {
   throw new SanityContractError(`${path}.mode expected "preview", "single", or "slider"; received ${formatValue(mode)}`)
 }
 
+export function validatePortableTextBody(value: unknown, path: string): PortableTextBody {
+  return arrayOf(value, path, (item, itemPath) => {
+    const obj = objectAt(item, itemPath)
+    const type = requiredString(obj._type, `${itemPath}._type`)
+
+    if (type === "block") return validatePortableTextBlock(obj, itemPath)
+    if (type === "inlineImage") return validatePortableTextInlineImage(obj, itemPath)
+
+    throw contractError(`${itemPath}._type`, '"block" or "inlineImage"', type)
+  })
+}
+
+function validatePortableTextBlock(obj: Record<string, unknown>, path: string): PortableTextBlock {
+  const markDefs = obj.markDefs === null || obj.markDefs === undefined
+    ? []
+    : arrayOf(obj.markDefs, `${path}.markDefs`, validatePortableTextLinkMark)
+  const markDefKeys = new Set<string>()
+
+  markDefs.forEach((markDef, index) => {
+    if (markDefKeys.has(markDef._key)) {
+      throw new SanityContractError(`${path}.markDefs[${index}]._key must be unique; received ${JSON.stringify(markDef._key)}`)
+    }
+    markDefKeys.add(markDef._key)
+  })
+
+  const style = obj.style === null || obj.style === undefined
+    ? "normal"
+    : allowedString(obj.style, `${path}.style`, PORTABLE_TEXT_STYLES)
+  const listItem = obj.listItem === null || obj.listItem === undefined
+    ? undefined
+    : allowedString(obj.listItem, `${path}.listItem`, PORTABLE_TEXT_LIST_ITEMS)
+  const level = obj.level === null || obj.level === undefined
+    ? undefined
+    : portableTextListLevel(obj.level, `${path}.level`)
+  const children = arrayOf(obj.children, `${path}.children`, (child, childPath) =>
+    validatePortableTextSpan(child, childPath, markDefKeys),
+  )
+
+  return {
+    _key: requiredString(obj._key, `${path}._key`),
+    _type: "block",
+    style: style as PortableTextBlock["style"],
+    children,
+    markDefs,
+    ...(listItem ? { listItem: listItem as PortableTextBlock["listItem"] } : {}),
+    ...(listItem && level ? { level } : {}),
+  }
+}
+
+function validatePortableTextSpan(value: unknown, path: string, markDefKeys: Set<string>): PortableTextSpan {
+  const obj = objectAt(value, path)
+  const type = requiredString(obj._type, `${path}._type`)
+  if (type !== "span") throw contractError(`${path}._type`, '"span"', type)
+
+  const marks = validatePortableTextMarks(obj.marks, `${path}.marks`, markDefKeys)
+
+  return {
+    _key: requiredString(obj._key, `${path}._key`),
+    _type: "span",
+    text: typeof obj.text === "string" ? obj.text : requiredString(obj.text, `${path}.text`),
+    marks,
+  }
+}
+
+function validatePortableTextMarks(value: unknown, path: string, markDefKeys: Set<string>): string[] {
+  if (value === null || value === undefined) return []
+  if (!Array.isArray(value)) throw contractError(path, "array", value)
+  if (value.length > PORTABLE_TEXT_MAX_MARKS_PER_SPAN) {
+    throw new SanityContractError(
+      `${path} must contain at most ${PORTABLE_TEXT_MAX_MARKS_PER_SPAN} marks; received ${value.length}`,
+    )
+  }
+
+  const seenMarks = new Set<string>()
+  let annotationCount = 0
+
+  return arrayOf(value, path, (mark, markPath) => {
+    const name = requiredString(mark, markPath)
+    if (seenMarks.has(name)) {
+      throw new SanityContractError(`${markPath} duplicates mark ${JSON.stringify(name)}`)
+    }
+
+    const isDecorator = PORTABLE_TEXT_DECORATORS.has(name)
+    const isAnnotation = markDefKeys.has(name)
+    if (!isDecorator && !isAnnotation) {
+      throw new SanityContractError(`${markPath} references an unknown mark; received ${JSON.stringify(name)}`)
+    }
+    if (isAnnotation && ++annotationCount > PORTABLE_TEXT_MAX_ANNOTATIONS_PER_SPAN) {
+      throw new SanityContractError(
+        `${path} must reference at most ${PORTABLE_TEXT_MAX_ANNOTATIONS_PER_SPAN} annotation mark`,
+      )
+    }
+
+    seenMarks.add(name)
+    return name
+  })
+}
+
+function validatePortableTextLinkMark(value: unknown, path: string): PortableTextLinkMark {
+  const obj = objectAt(value, path)
+  const type = requiredString(obj._type, `${path}._type`)
+  if (type !== "link") throw contractError(`${path}._type`, '"link"', type)
+
+  const rawHref = optionalString(obj.href, `${path}.href`)?.trim()
+  const href = rawHref && isSafePortableTextHref(rawHref) ? rawHref : undefined
+
+  return {
+    _key: requiredString(obj._key, `${path}._key`),
+    _type: "link",
+    ...(href ? { href } : {}),
+  }
+}
+
+function validatePortableTextInlineImage(value: Record<string, unknown>, path: string): PortableTextInlineImage {
+  const asset = objectAt(value.asset, `${path}.asset`)
+  const url = requiredString(asset.url, `${path}.asset.url`).trim()
+  if (!isSafeSanityImageUrl(url)) {
+    throw new SanityContractError(`${path}.asset.url must be an HTTPS Sanity image URL`)
+  }
+
+  const metadata = optionalObject(asset.metadata, `${path}.asset.metadata`, metadataValue => {
+    const dimensions = optionalObject(
+      metadataValue.dimensions,
+      `${path}.asset.metadata.dimensions`,
+      dimensionsValue => ({
+        width: positiveFiniteNumber(dimensionsValue.width, `${path}.asset.metadata.dimensions.width`),
+        height: positiveFiniteNumber(dimensionsValue.height, `${path}.asset.metadata.dimensions.height`),
+      }),
+    )
+    return dimensions ? { dimensions } : {}
+  })
+  const crop = optionalObject(value.crop, `${path}.crop`, cropValue => {
+    const result = {
+      top: unitNumber(cropValue.top, `${path}.crop.top`),
+      bottom: unitNumber(cropValue.bottom, `${path}.crop.bottom`),
+      left: unitNumber(cropValue.left, `${path}.crop.left`),
+      right: unitNumber(cropValue.right, `${path}.crop.right`),
+    }
+    if (result.top + result.bottom >= 1 || result.left + result.right >= 1) {
+      throw new SanityContractError(`${path}.crop must leave a visible image area`)
+    }
+    return result
+  })
+  const hotspot = optionalObject(value.hotspot, `${path}.hotspot`, hotspotValue => ({
+    x: unitNumber(hotspotValue.x, `${path}.hotspot.x`),
+    y: unitNumber(hotspotValue.y, `${path}.hotspot.y`),
+    width: positiveUnitNumber(hotspotValue.width, `${path}.hotspot.width`),
+    height: positiveUnitNumber(hotspotValue.height, `${path}.hotspot.height`),
+  }))
+
+  return {
+    _key: requiredString(value._key, `${path}._key`),
+    _type: "inlineImage",
+    alt: requiredString(value.alt, `${path}.alt`),
+    caption: optionalString(value.caption, `${path}.caption`),
+    ...(crop ? { crop } : {}),
+    ...(hotspot ? { hotspot } : {}),
+    asset: {
+      url,
+      ...(metadata ? { metadata } : {}),
+    },
+  }
+}
+
+export function isSafePortableTextHref(value: string): boolean {
+  const href = value.trim()
+  if (!href || /[\u0000-\u001f\u007f]/.test(href) || href.startsWith("//")) return false
+
+  try {
+    const url = new URL(href, "https://relative.invalid/")
+    if (url.origin === "https://relative.invalid") return true
+    return ["http:", "https:", "mailto:", "tel:"].includes(url.protocol)
+  } catch {
+    return false
+  }
+}
+
+export function isSafeSanityImageUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return url.protocol === "https:" && url.hostname === "cdn.sanity.io" && url.pathname.startsWith("/images/")
+  } catch {
+    return false
+  }
+}
+
 function optionalMediaUrls(value: unknown, path: string) {
   return optionalObject(value, path, obj => ({
     mp4: optionalString(obj.mp4, `${path}.mp4`),
@@ -423,6 +671,39 @@ function optionalNumber(value: unknown, path: string) {
   if (value === null || value === undefined) return undefined
   if (typeof value === "number" && Number.isFinite(value)) return value
   throw contractError(path, "finite number", value)
+}
+
+function positiveFiniteNumber(value: unknown, path: string) {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) return value
+  throw contractError(path, "positive finite number", value)
+}
+
+function unitNumber(value: unknown, path: string) {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1) return value
+  throw contractError(path, "number from 0 to 1", value)
+}
+
+function positiveUnitNumber(value: unknown, path: string) {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0 && value <= 1) return value
+  throw contractError(path, "number greater than 0 and at most 1", value)
+}
+
+function portableTextListLevel(value: unknown, path: string) {
+  if (
+    typeof value === "number"
+    && Number.isSafeInteger(value)
+    && value >= 1
+    && value <= PORTABLE_TEXT_MAX_LIST_LEVEL
+  ) {
+    return value
+  }
+  throw contractError(path, `safe integer from 1 to ${PORTABLE_TEXT_MAX_LIST_LEVEL}`, value)
+}
+
+function allowedString(value: unknown, path: string, allowed: Set<string>) {
+  const result = requiredString(value, path)
+  if (allowed.has(result)) return result
+  throw new SanityContractError(`${path} expected one of ${Array.from(allowed).join(", ")}; received ${JSON.stringify(result)}`)
 }
 
 function optionalBoolean(value: unknown, path: string) {
