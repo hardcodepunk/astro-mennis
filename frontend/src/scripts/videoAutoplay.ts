@@ -22,6 +22,7 @@ function makeAutoplayController(
   video: HTMLVideoElement,
   callbacks: {
     hydrate?: () => void
+    onExhausted?: () => void
     onPlay?: () => void
     onStop?: () => void
     maxAttempts?: number
@@ -38,6 +39,7 @@ function makeAutoplayController(
 
   const {
     hydrate,
+    onExhausted,
     onPlay,
     onStop,
     maxAttempts = MAX_AUTOPLAY_ATTEMPTS,
@@ -64,7 +66,10 @@ function makeAutoplayController(
 
   const scheduleRetry = (generation: number) => {
     if (!startRequested || generation !== requestGeneration) return
-    if (attempts >= maxAttempts) return
+    if (attempts >= maxAttempts) {
+      onExhausted?.()
+      return
+    }
     if (retryScheduled) return
 
     attempts += 1
@@ -354,6 +359,7 @@ type NetworkInformationLike = EventTarget & { saveData?: boolean }
 type ThumbnailSession = {
   root: HTMLElement
   cleanup: () => void
+  handlePlayExhaustion: (item: HTMLElement) => void
   reconcile: () => void
   isCleaned: () => boolean
 }
@@ -402,6 +408,7 @@ function bootThumbnailVideos() {
       maxAttempts: 8,
       resetOnStop: true,
       hydrate: () => hydrateVideoSources(video),
+      onExhausted: () => thumbnailSession?.handlePlayExhaustion(item),
       onPlay: () => container.classList.add("is-playing"),
       onStop: () => container.classList.remove("is-playing"),
     })
@@ -570,14 +577,15 @@ function bootThumbnailVideos() {
     }
 
     states.forEach(state => {
+      if (!playing.has(state)) stopState(state, !hydrated.has(state))
+    })
+
+    states.forEach(state => {
       if (playing.has(state)) {
         startState(state)
-      } else {
-        stopState(state, !hydrated.has(state))
-        if (hydrated.has(state)) {
-          state.video.preload = "metadata"
-          hydrateVideoSources(state.video)
-        }
+      } else if (hydrated.has(state)) {
+        state.video.preload = "metadata"
+        hydrateVideoSources(state.video)
       }
     })
   }
@@ -609,7 +617,14 @@ function bootThumbnailVideos() {
       .forEach(state => state.controller.start())
   }
 
-  const recoverFailedStates = () => {
+  const recoverUnavailableStates = () => {
+    states
+      .filter(state => state.unavailable)
+      .forEach(clearSourceFailures)
+    resumeActiveStates()
+  }
+
+  const recoverAllFailedStates = () => {
     states.forEach(clearSourceFailures)
     resumeActiveStates()
   }
@@ -641,9 +656,21 @@ function bootThumbnailVideos() {
     states.forEach(state => stopState(state, true))
   }
 
+  const handlePlayExhaustion = (item: HTMLElement) => {
+    if (cleaned) return
+    const state = stateByItem.get(item)
+    if (!state) return
+
+    state.unavailable = true
+    state.playRequested = false
+    state.controller.stop()
+    reconcile()
+  }
+
   thumbnailSession = {
     root: items[0],
     cleanup,
+    handlePlayExhaustion,
     reconcile,
     isCleaned: () => cleaned,
   }
@@ -737,16 +764,16 @@ function bootThumbnailVideos() {
   })
 
   rebuildProximityObserver()
-  listen(window, "pageshow", recoverFailedStates)
-  listen(window, "focus", recoverFailedStates)
-  listen(window, "online", recoverFailedStates)
+  listen(window, "pageshow", recoverUnavailableStates)
+  listen(window, "focus", recoverUnavailableStates)
+  listen(window, "online", recoverAllFailedStates)
   listen(window, "scroll", scheduleReconcile, { passive: true })
   listen(window, "resize", scheduleProximityObserverRebuild, { passive: true })
   listen(document, "visibilitychange", reconcile)
   listen(finePointer, "change", reconcile)
   listen(desktopViewport, "change", reconcile)
   listen(motionPreference, "change", reconcile)
-  if (connection) listen(connection, "change", recoverFailedStates)
+  if (connection) listen(connection, "change", recoverAllFailedStates)
 }
 
 function bootAllAutoplay() {
