@@ -16,7 +16,8 @@ const {
 }
 
 const Heading = headingTag
-const shouldAutoplay = Boolean(work.thumbnailAutoplay && (work.preview.webm || work.preview.mp4))
+const hasPreviewVideo = Boolean(work.preview.webm || work.preview.mp4)
+const shouldAutoplay = Boolean(work.thumbnailAutoplay && hasPreviewVideo)
 const isPrimary = variant === "featuredPrimary"
 const isSecondary = variant === "featuredSecondary"
 const imageSize = isPrimary
@@ -60,31 +61,22 @@ const poster = imageAttributes({
       loading="lazy"
       decoding="async"
     />
-    <video
-      class="work-card-vid"
-      autoplay={shouldAutoplay}
-      muted
-      loop
-      playsinline
-      webkit-playsinline
-      preload={shouldAutoplay ? "auto" : "none"}
-      aria-hidden="true"
-    >
-      {work.preview.mp4 ? (
-        <source
-          src={shouldAutoplay ? work.preview.mp4 : undefined}
-          data-src={shouldAutoplay ? undefined : work.preview.mp4}
-          type="video/mp4"
-        />
-      ) : null}
-      {work.preview.webm ? (
-        <source
-          src={shouldAutoplay ? work.preview.webm : undefined}
-          data-src={shouldAutoplay ? undefined : work.preview.webm}
-          type="video/webm"
-        />
-      ) : null}
-    </video>
+    {hasPreviewVideo ? (
+      <video
+        class="work-card-vid"
+        muted
+        loop
+        playsinline
+        webkit-playsinline
+        preload="none"
+        aria-hidden="true"
+      >
+        {work.preview.webm ? (
+          <source data-src={work.preview.webm} type="video/webm" />
+        ) : null}
+        {work.preview.mp4 ? <source data-src={work.preview.mp4} type="video/mp4" /> : null}
+      </video>
+    ) : null}
   </div>
 
   <div class="work-card-overlay">
