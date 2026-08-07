@@ -1,5 +1,7 @@
 const MAX_AUTOPLAY_ATTEMPTS = 6
 const MAX_THUMBNAIL_PLAYERS = 2
+const AUTOPLAY_PLAY_START_TIMEOUT_MS = 12_000
+const THUMBNAIL_PLAY_START_TIMEOUT_MS = 8_000
 const THUMBNAIL_PLAY_THRESHOLD = 0.25
 const THUMBNAIL_LOAD_MARGIN_RATIO = 0.5
 const THUMBNAIL_VISIBILITY_THRESHOLDS = Array.from(
@@ -18,7 +20,24 @@ function prepareVideo(video: HTMLVideoElement) {
   video.setAttribute("webkit-playsinline", "")
 }
 
-function makeAutoplayController(
+function supportsPointerEvents() {
+  return typeof window.PointerEvent === "function"
+}
+
+function isActivationKey(event: KeyboardEvent) {
+  return event.key !== "Escape" &&
+    !event.isComposing &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey
+}
+
+function isTrustedActivation(event: Event) {
+  return event.isTrusted &&
+    (event.type !== "keydown" || isActivationKey(event as KeyboardEvent))
+}
+
+export function makeAutoplayController(
   video: HTMLVideoElement,
   callbacks: {
     hydrate?: () => void
@@ -26,13 +45,17 @@ function makeAutoplayController(
     onPlay?: () => void
     onStop?: () => void
     maxAttempts?: number
+    playStartTimeoutMs?: number
     resetOnStop?: boolean
   } = {},
 ) {
   let startRequested = false
   let retryScheduled = false
   let requestGeneration = 0
-  let playPendingGeneration: number | undefined
+  let pendingPlayAttempt: {
+    generation: number
+    cleanup: () => void
+  } | undefined
   let retryCleanup: (() => void) | undefined
   let didMarkPlaying = false
   let attempts = 0
@@ -43,6 +66,7 @@ function makeAutoplayController(
     onPlay,
     onStop,
     maxAttempts = MAX_AUTOPLAY_ATTEMPTS,
+    playStartTimeoutMs = AUTOPLAY_PLAY_START_TIMEOUT_MS,
     resetOnStop = false,
   } = callbacks
 
@@ -53,10 +77,19 @@ function makeAutoplayController(
     cleanup?.()
   }
 
+  const clearPendingPlay = (
+    attempt = pendingPlayAttempt,
+  ) => {
+    if (!attempt || pendingPlayAttempt !== attempt) return false
+    pendingPlayAttempt = undefined
+    attempt.cleanup()
+    return true
+  }
+
   const markPlaying = () => {
     if (!startRequested) return
     attempts = 0
-    playPendingGeneration = undefined
+    clearPendingPlay()
     clearRetry()
     if (!didMarkPlaying) {
       didMarkPlaying = true
@@ -92,6 +125,67 @@ function makeAutoplayController(
     video.addEventListener("canplay", retry)
   }
 
+  const beginPendingPlay = (generation: number) => {
+    const attempt = {
+      generation,
+      cleanup: () => {},
+    }
+    pendingPlayAttempt = attempt
+
+    if (!playStartTimeoutMs || playStartTimeoutMs <= 0) return attempt
+
+    let remainingMs = playStartTimeoutMs
+    let startedAt: number | undefined
+    let timer: number | undefined
+
+    const pauseTimer = () => {
+      if (timer === undefined) return
+      window.clearTimeout(timer)
+      timer = undefined
+      if (startedAt !== undefined) {
+        remainingMs = Math.max(0, remainingMs - (Date.now() - startedAt))
+        startedAt = undefined
+      }
+    }
+
+    const expire = () => {
+      timer = undefined
+      startedAt = undefined
+      if (pendingPlayAttempt !== attempt || document.hidden) return
+      clearPendingPlay(attempt)
+      if (!startRequested || generation !== requestGeneration) return
+      if (!video.paused) video.pause()
+      if (onExhausted) {
+        onExhausted()
+      } else {
+        scheduleRetry(generation)
+      }
+    }
+
+    const armTimer = () => {
+      if (pendingPlayAttempt !== attempt || document.hidden || timer !== undefined) return
+      startedAt = Date.now()
+      timer = window.setTimeout(expire, remainingMs)
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        pauseTimer()
+      } else {
+        armTimer()
+      }
+    }
+
+    attempt.cleanup = () => {
+      pauseTimer()
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    armTimer()
+    return attempt
+  }
+
   const tryStart = (generation: number) => {
     if (!startRequested || generation !== requestGeneration) return
     if (!document.body.contains(video)) return
@@ -99,25 +193,23 @@ function makeAutoplayController(
     hydrate?.()
     prepareVideo(video)
 
+    if (pendingPlayAttempt?.generation === generation) return
+
     if (!video.paused && !video.ended) {
       markPlaying()
       return
     }
 
-    if (playPendingGeneration === generation) return
-    playPendingGeneration = generation
+    const attempt = beginPendingPlay(generation)
     video.play().then(() => {
-      if (playPendingGeneration === generation) playPendingGeneration = undefined
+      if (!clearPendingPlay(attempt)) return
       if (!startRequested || generation !== requestGeneration) return
       markPlaying()
     }).catch(() => {
-      if (playPendingGeneration === generation) playPendingGeneration = undefined
+      if (!clearPendingPlay(attempt)) return
       scheduleRetry(generation)
     })
   }
-
-  video.addEventListener("playing", markPlaying)
-  video.addEventListener("play", markPlaying)
 
   return {
     start() {
@@ -138,9 +230,9 @@ function makeAutoplayController(
     stop() {
       startRequested = false
       requestGeneration += 1
-      playPendingGeneration = undefined
       didMarkPlaying = false
       attempts = 0
+      clearPendingPlay()
       clearRetry()
       if (!video.paused) video.pause()
       if (resetOnStop) {
@@ -220,21 +312,37 @@ const aboutControllers = new WeakMap<HTMLVideoElement, ReturnType<typeof makeAut
 const previewControllers = new WeakMap<HTMLVideoElement, ReturnType<typeof makeAutoplayController>>()
 const thumbnailControllers = new WeakMap<HTMLElement, ReturnType<typeof makeAutoplayController>>()
 
-function bindResumeListeners(start: () => void) {
+function bindResumeListeners(start: () => void, stop: () => void) {
   const abort = new AbortController()
   const startWhenVisible = () => {
     if (document.hidden) return
     start()
   }
+  const startFromTrustedActivation = (event: Event) => {
+    if (isTrustedActivation(event)) startWhenVisible()
+  }
 
   window.addEventListener("pageshow", startWhenVisible, { signal: abort.signal })
   window.addEventListener("focus", startWhenVisible, { signal: abort.signal })
   window.addEventListener("load", startWhenVisible, { signal: abort.signal })
-  window.addEventListener("pointerdown", startWhenVisible, { passive: true, signal: abort.signal })
-  window.addEventListener("touchstart", startWhenVisible, { passive: true, signal: abort.signal })
-  window.addEventListener("keydown", startWhenVisible, { signal: abort.signal })
+  if (supportsPointerEvents()) {
+    window.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse") startFromTrustedActivation(event)
+    }, { passive: true, signal: abort.signal })
+    window.addEventListener("pointerup", event => {
+      if (event.pointerType !== "mouse") startFromTrustedActivation(event)
+    }, { passive: true, signal: abort.signal })
+  } else {
+    window.addEventListener("mousedown", startFromTrustedActivation, { passive: true, signal: abort.signal })
+    window.addEventListener("touchend", startFromTrustedActivation, { passive: true, signal: abort.signal })
+  }
+  window.addEventListener("click", startFromTrustedActivation, { passive: true, signal: abort.signal })
+  window.addEventListener("keydown", startFromTrustedActivation, { signal: abort.signal })
   document.addEventListener("visibilitychange", startWhenVisible, { signal: abort.signal })
-  document.addEventListener("astro:before-swap", () => abort.abort(), { once: true, signal: abort.signal })
+  document.addEventListener("astro:before-swap", () => {
+    stop()
+    abort.abort()
+  }, { once: true, signal: abort.signal })
 }
 
 function isMotionAllowed() {
@@ -284,7 +392,7 @@ function bootHeroVideos() {
 
     if (!existing) {
       heroControllers.set(root, controller)
-      bindResumeListeners(controller.start)
+      bindResumeListeners(controller.start, controller.stop)
     }
 
     controller.start()
@@ -305,7 +413,7 @@ function bootVideoVideos() {
 
     if (!existing) {
       aboutControllers.set(video, controller)
-      bindResumeListeners(controller.start)
+      bindResumeListeners(controller.start, controller.stop)
     }
 
     controller.start()
@@ -329,7 +437,7 @@ function bootPreviewVideos() {
 
     if (!existing) {
       previewControllers.set(video, controller)
-      bindResumeListeners(controller.start)
+      bindResumeListeners(controller.start, controller.stop)
     }
 
     controller.start()
@@ -350,7 +458,7 @@ type ThumbnailState = {
   visibleRatio: number
   interacting: boolean
   playRequested: boolean
-  unavailable: boolean
+  unavailableReason?: "source" | "play"
   failedSources: Set<HTMLSourceElement>
 }
 
@@ -406,6 +514,7 @@ function bootThumbnailVideos() {
     const existing = thumbnailControllers.get(item)
     const controller = existing ?? makeAutoplayController(video, {
       maxAttempts: 8,
+      playStartTimeoutMs: THUMBNAIL_PLAY_START_TIMEOUT_MS,
       resetOnStop: true,
       hydrate: () => hydrateVideoSources(video),
       onExhausted: () => thumbnailSession?.handlePlayExhaustion(item),
@@ -427,7 +536,6 @@ function bootThumbnailVideos() {
       visibleRatio: 0,
       interacting: false,
       playRequested: false,
-      unavailable: false,
       failedSources: new Set(),
     }]
   })
@@ -496,7 +604,7 @@ function bootThumbnailVideos() {
     state.sources.forEach(source => {
       delete source.dataset.autoplaySourceFailed
     })
-    state.unavailable = false
+    if (state.unavailableReason === "source") state.unavailableReason = undefined
   }
 
   const stopState = (state: ThumbnailState, unload: boolean) => {
@@ -548,7 +656,7 @@ function bootThumbnailVideos() {
     const playing = new Set(
       states
         .filter(state =>
-          !state.unavailable &&
+          !state.unavailableReason &&
           state.nearViewport &&
           (state.interacting || (state.autoplay && state.visibleRatio >= THUMBNAIL_PLAY_THRESHOLD)),
         )
@@ -565,7 +673,7 @@ function bootThumbnailVideos() {
       states
         .filter(state =>
           state.autoplay &&
-          !state.unavailable &&
+          !state.unavailableReason &&
           state.nearViewport &&
           !hydrated.has(state),
         )
@@ -599,7 +707,9 @@ function bootThumbnailVideos() {
     state.failedSources.add(source)
     source.dataset.autoplaySourceFailed = "1"
     source.removeAttribute("src")
-    state.unavailable = state.failedSources.size >= state.sources.length
+    if (state.failedSources.size >= state.sources.length) {
+      state.unavailableReason = "source"
+    }
 
     if (state.playRequested) {
       state.playRequested = false
@@ -617,9 +727,9 @@ function bootThumbnailVideos() {
       .forEach(state => state.controller.start())
   }
 
-  const recoverUnavailableStates = () => {
+  const recoverSourceFailures = () => {
     states
-      .filter(state => state.unavailable)
+      .filter(state => state.unavailableReason === "source")
       .forEach(clearSourceFailures)
     resumeActiveStates()
   }
@@ -630,9 +740,20 @@ function bootThumbnailVideos() {
   }
 
   const reconcileAndResumeState = (state: ThumbnailState) => {
-    if (state.unavailable) clearSourceFailures(state)
     reconcile()
     if (state.playRequested && state.video.paused) state.controller.start()
+  }
+
+  const resumeFromUserGesture = () => {
+    if (cleaned || document.hidden || !mediaAllowed()) return
+
+    states.forEach(state => {
+      if (state.unavailableReason !== "play") return
+      state.unavailableReason = state.failedSources.size >= state.sources.length
+        ? "source"
+        : undefined
+    })
+    resumeActiveStates()
   }
 
   const scheduleReconcile = () => {
@@ -661,7 +782,7 @@ function bootThumbnailVideos() {
     const state = stateByItem.get(item)
     if (!state) return
 
-    state.unavailable = true
+    state.unavailableReason = "play"
     state.playRequested = false
     state.controller.stop()
     reconcile()
@@ -764,9 +885,34 @@ function bootThumbnailVideos() {
   })
 
   rebuildProximityObserver()
-  listen(window, "pageshow", recoverUnavailableStates)
-  listen(window, "focus", recoverUnavailableStates)
+  listen(window, "pageshow", recoverSourceFailures)
+  listen(window, "focus", recoverSourceFailures)
   listen(window, "online", recoverAllFailedStates)
+  if (supportsPointerEvents()) {
+    listen(window, "pointerdown", event => {
+      if ((event as PointerEvent).pointerType === "mouse" && isTrustedActivation(event)) {
+        resumeFromUserGesture()
+      }
+    }, { passive: true })
+    listen(window, "pointerup", event => {
+      if ((event as PointerEvent).pointerType !== "mouse" && isTrustedActivation(event)) {
+        resumeFromUserGesture()
+      }
+    }, { passive: true })
+  } else {
+    listen(window, "mousedown", event => {
+      if (isTrustedActivation(event)) resumeFromUserGesture()
+    }, { passive: true })
+    listen(window, "touchend", event => {
+      if (isTrustedActivation(event)) resumeFromUserGesture()
+    }, { passive: true })
+  }
+  listen(window, "click", event => {
+    if (isTrustedActivation(event)) resumeFromUserGesture()
+  }, { passive: true })
+  listen(window, "keydown", event => {
+    if (isTrustedActivation(event)) resumeFromUserGesture()
+  })
   listen(window, "scroll", scheduleReconcile, { passive: true })
   listen(window, "resize", scheduleProximityObserverRebuild, { passive: true })
   listen(document, "visibilitychange", reconcile)
