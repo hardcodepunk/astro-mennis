@@ -1,6 +1,11 @@
 const MAX_AUTOPLAY_ATTEMPTS = 6
 const MAX_THUMBNAIL_PLAYERS = 2
 const THUMBNAIL_PLAY_THRESHOLD = 0.25
+const THUMBNAIL_LOAD_MARGIN_RATIO = 0.5
+const THUMBNAIL_VISIBILITY_THRESHOLDS = Array.from(
+  { length: 21 },
+  (_, index) => index / 20,
+)
 
 let didInitAutoplayScripts = false
 
@@ -183,7 +188,9 @@ function attachHeroSources(video: HTMLVideoElement) {
 }
 
 function hydrateVideoSources(video: HTMLVideoElement) {
-  const sources = Array.from(video.querySelectorAll("source[data-src]:not([src])")) as HTMLSourceElement[]
+  const sources = Array.from(
+    video.querySelectorAll("source[data-src]:not([src]):not([data-autoplay-source-failed])"),
+  ) as HTMLSourceElement[]
   if (!sources.length) return
 
   sources.forEach(source => {
@@ -329,6 +336,7 @@ type ThumbnailState = {
   item: HTMLElement
   container: HTMLElement
   video: HTMLVideoElement
+  sources: HTMLSourceElement[]
   controller: ReturnType<typeof makeAutoplayController>
   autoplay: boolean
   index: number
@@ -336,6 +344,9 @@ type ThumbnailState = {
   proximityDistance: number
   visibleRatio: number
   interacting: boolean
+  playRequested: boolean
+  unavailable: boolean
+  failedSources: Set<HTMLSourceElement>
 }
 
 type NetworkInformationLike = EventTarget & { saveData?: boolean }
@@ -378,6 +389,14 @@ function bootThumbnailVideos() {
     const video = container?.querySelector<HTMLVideoElement>("video")
     if (!container || !video) return []
 
+    const sources = Array.from(
+      video.querySelectorAll<HTMLSourceElement>("source[data-src], source[src]"),
+    ).filter(source => {
+      const type = source.getAttribute("type")
+      return !type || video.canPlayType(type) !== ""
+    })
+    if (!sources.length) return []
+
     const existing = thumbnailControllers.get(item)
     const controller = existing ?? makeAutoplayController(video, {
       maxAttempts: 8,
@@ -392,6 +411,7 @@ function bootThumbnailVideos() {
       item,
       container,
       video,
+      sources,
       controller,
       autoplay: container.dataset.autoplay === "true",
       index,
@@ -399,11 +419,23 @@ function bootThumbnailVideos() {
       proximityDistance: Number.POSITIVE_INFINITY,
       visibleRatio: 0,
       interacting: false,
+      playRequested: false,
+      unavailable: false,
+      failedSources: new Set(),
     }]
   })
 
+  if (!states.length) {
+    thumbnailSession = undefined
+    return
+  }
+
+  const stateByItem = new Map(states.map(state => [state.item, state]))
   let proximityObserver: IntersectionObserver | undefined
   let visibilityObserver: IntersectionObserver | undefined
+  let proximityMarginPx = -1
+  let resizeFrame: number | undefined
+  let reconcileFrame: number | undefined
   let cleaned = false
   const listenerCleanups: Array<() => void> = []
 
@@ -418,32 +450,88 @@ function bootThumbnailVideos() {
   }
 
   const mediaAllowed = () => !motionPreference.matches && connection?.saveData !== true
+  const getViewportHeight = () => document.documentElement.clientHeight || window.innerHeight
+  const getViewportWidth = () => document.documentElement.clientWidth || window.innerWidth
+  const getLoadMargin = () => getViewportHeight() * THUMBNAIL_LOAD_MARGIN_RATIO
 
-  const isWithinLoadMargin = (state: ThumbnailState) => {
-    if (state.nearViewport) return true
-    const rect = state.item.getBoundingClientRect()
-    const margin = window.innerHeight * 0.5
-    return rect.bottom >= -margin && rect.top <= window.innerHeight + margin
+  const refreshProximityState = (
+    state: ThumbnailState,
+    rect: DOMRectReadOnly,
+    loadMargin = getLoadMargin(),
+    viewportHeight = getViewportHeight(),
+  ) => {
+    const viewportWidth = getViewportWidth()
+    state.nearViewport = rect.width > 0 && rect.height > 0 &&
+      rect.right >= 0 && rect.left <= viewportWidth &&
+      rect.bottom >= -loadMargin && rect.top <= viewportHeight + loadMargin
+    state.proximityDistance = state.nearViewport
+      ? rect.bottom < 0
+        ? -rect.bottom
+        : rect.top > viewportHeight
+          ? rect.top - viewportHeight
+          : 0
+      : Number.POSITIVE_INFINITY
+  }
+
+  const refreshVisibleRatio = (state: ThumbnailState, rect: DOMRectReadOnly) => {
+    if (rect.width <= 0 || rect.height <= 0) {
+      state.visibleRatio = 0
+      return
+    }
+
+    const visibleWidth = Math.max(0, Math.min(rect.right, getViewportWidth()) - Math.max(rect.left, 0))
+    const visibleHeight = Math.max(0, Math.min(rect.bottom, getViewportHeight()) - Math.max(rect.top, 0))
+    state.visibleRatio = (visibleWidth * visibleHeight) / (rect.width * rect.height)
+  }
+
+  const clearSourceFailures = (state: ThumbnailState) => {
+    state.failedSources.clear()
+    state.sources.forEach(source => {
+      delete source.dataset.autoplaySourceFailed
+    })
+    state.unavailable = false
   }
 
   const stopState = (state: ThumbnailState, unload: boolean) => {
     state.video.autoplay = false
-    state.controller.stop()
+    if (state.playRequested) {
+      state.playRequested = false
+      state.controller.stop()
+    }
     if (!unload) return
     state.video.preload = "none"
     unloadVideoSources(state.video)
   }
 
   const startState = (state: ThumbnailState) => {
+    if (state.playRequested) return
     prepareVideo(state.video)
     state.video.autoplay = true
     state.video.preload = "metadata"
     hydrateVideoSources(state.video)
+    state.playRequested = true
     state.controller.start()
   }
 
   const reconcile = () => {
     if (cleaned) return
+
+    const viewportHeight = getViewportHeight()
+    const loadMargin = viewportHeight * THUMBNAIL_LOAD_MARGIN_RATIO
+    const interactionsAllowed = finePointer.matches && desktopViewport.matches
+    states.forEach(state => {
+      const rect = state.item.getBoundingClientRect()
+      refreshProximityState(
+        state,
+        rect,
+        loadMargin,
+        viewportHeight,
+      )
+      refreshVisibleRatio(state, rect)
+      state.interacting = interactionsAllowed &&
+        state.nearViewport &&
+        (state.item.matches(":hover") || state.item.matches(":focus-within"))
+    })
 
     if (!mediaAllowed() || document.hidden) {
       states.forEach(state => stopState(state, true))
@@ -453,7 +541,8 @@ function bootThumbnailVideos() {
     const playing = new Set(
       states
         .filter(state =>
-          isWithinLoadMargin(state) &&
+          !state.unavailable &&
+          state.nearViewport &&
           (state.interacting || (state.autoplay && state.visibleRatio >= THUMBNAIL_PLAY_THRESHOLD)),
         )
         .sort((left, right) =>
@@ -467,7 +556,12 @@ function bootThumbnailVideos() {
     const hydrated = new Set(playing)
     if (hydrated.size < MAX_THUMBNAIL_PLAYERS) {
       states
-        .filter(state => state.autoplay && state.nearViewport && !hydrated.has(state))
+        .filter(state =>
+          state.autoplay &&
+          !state.unavailable &&
+          state.nearViewport &&
+          !hydrated.has(state),
+        )
         .sort((left, right) =>
           left.proximityDistance - right.proximityDistance || left.index - right.index,
         )
@@ -488,9 +582,59 @@ function bootThumbnailVideos() {
     })
   }
 
+  const handleSourceFailure = (
+    state: ThumbnailState,
+    source: HTMLSourceElement,
+  ) => {
+    if (!source.hasAttribute("src") || state.failedSources.has(source)) return
+
+    state.failedSources.add(source)
+    source.dataset.autoplaySourceFailed = "1"
+    source.removeAttribute("src")
+    state.unavailable = state.failedSources.size >= state.sources.length
+
+    if (state.playRequested) {
+      state.playRequested = false
+      state.controller.stop()
+    }
+
+    state.video.load()
+    reconcile()
+  }
+
+  const resumeActiveStates = () => {
+    reconcile()
+    states
+      .filter(state => state.playRequested && state.video.paused)
+      .forEach(state => state.controller.start())
+  }
+
+  const recoverFailedStates = () => {
+    states.forEach(clearSourceFailures)
+    resumeActiveStates()
+  }
+
+  const reconcileAndResumeState = (state: ThumbnailState) => {
+    if (state.unavailable) clearSourceFailures(state)
+    reconcile()
+    if (state.playRequested && state.video.paused) state.controller.start()
+  }
+
+  const scheduleReconcile = () => {
+    if (cleaned || reconcileFrame !== undefined) return
+    reconcileFrame = window.requestAnimationFrame(() => {
+      reconcileFrame = undefined
+      reconcile()
+    })
+  }
+
   const cleanup = () => {
     if (cleaned) return
     cleaned = true
+    if (resizeFrame !== undefined) window.cancelAnimationFrame(resizeFrame)
+    if (reconcileFrame !== undefined) window.cancelAnimationFrame(reconcileFrame)
+    resizeFrame = undefined
+    reconcileFrame = undefined
     proximityObserver?.disconnect()
     visibilityObserver?.disconnect()
     listenerCleanups.splice(0).forEach(removeListener => removeListener())
@@ -511,26 +655,52 @@ function bootThumbnailVideos() {
     return
   }
 
-  const stateByItem = new Map(states.map(state => [state.item, state]))
-  proximityObserver = new IntersectionObserver(
-    entries => {
-      if (cleaned) return
-      entries.forEach(entry => {
-        const state = stateByItem.get(entry.target as HTMLElement)
-        if (!state) return
-        state.nearViewport = entry.isIntersecting
-        const rect = entry.boundingClientRect
-        state.proximityDistance = rect.bottom < 0
-          ? -rect.bottom
-          : rect.top > window.innerHeight
-            ? rect.top - window.innerHeight
-            : 0
-        if (!entry.isIntersecting) state.interacting = false
-      })
-      reconcile()
-    },
-    { rootMargin: "50% 0px" },
-  )
+  const rebuildProximityObserver = () => {
+    if (cleaned) return
+
+    const viewportHeight = getViewportHeight()
+    const nextMarginPx = Math.max(0, Math.round(viewportHeight * THUMBNAIL_LOAD_MARGIN_RATIO))
+    states.forEach(state => {
+      const rect = state.item.getBoundingClientRect()
+      refreshProximityState(state, rect, nextMarginPx, viewportHeight)
+      refreshVisibleRatio(state, rect)
+    })
+
+    if (!proximityObserver || nextMarginPx !== proximityMarginPx) {
+      proximityObserver?.disconnect()
+      proximityMarginPx = nextMarginPx
+      proximityObserver = new IntersectionObserver(
+        entries => {
+          if (cleaned) return
+          const currentViewportHeight = getViewportHeight()
+          entries.forEach(entry => {
+            const state = stateByItem.get(entry.target as HTMLElement)
+            if (!state) return
+            refreshProximityState(
+              state,
+              entry.boundingClientRect,
+              proximityMarginPx,
+              currentViewportHeight,
+            )
+          })
+          reconcile()
+        },
+        { rootMargin: `${nextMarginPx}px 0px` },
+      )
+      states.forEach(state => proximityObserver?.observe(state.item))
+    }
+
+    reconcile()
+  }
+
+  const scheduleProximityObserverRebuild = () => {
+    if (cleaned || resizeFrame !== undefined) return
+    resizeFrame = window.requestAnimationFrame(() => {
+      resizeFrame = undefined
+      rebuildProximityObserver()
+    })
+  }
+
   visibilityObserver = new IntersectionObserver(
     entries => {
       if (cleaned) return
@@ -541,46 +711,42 @@ function bootThumbnailVideos() {
       })
       reconcile()
     },
-    { threshold: [0, THUMBNAIL_PLAY_THRESHOLD, 0.6, 1] },
+    { threshold: THUMBNAIL_VISIBILITY_THRESHOLDS },
   )
 
   states.forEach(state => {
-    proximityObserver?.observe(state.item)
     visibilityObserver?.observe(state.item)
-
-    const beginInteraction = () => {
-      if (!finePointer.matches || !desktopViewport.matches) return
-      if (!isWithinLoadMargin(state)) return
-      state.interacting = true
-      reconcile()
-    }
-    const endInteraction = () => {
-      state.interacting = false
-      reconcile()
-    }
-
-    listen(state.item, "pointerenter", beginInteraction)
-    listen(state.item, "pointerleave", endInteraction)
-    listen(state.item, "focusin", beginInteraction)
-    listen(state.item, "focusout", endInteraction)
+    listen(state.item, "pointerenter", () => reconcileAndResumeState(state))
+    listen(state.item, "pointerleave", reconcile)
+    listen(state.item, "focusin", () => reconcileAndResumeState(state))
+    listen(state.item, "focusout", reconcile)
+    listen(state.video, "error", () => {
+      const currentSrc = state.video.currentSrc
+      if (!currentSrc) return
+      const failedSource = state.sources.find(source => {
+        const src = source.getAttribute("src")
+        return src ? new URL(src, document.baseURI).href === currentSrc : false
+      })
+      if (failedSource) handleSourceFailure(state, failedSource)
+    })
+    state.sources.forEach(source => {
+      listen(source, "error", () => {
+        handleSourceFailure(state, source)
+      })
+    })
   })
 
-  const reconcileAfterInputChange = () => {
-    if (!finePointer.matches || !desktopViewport.matches) {
-      states.forEach(state => {
-        state.interacting = false
-      })
-    }
-    reconcile()
-  }
-
-  listen(window, "pageshow", reconcile)
-  listen(window, "focus", reconcile)
+  rebuildProximityObserver()
+  listen(window, "pageshow", recoverFailedStates)
+  listen(window, "focus", recoverFailedStates)
+  listen(window, "online", recoverFailedStates)
+  listen(window, "scroll", scheduleReconcile, { passive: true })
+  listen(window, "resize", scheduleProximityObserverRebuild, { passive: true })
   listen(document, "visibilitychange", reconcile)
-  listen(finePointer, "change", reconcileAfterInputChange)
-  listen(desktopViewport, "change", reconcileAfterInputChange)
+  listen(finePointer, "change", reconcile)
+  listen(desktopViewport, "change", reconcile)
   listen(motionPreference, "change", reconcile)
-  if (connection) listen(connection, "change", reconcile)
+  if (connection) listen(connection, "change", recoverFailedStates)
 }
 
 function bootAllAutoplay() {
