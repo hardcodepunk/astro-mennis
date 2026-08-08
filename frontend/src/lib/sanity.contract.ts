@@ -1,3 +1,9 @@
+import {
+  isCloudinaryPosterUrl,
+  isCloudinaryVideoUrl,
+  parseYouTubeId,
+} from "@astro-mennis/media-contract"
+
 class SanityContractError extends Error {
   constructor(message: string) {
     super(message)
@@ -6,6 +12,7 @@ class SanityContractError extends Error {
 }
 
 export type SiteSettings = {
+  homepageWorkIds?: string[]
   homeSeoH1?: string
   projectsSeoH1?: string
   videoHero?: {
@@ -89,7 +96,6 @@ type DocumentSeo = {
   socialImageAlt?: string
   canonicalUrl?: string
   noindex?: boolean
-  focusKeyword?: string
 }
 
 export type LogoItem = {
@@ -205,7 +211,8 @@ export type PortableTextInlineImage = {
 
 export type PortableTextBody = Array<PortableTextBlock | PortableTextInlineImage>
 
-export type WorkItem = {
+export type WorkSummary = {
+  _id: string
   slug: string
   title: string
   category: string
@@ -216,12 +223,16 @@ export type WorkItem = {
   year?: string
   publishedAt?: string
   updatedAt?: string
-  overviewTitle?: string
-  body?: PortableTextBody
-  media?: WorkMedia
   featuredOnHome?: boolean
   featuredOrder?: number
   seo?: DocumentSeo
+}
+
+export type WorkDetail = Omit<WorkSummary, "year"> & {
+  year: string
+  overviewTitle?: string
+  body?: PortableTextBody
+  media?: WorkMedia
 }
 
 type Validator<T> = (value: unknown, path: string) => T
@@ -239,6 +250,7 @@ export function arrayOf<T>(value: unknown, path: string, validator: Validator<T>
 export function validateSiteSettings(value: unknown, path: string): SiteSettings {
   const obj = objectAt(value, path)
   return {
+    homepageWorkIds: optionalStringArray(obj.homepageWorkIds, `${path}.homepageWorkIds`),
     homeSeoH1: optionalString(obj.homeSeoH1, `${path}.homeSeoH1`),
     projectsSeoH1: optionalString(obj.projectsSeoH1, `${path}.projectsSeoH1`),
     videoHero: optionalMediaUrls(obj.videoHero, `${path}.videoHero`),
@@ -334,9 +346,10 @@ export function validateCategory(value: unknown, path: string): Category {
   }
 }
 
-export function validateWorkItem(value: unknown, path: string): WorkItem {
+export function validateWorkSummary(value: unknown, path: string): WorkSummary {
   const obj = objectAt(value, path)
   return {
+    _id: requiredString(obj._id, `${path}._id`),
     slug: requiredString(obj.slug, `${path}.slug`),
     title: requiredString(obj.title, `${path}.title`),
     category: requiredString(obj.category, `${path}.category`),
@@ -347,12 +360,23 @@ export function validateWorkItem(value: unknown, path: string): WorkItem {
     year: optionalString(obj.year, `${path}.year`),
     publishedAt: optionalString(obj.publishedAt, `${path}.publishedAt`),
     updatedAt: optionalString(obj.updatedAt, `${path}.updatedAt`),
-    overviewTitle: optionalString(obj.overviewTitle, `${path}.overviewTitle`),
-    body: obj.body === null || obj.body === undefined ? undefined : validatePortableTextBody(obj.body, `${path}.body`),
-    media: optionalObject(obj.media, `${path}.media`, validateWorkMedia),
     featuredOnHome: optionalBoolean(obj.featuredOnHome, `${path}.featuredOnHome`),
     featuredOrder: optionalNumber(obj.featuredOrder, `${path}.featuredOrder`),
     seo: optionalObject(obj.seo, `${path}.seo`, validateDocumentSeo),
+  }
+}
+
+export function validateWorkDetail(value: unknown, path: string): WorkDetail {
+  const obj = objectAt(value, path)
+  const summary = validateWorkSummary(obj, path)
+  return {
+    ...summary,
+    year: requiredString(obj.year, `${path}.year`),
+    overviewTitle: optionalString(obj.overviewTitle, `${path}.overviewTitle`),
+    body: obj.body === null || obj.body === undefined
+      ? undefined
+      : validatePortableTextBody(obj.body, `${path}.body`),
+    media: optionalObject(obj.media, `${path}.media`, validateWorkMedia),
   }
 }
 
@@ -388,16 +412,27 @@ function validateDocumentSeo(value: unknown, path: string): DocumentSeo {
     socialImageAlt: optionalString(obj.socialImageAlt, `${path}.socialImageAlt`),
     canonicalUrl: optionalString(obj.canonicalUrl, `${path}.canonicalUrl`),
     noindex: optionalBoolean(obj.noindex, `${path}.noindex`),
-    focusKeyword: optionalString(obj.focusKeyword, `${path}.focusKeyword`),
   }
 }
 
-function validatePreview(value: unknown, path: string): WorkItem["preview"] {
+function validatePreview(value: unknown, path: string): WorkSummary["preview"] {
   const obj = objectAt(value, path)
+  const poster = requiredString(obj.poster, `${path}.poster`)
+  const webm = optionalString(obj.webm, `${path}.webm`)
+  const mp4 = optionalString(obj.mp4, `${path}.mp4`)
+  if (!isCloudinaryPosterUrl(poster)) {
+    throw new SanityContractError(`${path}.poster must be a Cloudinary image delivery URL`)
+  }
+  if (webm && !isCloudinaryVideoUrl(webm, "webm")) {
+    throw new SanityContractError(`${path}.webm must be a Cloudinary WEBM delivery URL`)
+  }
+  if (mp4 && !isCloudinaryVideoUrl(mp4, "mp4")) {
+    throw new SanityContractError(`${path}.mp4 must be a Cloudinary MP4 delivery URL`)
+  }
   return {
-    poster: requiredString(obj.poster, `${path}.poster`),
-    webm: optionalString(obj.webm, `${path}.webm`),
-    mp4: optionalString(obj.mp4, `${path}.mp4`),
+    poster,
+    webm,
+    mp4,
   }
 }
 
@@ -407,15 +442,28 @@ function validateWorkMedia(value: unknown, path: string): WorkMedia {
 
   if (mode === "preview") return { mode }
   if (mode === "single") {
+    const youtubeUrl = requiredString(obj.youtubeUrl, `${path}.youtubeUrl`)
+    if (!parseYouTubeId(youtubeUrl)) {
+      throw new SanityContractError(`${path}.youtubeUrl must be a supported YouTube URL`)
+    }
     return {
       mode,
-      youtubeUrl: optionalString(obj.youtubeUrl, `${path}.youtubeUrl`),
+      youtubeUrl,
     }
   }
   if (mode === "slider") {
+    const reels = optionalStringArray(obj.reels, `${path}.reels`) ?? []
+    if (reels.length < 1 || reels.length > 4) {
+      throw new SanityContractError(`${path}.reels must contain between 1 and 4 YouTube URLs`)
+    }
+    reels.forEach((url, index) => {
+      if (!parseYouTubeId(url)) {
+        throw new SanityContractError(`${path}.reels[${index}] must be a supported YouTube URL`)
+      }
+    })
     return {
       mode,
-      reels: optionalStringArray(obj.reels, `${path}.reels`),
+      reels,
     }
   }
 
@@ -519,7 +567,6 @@ function validatePortableTextMarks(value: unknown, path: string, markDefKeys: Se
     return name
   })
 }
-
 function validatePortableTextLinkMark(value: unknown, path: string): PortableTextLinkMark {
   const obj = objectAt(value, path)
   const type = requiredString(obj._type, `${path}._type`)

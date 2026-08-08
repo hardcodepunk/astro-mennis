@@ -95,12 +95,6 @@ export function defineDocumentSeoFields(context: DocumentTypeContext = 'item') {
       type: 'boolean',
       initialValue: false,
     }),
-    defineField({
-      name: 'focusKeyword',
-      title: 'Focus keyword',
-      description: 'Internal planning note only. This is not rendered as a meta keywords tag.',
-      type: 'string',
-    }),
   ]
 }
 

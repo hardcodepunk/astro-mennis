@@ -10,20 +10,19 @@ const optimizedPoster = cloudinaryImage(safePoster, 1280)
   <video
     class="pp-video"
     data-preview-autoplay-video
-    autoplay
     muted
     loop
     playsinline
     webkit-playsinline
-    preload="auto"
+    preload="none"
     poster={optimizedPoster}
     width="1280"
     height="720"
     disableRemotePlayback
     aria-hidden="true"
   >
-    {mp4 ? <source src={mp4} type="video/mp4" /> : null}
-    {webm ? <source src={webm} type="video/webm" /> : null}
+    {webm ? <source data-src={webm} type="video/webm" /> : null}
+    {mp4 ? <source data-src={mp4} type="video/mp4" /> : null}
   </video>
 
   <style>

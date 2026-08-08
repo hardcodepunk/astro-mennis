@@ -1,4 +1,5 @@
 export const DEPLOY_GUARD_VALUE = 'sanity-deploy-wrapper-v1'
+export const DEPLOY_CONFIRMATION_VALUE = 'production-confirmed'
 
 export const PRODUCTION_SANITY_ENVIRONMENT = Object.freeze({
   projectId: '454gxa26',
@@ -225,6 +226,13 @@ export function assertGuardedCliDeployment(
 
   if (!hasOnlyExpectedArguments) {
     throw new Error('Deployment flags and positional target overrides are disabled')
+  }
+
+  if (
+    target === 'production' &&
+    variables.SANITY_DEPLOY_CONFIRMED !== DEPLOY_CONFIRMATION_VALUE
+  ) {
+    throw new Error('Production deployment has not been confirmed by the deployment wrapper')
   }
 
   assertExplicitDeploymentVariables(detectedKind, variables)

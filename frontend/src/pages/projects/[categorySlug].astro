@@ -1,21 +1,37 @@
 ---
 import Layout from "../../layouts/Layout.astro"
 import ProjectGrid from "../../components/ProjectGrid.astro"
-import { getCategories, getSeoSettings, getWorksByCategorySlug } from "../../lib/sanity.queries"
+import {
+  getContentSnapshot,
+  selectWorksByCategorySlug,
+  type Category,
+  type SeoSettings,
+  type WorkSummary,
+} from "../../lib/sanity.queries"
 import { breadcrumbJsonLd, categorySeoDescription, categorySeoTitle, collectionPageJsonLd, socialImage } from "../../lib/seo"
 
 export async function getStaticPaths() {
-  const categories = await getCategories()
-  return categories.map(category => ({
-    params: { categorySlug: category.slug },
+  const snapshot = await getContentSnapshot()
+  return snapshot.categories.map(activeCategory => ({
+    params: {categorySlug: activeCategory.slug},
+    props: {
+      activeCategory,
+      categories: [...snapshot.categories],
+      works: selectWorksByCategorySlug(snapshot, activeCategory.slug),
+      seoSettings: snapshot.seoSettings,
+    },
   }))
 }
 
-const { categorySlug } = Astro.params
-const categories = await getCategories()
-const works = await getWorksByCategorySlug(categorySlug!)
-const seoSettings = await getSeoSettings()
-const activeCategory = categories.find(category => category.slug === categorySlug)
+type Props = {
+  activeCategory: Category
+  categories: Category[]
+  works: WorkSummary[]
+  seoSettings: SeoSettings | null
+}
+
+const {activeCategory, categories, works, seoSettings} = Astro.props as Props
+const categorySlug = activeCategory.slug
 const categoryTitle = activeCategory?.title ?? "Projects"
 const pageTitle = categorySeoTitle(seoSettings, categoryTitle, activeCategory?.seo?.title)
 const description = categorySeoDescription(seoSettings, categoryTitle, activeCategory?.seo?.description)

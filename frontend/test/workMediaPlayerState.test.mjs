@@ -254,14 +254,19 @@ test("provider failure offers only the available YouTube fallback", () => {
 
 test("ready and playing feedback clear busy state without removing the live region", () => {
   const elements = makeFeedbackElements()
+  renderWorkMediaFeedback(elements, "project video", "idle")
+  assert.equal(elements.overlay.getAttribute("aria-label"), "Play project video on YouTube")
+
   renderWorkMediaFeedback(elements, "project video", "loading")
 
   renderWorkMediaFeedback(elements, "project video", "ready")
+  assert.equal(elements.overlay.getAttribute("aria-label"), "Play project video on YouTube")
   assert.equal(elements.overlay.getAttribute("aria-disabled"), null)
   assert.equal(elements.status.textContent, "Ready: project video. Press Play to start.")
   assert.equal(elements.retry.hidden, true)
 
   renderWorkMediaFeedback(elements, "project video", "playing")
+  assert.equal(elements.overlay.getAttribute("aria-label"), "Play project video on YouTube")
   assert.equal(elements.status.textContent, "")
   assert.equal(elements.fallback.hidden, true)
 })

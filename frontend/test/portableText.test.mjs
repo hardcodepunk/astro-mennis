@@ -165,7 +165,6 @@ test("rejects Portable Text structures that can exceed renderer nesting bounds",
     )
   }
 })
-
 test("rejects and safely drops unknown top-level types", () => {
   const body = [{ _key: "attack", _type: 'evil"><img src=x onerror=alert(1)>' }]
 

@@ -1,0 +1,15 @@
+{
+  "name": "@astro-mennis/media-contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

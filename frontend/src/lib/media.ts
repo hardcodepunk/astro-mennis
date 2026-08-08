@@ -1,3 +1,8 @@
+import {
+  isImageDeliveryUrl,
+  parseYouTubeId,
+} from "@astro-mennis/media-contract"
+
 const CLOUDINARY_UPLOAD = "/upload/"
 
 type CloudinaryQuality = "auto" | "auto:eco"
@@ -15,30 +20,45 @@ type ImageDimensions = {
 
 export function cloudinaryImage(url: string | undefined, width: number, quality: CloudinaryQuality = "auto") {
   if (!url) return undefined
-  if (!isImageUrl(url)) return url
-  if (!url.includes("res.cloudinary.com") || !url.includes(CLOUDINARY_UPLOAD)) return url
+  if (!isImageDeliveryUrl(url)) return url
+  const parsed = new URL(url)
+  if (parsed.hostname !== "res.cloudinary.com" || !parsed.pathname.includes(CLOUDINARY_UPLOAD)) return url
 
-  const markerIndex = url.indexOf(CLOUDINARY_UPLOAD)
-  const beforeUpload = url.slice(0, markerIndex + CLOUDINARY_UPLOAD.length)
-  const afterUpload = url.slice(markerIndex + CLOUDINARY_UPLOAD.length)
-  const segments = afterUpload.split("/")
-  const hasTransformSegment = segments.length > 1 && !/^v\d+$/.test(segments[0])
-  const existingTransforms = hasTransformSegment ? segments[0].split(",") : []
-  const assetPath = hasTransformSegment ? segments.slice(1).join("/") : afterUpload
+  const markerIndex = parsed.pathname.indexOf(CLOUDINARY_UPLOAD)
+  const beforeUpload = parsed.pathname.slice(0, markerIndex + CLOUDINARY_UPLOAD.length)
+  const afterUpload = parsed.pathname.slice(markerIndex + CLOUDINARY_UPLOAD.length)
+  const segments = afterUpload.split("/").filter(Boolean)
+  const versionIndex = segments.findIndex(segment => /^v\d+$/.test(segment))
+  const transformSegmentCount = versionIndex >= 0
+    ? versionIndex
+    : segments.findIndex(segment => !isCloudinaryTransformSegment(segment))
+  const safeTransformCount = transformSegmentCount === -1 ? 0 : transformSegmentCount
+  const existingTransforms = segments.slice(0, safeTransformCount).flatMap(segment => segment.split(","))
+  const assetPath = segments.slice(safeTransformCount).join("/")
+  if (!assetPath) return url
   const preservedTransforms = existingTransforms.filter(transform => transform.startsWith("so_"))
   const transforms = [...preservedTransforms, "f_auto", `q_${quality}`, `w_${width}`]
 
-  return `${beforeUpload}${transforms.join(",")}/${assetPath}`
+  parsed.pathname = `${beforeUpload}${transforms.join(",")}/${assetPath}`
+  return parsed.toString()
 }
 
-function isImageUrl(url: string | undefined) {
-  if (!url) return false
-  const cleanUrl = url.split("?")[0].toLowerCase()
-  return /\.(avif|gif|jpe?g|png|svg|webp)$/.test(cleanUrl)
+const CLOUDINARY_TRANSFORM_KEYS = new Set([
+  "a", "ac", "af", "ar", "b", "bo", "br", "c", "co", "cs", "d", "dl", "dn", "dpr",
+  "du", "e", "eo", "f", "fl", "fn", "fps", "g", "h", "if", "ki", "l", "o", "p", "pg",
+  "q", "r", "so", "sp", "t", "u", "vc", "vs", "w", "x", "y", "z",
+])
+
+function isCloudinaryTransformSegment(segment: string) {
+  if (!segment || /^v\d+$/.test(segment)) return false
+  return segment.split(",").every(component => {
+    const separatorIndex = component.indexOf("_")
+    return separatorIndex > 0 && CLOUDINARY_TRANSFORM_KEYS.has(component.slice(0, separatorIndex))
+  })
 }
 
 export function safePosterUrl(url: string | undefined, fallback: string): string {
-  return url && isImageUrl(url) ? url : fallback
+  return url && isImageDeliveryUrl(url) ? url : fallback
 }
 
 function imageSrcset(url: string | undefined, widths: number[], quality: CloudinaryQuality = "auto") {
@@ -119,28 +139,7 @@ function clampUnit(value: number | undefined) {
 }
 
 export function youtubeId(input?: string | null) {
-  if (!input) return undefined
-  const s = String(input).trim()
-  if (!s) return undefined
-
-  const patterns = [
-    /(?:youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/,
-    /(?:youtu\.be\/)([A-Za-z0-9_-]{6,})/,
-    /[?&]v=([A-Za-z0-9_-]{6,})/,
-    /^([A-Za-z0-9_-]{6,})$/,
-  ]
-
-  for (const pattern of patterns) {
-    const match = s.match(pattern)
-    if (match?.[1]) return match[1]
-  }
-
-  return undefined
-}
-
-export function youtubePoster(id: string | undefined, quality: "maxres" | "hq" = "maxres") {
-  if (!id) return undefined
-  return `https://i.ytimg.com/vi/${id}/${quality === "maxres" ? "maxresdefault" : "hqdefault"}.jpg`
+  return parseYouTubeId(input)
 }
 
 export const defaultHeroMedia = Object.freeze({

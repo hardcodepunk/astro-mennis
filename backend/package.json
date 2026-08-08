@@ -26,24 +26,22 @@
     "sanity"
   ],
   "dependencies": {
-    "@sanity/vision": "^5.26.0",
-    "react": "^19.1",
-    "react-dom": "^19.1",
-    "sanity": "^5.26.0",
+    "@astro-mennis/media-contract": "file:../shared/media-contract",
+    "@sanity/vision": "6.9.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sanity": "6.9.1",
     "styled-components": "^6.1.18"
   },
-  "overrides": {
-    "react-is": "^19.2.6"
-  },
   "devDependencies": {
-    "@sanity/cli": "^6.6.0",
+    "@sanity/cli": "7.18.0",
     "@sanity/eslint-config-studio": "^6.0.0",
     "@types/node": "^24.12.4",
-    "@types/react": "^19.1",
+    "@types/react": "^19.2.18",
     "eslint": "^9.28",
     "prettier": "^3.5",
     "typescript": "^5.8",
-    "vite": "^7.3.2"
+    "vite": "^8.2.1"
   },
   "prettier": {
     "semi": false,

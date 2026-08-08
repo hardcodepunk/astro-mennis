@@ -1,8 +1,8 @@
 ---
 import WorkThumbnailCard from "./WorkThumbnailCard.astro"
-import type { WorkItem } from "../lib/sanity.queries"
+import type { WorkSummary } from "../lib/sanity.queries"
 
-const { items = [] } = Astro.props as { items: WorkItem[] }
+const { items = [] } = Astro.props as { items: WorkSummary[] }
 ---
 
 <section class="rw">

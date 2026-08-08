@@ -1,6 +1,6 @@
 ---
 import WorkThumbnailCard from "./WorkThumbnailCard.astro"
-import type { WorkItem } from "../lib/sanity.queries"
+import type { WorkSummary } from "../lib/sanity.queries"
 
 interface CategoryItem {
   slug: string
@@ -12,7 +12,7 @@ const {
   categories = [],
   activeSlug = "all",
 } = Astro.props as {
-  items: WorkItem[]
+  items: WorkSummary[]
   categories: CategoryItem[]
   activeSlug?: string
 }

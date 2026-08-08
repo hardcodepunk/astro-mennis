@@ -7,10 +7,15 @@ type Props = {
 
 const { sentences, mailSentence, email } = Astro.props as Props
 const firstSentence = sentences[0] ?? ""
+const accessibleSentences = sentences.map(sentence => sentence.trim()).filter(Boolean).join(" ")
 const mailHref = `mailto:${email}`
 ---
 
-<section class="contact-page">
+<section
+  class="contact-page"
+  data-contact-typewriter-root
+  data-sentences={JSON.stringify(sentences)}
+>
   <div class="contact-page__inner ds-shell">
     <div class="contact-page__details">
       <div class="contact-page__intro">
@@ -26,77 +31,14 @@ const mailHref = `mailto:${email}`
       </div>
     </div>
 
-    <div class="contact-page__headline" aria-live="polite">
-      <span data-contact-typewriter>{firstSentence}</span><span class="contact-page__cursor" aria-hidden="true">|</span>
+    <div class="contact-page__headline">
+      <span class="sr-only">{accessibleSentences || firstSentence}</span>
+      <span aria-hidden="true">
+        <span data-contact-typewriter>{firstSentence}</span><span class="contact-page__cursor">|</span>
+      </span>
     </div>
   </div>
 </section>
-
-<script is:inline define:vars={{ sentences }}>
-  ;(() => {
-    const bootTypewriter = () => {
-      const target = document.querySelector("[data-contact-typewriter]")
-      if (!(target instanceof HTMLElement) || target.dataset.typewriterReady === "true") return
-
-      const values = Array.isArray(sentences)
-        ? sentences.map(value => String(value || "").trim()).filter(Boolean)
-        : []
-
-      if (values.length <= 1 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        target.textContent = values[0] || target.textContent || ""
-        return
-      }
-
-      target.dataset.typewriterReady = "true"
-
-      let sentenceIndex = 0
-      let charIndex = values[0].length
-      let deleting = true
-      let timeoutId = 0
-
-      const tick = () => {
-        const current = values[sentenceIndex] || ""
-
-        if (deleting) {
-          charIndex -= 1
-          target.textContent = current.slice(0, Math.max(0, charIndex))
-
-          if (charIndex <= 0) {
-            deleting = false
-            sentenceIndex = (sentenceIndex + 1) % values.length
-          }
-        } else {
-          const next = values[sentenceIndex] || ""
-          charIndex += 1
-          target.textContent = next.slice(0, charIndex)
-
-          if (charIndex >= next.length) {
-            deleting = true
-          }
-        }
-
-        const atFullSentence = deleting && charIndex >= (values[sentenceIndex] || "").length
-        const atEmptySentence = !deleting && charIndex <= 0
-        const delay = atFullSentence ? 1400 : atEmptySentence ? 240 : deleting ? 32 : 58
-        timeoutId = window.setTimeout(tick, delay)
-      }
-
-      timeoutId = window.setTimeout(tick, 1200)
-
-      document.addEventListener(
-        "astro:before-swap",
-        () => {
-          window.clearTimeout(timeoutId)
-        },
-        { once: true },
-      )
-    }
-
-    bootTypewriter()
-    document.addEventListener("astro:page-load", bootTypewriter)
-    document.addEventListener("astro:after-swap", bootTypewriter)
-  })()
-</script>
 
 <style>
   .contact-page {
