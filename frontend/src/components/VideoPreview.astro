@@ -1,12 +1,14 @@
 ---
-import { cloudinaryImage, safePosterUrl } from "../lib/media"
+import { cloudinaryImage, cloudinaryVideo, safePosterUrl } from "../lib/media"
 
 const { mp4, webm, poster } = Astro.props
 const safePoster = safePosterUrl(poster, "")
 const optimizedPoster = cloudinaryImage(safePoster, 1280)
+const compatibleWebm = cloudinaryVideo(webm, "webm")
+const compatibleMp4 = cloudinaryVideo(mp4, "mp4")
 ---
 
-<div class="pp">
+<div class="pp" data-autoplay-poster-root>
   <video
     class="pp-video"
     data-preview-autoplay-video
@@ -21,21 +23,46 @@ const optimizedPoster = cloudinaryImage(safePoster, 1280)
     disableRemotePlayback
     aria-hidden="true"
   >
-    {webm ? <source data-src={webm} type="video/webm" /> : null}
-    {mp4 ? <source data-src={mp4} type="video/mp4" /> : null}
+    {compatibleWebm ? <source data-src={compatibleWebm} type="video/webm" /> : null}
+    {compatibleMp4 ? <source data-src={compatibleMp4} type="video/mp4" /> : null}
   </video>
+  {optimizedPoster ? (
+    <img
+      class="pp-poster"
+      src={optimizedPoster}
+      width="1280"
+      height="720"
+      alt=""
+      loading="lazy"
+      decoding="async"
+      aria-hidden="true"
+    />
+  ) : null}
 
   <style>
     .pp {
+      position: relative;
       overflow: hidden;
       border-radius: 0;
     }
-    .pp-video {
+    .pp-video,
+    .pp-poster {
       display: block;
       width: 100%;
       height: auto;
       aspect-ratio: 16 / 9;
       object-fit: cover;
+    }
+    .pp-poster {
+      position: absolute;
+      inset: 0;
+      height: 100%;
+      opacity: 1;
+      transition: opacity 180ms ease-out;
+      pointer-events: none;
+    }
+    .pp.is-playing .pp-poster {
+      opacity: 0;
     }
   </style>
 </div>

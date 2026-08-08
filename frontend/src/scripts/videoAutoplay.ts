@@ -1,8 +1,4 @@
-import {
-  normalizeStoredAutoplayChoice,
-  resolveAutoplayAllowed,
-  type AutoplayChoice,
-} from "../lib/autoplayPolicy.ts"
+import { resolveAutoplayAllowed } from "../lib/autoplayPolicy.ts"
 
 const MAX_AUTOPLAY_ATTEMPTS = 6
 const MAX_THUMBNAIL_PLAYERS = 2
@@ -14,37 +10,13 @@ const THUMBNAIL_VISIBILITY_THRESHOLDS = Array.from(
   { length: 21 },
   (_, index) => index / 20,
 )
-const AUTOPLAY_CHOICE_KEY = "astro-mennis:background-video-choice"
-
 let didInitAutoplayScripts = false
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)")
 const connection = getNetworkInformation()
 const policyListeners = new Set<() => void>()
 
-function readAutoplayChoice(): AutoplayChoice {
-  try {
-    const value = window.sessionStorage.getItem(AUTOPLAY_CHOICE_KEY)
-    return normalizeStoredAutoplayChoice(value, motionPreference.matches)
-  } catch {
-    return "default"
-  }
-}
-
-let autoplayChoice = readAutoplayChoice()
-
-function saveAutoplayChoice(choice: AutoplayChoice) {
-  autoplayChoice = choice
-  try {
-    if (choice === "default") window.sessionStorage.removeItem(AUTOPLAY_CHOICE_KEY)
-    else window.sessionStorage.setItem(AUTOPLAY_CHOICE_KEY, choice)
-  } catch {
-    // Storage can be unavailable in hardened browsing modes; the in-memory choice still applies.
-  }
-}
-
 function autoplayAllowed() {
   return resolveAutoplayAllowed({
-    choice: autoplayChoice,
     reducedMotion: motionPreference.matches,
     saveData: connection?.saveData === true,
   })
@@ -52,13 +24,9 @@ function autoplayAllowed() {
 
 function notifyPolicyChange() {
   policyListeners.forEach(listener => listener())
-  updateAutoplayControls()
 }
 
-motionPreference.addEventListener("change", event => {
-  if (event.matches && autoplayChoice === "play") saveAutoplayChoice("default")
-  notifyPolicyChange()
-})
+motionPreference.addEventListener("change", notifyPolicyChange)
 connection?.addEventListener("change", notifyPolicyChange)
 
 function prepareVideo(video: HTMLVideoElement) {
@@ -180,7 +148,18 @@ export function makeAutoplayController(
       generation,
       cleanup: () => {},
     }
+    const handlePlaying = () => {
+      if (pendingPlayAttempt !== attempt) return
+      if (!startRequested || generation !== requestGeneration) return
+      if (video.paused || video.ended) return
+      markPlaying()
+    }
+
+    attempt.cleanup = () => {
+      video.removeEventListener("playing", handlePlaying)
+    }
     pendingPlayAttempt = attempt
+    video.addEventListener("playing", handlePlaying)
 
     if (!playStartTimeoutMs || playStartTimeoutMs <= 0) return attempt
 
@@ -205,11 +184,7 @@ export function makeAutoplayController(
       clearPendingPlay(attempt)
       if (!startRequested || generation !== requestGeneration) return
       if (!video.paused) video.pause()
-      if (onExhausted) {
-        onExhausted()
-      } else {
-        scheduleRetry(generation)
-      }
+      scheduleRetry(generation)
     }
 
     const armTimer = () => {
@@ -229,6 +204,7 @@ export function makeAutoplayController(
     attempt.cleanup = () => {
       pauseTimer()
       document.removeEventListener("visibilitychange", handleVisibilityChange)
+      video.removeEventListener("playing", handlePlaying)
     }
 
     document.addEventListener("visibilitychange", handleVisibilityChange)
@@ -240,8 +216,8 @@ export function makeAutoplayController(
     if (!startRequested || generation !== requestGeneration) return
     if (!document.body.contains(video)) return
 
-    hydrate?.()
     prepareVideo(video)
+    hydrate?.()
 
     if (pendingPlayAttempt?.generation === generation) return
 
@@ -421,6 +397,8 @@ function bootHeroVideos() {
     const reconcile = () => {
       if (autoplayAllowed() && !document.hidden) {
         root.removeAttribute("data-reduced")
+        prepareVideo(video)
+        video.autoplay = true
         video.preload = "metadata"
         controller.start()
       } else {
@@ -453,15 +431,22 @@ function bootHeroVideos() {
 function bootVideoVideos() {
   const videos = document.querySelectorAll<HTMLVideoElement>("[data-about-autoplay-video]")
   videos.forEach(video => {
+    const posterRoot = typeof video.closest === "function"
+      ? video.closest<HTMLElement>("[data-autoplay-poster-root]")
+      : null
     const existing = aboutControllers.get(video)
     const controller = existing ?? makeAutoplayController(video, {
       hydrate: () => hydrateVideoSources(video),
       maxAttempts: 8,
+      onPlay: () => posterRoot?.classList.add("is-playing"),
+      onStop: () => posterRoot?.classList.remove("is-playing"),
       resetOnStop: false,
     })
 
     const reconcile = () => {
       if (autoplayAllowed() && !document.hidden) {
+        prepareVideo(video)
+        video.autoplay = true
         video.preload = "metadata"
         controller.start()
       } else {
@@ -492,9 +477,14 @@ function bootVideoVideos() {
 function bootPreviewVideos() {
   const videos = document.querySelectorAll<HTMLVideoElement>("[data-preview-autoplay-video]")
   videos.forEach(video => {
+    const posterRoot = typeof video.closest === "function"
+      ? video.closest<HTMLElement>("[data-autoplay-poster-root]")
+      : null
     const existing = previewControllers.get(video)
     const controller = existing ?? makeAutoplayController(video, {
       maxAttempts: 8,
+      onPlay: () => posterRoot?.classList.add("is-playing"),
+      onStop: () => posterRoot?.classList.remove("is-playing"),
       resetOnStop: false,
       hydrate: () => {
         hydrateVideoSources(video)
@@ -503,6 +493,8 @@ function bootPreviewVideos() {
 
     const reconcile = () => {
       if (autoplayAllowed() && !document.hidden) {
+        prepareVideo(video)
+        video.autoplay = true
         video.preload = "metadata"
         controller.start()
       } else {
@@ -822,7 +814,15 @@ function bootThumbnailVideos() {
     resumeActiveStates()
   }
 
+  const recoverPlayFailure = (state: ThumbnailState) => {
+    if (state.unavailableReason !== "play") return
+    state.unavailableReason = state.failedSources.size >= state.sources.length
+      ? "source"
+      : undefined
+  }
+
   const reconcileAndResumeState = (state: ThumbnailState) => {
+    recoverPlayFailure(state)
     reconcile()
     if (state.playRequested && state.video.paused) state.controller.start()
   }
@@ -830,12 +830,7 @@ function bootThumbnailVideos() {
   const resumeFromUserGesture = () => {
     if (cleaned || document.hidden || !mediaAllowed()) return
 
-    states.forEach(state => {
-      if (state.unavailableReason !== "play") return
-      state.unavailableReason = state.failedSources.size >= state.sources.length
-        ? "source"
-        : undefined
-    })
+    states.forEach(recoverPlayFailure)
     resumeActiveStates()
   }
 
@@ -1006,57 +1001,11 @@ function bootThumbnailVideos() {
   if (connection) listen(connection, "change", recoverAllFailedStates)
 }
 
-function hasBackgroundVideos() {
-  const standaloneVideos = document.querySelectorAll<HTMLVideoElement>(
-    "[data-hero-autoplay-video], [data-about-autoplay-video], [data-preview-autoplay-video]",
-  )
-  if (Array.from(standaloneVideos).some(video => video.querySelector("source[data-src]"))) return true
-
-  const autoplayThumbnails = document.querySelectorAll<HTMLElement>(
-    "[data-thumbnail-video][data-autoplay='true']",
-  )
-  return Array.from(autoplayThumbnails).some(container => container.querySelector("video source[data-src]"))
-}
-
-function updateAutoplayControls() {
-  const enabled = autoplayAllowed()
-  const dataSaverEnabled = connection?.saveData === true
-
-  document.querySelectorAll<HTMLButtonElement>("[data-autoplay-control]").forEach(button => {
-    const label = button.querySelector<HTMLElement>("[data-autoplay-control-label]")
-    button.hidden = !hasBackgroundVideos()
-    button.disabled = dataSaverEnabled
-    button.title = dataSaverEnabled ? "Background videos are disabled by your data-saver setting" : ""
-    if (label) {
-      label.textContent = dataSaverEnabled
-        ? "Videos disabled by data saver"
-        : enabled
-          ? "Pause background videos"
-          : "Play background videos"
-    }
-  })
-}
-
-function bootAutoplayControl() {
-  document.querySelectorAll<HTMLButtonElement>("[data-autoplay-control]").forEach(button => {
-    if (button.dataset.autoplayControlReady === "1") return
-    button.dataset.autoplayControlReady = "1"
-    button.addEventListener("click", () => {
-      if (connection?.saveData === true) return
-      saveAutoplayChoice(autoplayAllowed() ? "pause" : "play")
-      notifyPolicyChange()
-    })
-  })
-  updateAutoplayControls()
-}
-
 function bootAllAutoplay() {
-  bootAutoplayControl()
   bootHeroVideos()
   bootVideoVideos()
   bootPreviewVideos()
   bootThumbnailVideos()
-  updateAutoplayControls()
 }
 
 function initAutoplay() {

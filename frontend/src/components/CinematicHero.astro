@@ -1,6 +1,6 @@
 ---
 import { getVideoHeroSettings } from "../lib/sanity.queries"
-import { imageAttributes, safePosterUrl, defaultHeroMedia } from "../lib/media"
+import { cloudinaryVideo, imageAttributes, safePosterUrl, defaultHeroMedia } from "../lib/media"
 import LineBreakText from "./LineBreakText.astro"
 
 const DEFAULT_CAPTION = "wild concepts captured by edgy and atypical video production"
@@ -19,6 +19,8 @@ const {
   minRevealMs = 0,
 } = props
 const safePoster = safePosterUrl(poster, defaultHeroMedia.poster)
+const compatibleWebm = cloudinaryVideo(webm, "webm")
+const compatibleMp4 = cloudinaryVideo(mp4, "mp4")
 const rawHeroCaption = typeof caption === "string" && caption.trim() ? caption.trim() : DEFAULT_CAPTION
 const heroCaption = rawHeroCaption.replace(/[ \t]{2,}/g, "\n")
 const captionScale = Math.min(1.8, Math.max(0.6, Number(captionTextScale) / 100 || 1))
@@ -59,8 +61,8 @@ const posterAttrs = imageAttributes({
     disableRemotePlayback
     aria-hidden="true"
   >
-    {webm ? <source data-src={webm} type="video/webm" /> : null}
-    {mp4 ? <source data-src={mp4} type="video/mp4" /> : null}
+    {compatibleWebm ? <source data-src={compatibleWebm} type="video/webm" /> : null}
+    {compatibleMp4 ? <source data-src={compatibleMp4} type="video/mp4" /> : null}
   </video>
 
   <div class="vh-overlay" aria-hidden="true"></div>

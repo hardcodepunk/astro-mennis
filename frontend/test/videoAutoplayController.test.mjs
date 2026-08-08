@@ -275,6 +275,7 @@ await test("times out a play request that emits play but never starts playing", 
       exhausted += 1
       controller.stop()
     },
+    maxAttempts: 0,
     playStartTimeoutMs: 25,
   })
 
@@ -309,6 +310,28 @@ await test("cancels the play-start lease when the play promise fulfills", async 
   controller.stop()
 })
 
+await test("a playing event confirms playback while the play promise is still pending", async () => {
+  const video = new FakeVideo()
+  let exhausted = 0
+  let played = 0
+  video.playImplementation = () => new Promise(() => {})
+  const controller = makeAutoplayController(video, {
+    maxAttempts: 0,
+    onExhausted: () => { exhausted += 1 },
+    onPlay: () => { played += 1 },
+    playStartTimeoutMs: 25,
+  })
+
+  controller.start()
+  video.paused = false
+  video.dispatchEvent(new Event("playing"))
+  await sleep(40)
+
+  assert.equal(played, 1)
+  assert.equal(exhausted, 0)
+  controller.stop()
+})
+
 await test("ignores a stale playing event after a new generation starts", async () => {
   const video = new FakeVideo()
   let exhausted = 0
@@ -319,6 +342,7 @@ await test("ignores a stale playing event after a new generation starts", async 
       exhausted += 1
       controller.stop()
     },
+    maxAttempts: 0,
     playStartTimeoutMs: 25,
   })
 
@@ -357,6 +381,39 @@ await test("retries a hung controller through the default play-start lease", asy
   controller.stop()
 })
 
+await test("a hung thumbnail-style attempt uses its retry budget before exhausting", async () => {
+  const video = new FakeVideo()
+  let exhausted = 0
+  let played = 0
+  video.playImplementation = () => {
+    video.paused = false
+    return new Promise(() => {})
+  }
+  const controller = makeAutoplayController(video, {
+    maxAttempts: 1,
+    onExhausted: () => { exhausted += 1 },
+    onPlay: () => { played += 1 },
+    playStartTimeoutMs: 20,
+  })
+
+  controller.start()
+  await sleep(30)
+  assert.equal(exhausted, 0)
+  assert.equal(video.pauseCalls, 1)
+
+  video.playImplementation = () => {
+    video.paused = false
+    return Promise.resolve()
+  }
+  video.dispatchEvent(new Event("loadeddata"))
+  await flushMicrotasks()
+
+  assert.equal(video.playCalls, 2)
+  assert.equal(played, 1)
+  assert.equal(exhausted, 0)
+  controller.stop()
+})
+
 await test("pauses the play-start lease while the document is hidden", async () => {
   const video = new FakeVideo()
   let exhausted = 0
@@ -367,6 +424,7 @@ await test("pauses the play-start lease while the document is hidden", async () 
       exhausted += 1
       controller.stop()
     },
+    maxAttempts: 0,
     playStartTimeoutMs: 30,
   })
 
@@ -519,6 +577,18 @@ await test("trusted gestures retry play exhaustion without reviving failed sourc
   assert.equal(failedSource.hasAttribute("src"), false)
 
   allowTopVideos()
+  const hoveredItem = fakeDocument.thumbnailItems[0]
+  hoveredItem.hover = true
+  const callsBeforeHover = videos[0].playCalls
+  hoveredItem.dispatchEvent(new Event("pointerenter"))
+  await flushMicrotasks()
+  assert.equal(videos[0].playCalls, callsBeforeHover + 1)
+  assert.equal(videos[0].paused, false)
+  assert.equal(videos[0].sources[0].hasAttribute("src"), true)
+  hoveredItem.hover = false
+
+  await restartAndExhaustTopVideos()
+  allowTopVideos()
   const callsBeforeTouch = videos.slice(0, 2).map(video => video.playCalls)
   fakeWindow.dispatchEvent(pointerEvent("pointerdown", "touch"))
   assert.deepEqual(
@@ -579,5 +649,56 @@ await test("trusted gestures retry play exhaustion without reviving failed sourc
     videos.slice(0, 2).map(video => video.playCalls),
     callsAfterCleanup,
   )
+  fakeDocument.thumbnailItems = []
+})
+
+await test("hover-only thumbnails recover from play exhaustion and stop on leave", async () => {
+  const video = new FakeVideo("/hover-only.webm")
+  const item = new FakeThumbnailItem(video, { autoplay: false })
+  video.playImplementation = () => Promise.reject(new Error("autoplay denied"))
+  fakeDocument.thumbnailItems = [item]
+  fakeDocument.dispatchEvent(new Event("astro:after-swap"))
+  await flushMicrotasks()
+
+  assert.equal(video.playCalls, 0)
+
+  item.hover = true
+  item.dispatchEvent(new Event("pointerenter"))
+  await flushMicrotasks()
+  for (let retry = 0; retry < 9; retry += 1) {
+    video.dispatchEvent(new Event("loadeddata"))
+    await flushMicrotasks()
+  }
+
+  const callsAfterExhaustion = video.playCalls
+  assert.equal(callsAfterExhaustion, 9)
+  video.dispatchEvent(new Event("loadeddata"))
+  await flushMicrotasks()
+  assert.equal(video.playCalls, callsAfterExhaustion)
+
+  item.hover = false
+  item.dispatchEvent(new Event("pointerleave"))
+  video.playImplementation = () => {
+    video.paused = false
+    return Promise.resolve()
+  }
+
+  item.hover = true
+  item.dispatchEvent(new Event("pointerenter"))
+  await flushMicrotasks()
+
+  assert.equal(video.playCalls, callsAfterExhaustion + 1)
+  assert.equal(video.paused, false)
+  assert.equal(item.container.classList.contains("is-playing"), true)
+  assert.equal(video.sources[0].hasAttribute("src"), true)
+
+  item.hover = false
+  item.dispatchEvent(new Event("pointerleave"))
+
+  assert.equal(video.paused, true)
+  assert.equal(item.container.classList.contains("is-playing"), false)
+  assert.equal(video.sources[0].hasAttribute("src"), false)
+
+  fakeDocument.dispatchEvent(new Event("astro:before-swap"))
   fakeDocument.thumbnailItems = []
 })

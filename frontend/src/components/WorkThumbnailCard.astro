@@ -1,6 +1,6 @@
 ---
 import type { WorkSummary } from "../lib/sanity.queries"
-import { imageAttributes } from "../lib/media"
+import { cloudinaryVideo, imageAttributes } from "../lib/media"
 
 type HeadingTag = "h2" | "h3"
 type CardVariant = "default" | "featuredPrimary" | "featuredSecondary"
@@ -18,6 +18,8 @@ const {
 const Heading = headingTag
 const hasPreviewVideo = Boolean(work.preview.webm || work.preview.mp4)
 const shouldAutoplay = Boolean(work.thumbnailAutoplay && hasPreviewVideo)
+const previewWebm = cloudinaryVideo(work.preview.webm, "webm")
+const previewMp4 = cloudinaryVideo(work.preview.mp4, "mp4")
 const isPrimary = variant === "featuredPrimary"
 const isSecondary = variant === "featuredSecondary"
 const imageSize = isPrimary
@@ -71,10 +73,10 @@ const poster = imageAttributes({
         preload="none"
         aria-hidden="true"
       >
-        {work.preview.webm ? (
-          <source data-src={work.preview.webm} type="video/webm" />
+        {previewWebm ? (
+          <source data-src={previewWebm} type="video/webm" />
         ) : null}
-        {work.preview.mp4 ? <source data-src={work.preview.mp4} type="video/mp4" /> : null}
+        {previewMp4 ? <source data-src={previewMp4} type="video/mp4" /> : null}
       </video>
     ) : null}
   </div>

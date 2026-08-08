@@ -122,6 +122,11 @@ await test("generic pointer listeners require trusted activation and clean up", 
   const video = new FakeVideo()
   await bootAndExhaustGenericVideo(video, "DOMContentLoaded")
 
+  assert.equal(video.autoplay, true)
+  assert.equal(video.muted, true)
+  assert.equal(video.defaultMuted, true)
+  assert.equal(video.playsInline, true)
+
   const callsAfterExhaustion = video.playCalls
   fakeWindow.dispatchEvent(pointerEvent("pointerdown", "mouse", false))
   fakeWindow.dispatchEvent(pointerEvent("pointerup", "touch", false))

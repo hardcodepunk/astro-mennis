@@ -58,7 +58,7 @@ test("server-rendered facades do not eagerly reference YouTube infrastructure", 
   assert.doesNotMatch(display, /(?:i\.ytimg\.com|youtubePoster|youtube-nocookie\.com|youtube\.com)/i)
   assert.match(display, /src=\{facadePosterSrc\}/)
   assert.match(display, /src:\s*work\.preview\.poster/)
-  assert.match(display, />Play on YouTube<\/span>/)
+  assert.doesNotMatch(display, /yt-overlay__provider|>Play on YouTube<\/span>/)
   assert.match(display, /aria-label=\{`Play \$\{singleMediaLabel\} on YouTube`\}/)
   assert.doesNotMatch(workPage, /youtubePoster|i\.ytimg\.com/i)
   assert.match(workPage, /src:\s*work\.preview\.poster/)

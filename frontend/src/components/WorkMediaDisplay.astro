@@ -79,7 +79,6 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
               sizes={facadePoster.sizes}
             />
             <span class="yt-overlay__play" aria-hidden="true" />
-            <span class="yt-overlay__provider" aria-hidden="true">Play on YouTube</span>
           </button>
           <div class="yt-feedback">
             <p
@@ -150,7 +149,6 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
                       sizes={facadePoster.sizes}
                     />
                     <span class="yt-overlay__play" aria-hidden="true" />
-                    <span class="yt-overlay__provider" aria-hidden="true">Play on YouTube</span>
                   </button>
                   <div class="yt-feedback">
                     <p
@@ -403,20 +401,6 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     border: 2px solid rgba(255, 255, 255, 0.92);
     cursor: pointer;
     font: inherit;
-  }
-
-  .yt-overlay__provider {
-    position: absolute;
-    left: 50%;
-    bottom: clamp(0.75rem, 3vw, 1.5rem);
-    transform: translateX(-50%);
-    padding: 0.45rem 0.65rem;
-    background: color-mix(in srgb, var(--color-brand-secondary) 88%, transparent);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
-    line-height: 1.2;
-    white-space: nowrap;
   }
 
   .yt-frame :global(.plyr--video.plyr--hide-controls:focus-within .plyr__controls) {

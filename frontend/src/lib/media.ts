@@ -4,6 +4,7 @@ import {
 } from "@astro-mennis/media-contract"
 
 const CLOUDINARY_UPLOAD = "/upload/"
+const CLOUDINARY_VIDEO_UPLOAD = "/video/upload/"
 
 type CloudinaryQuality = "auto" | "auto:eco"
 type SanityCrop = {
@@ -55,6 +56,58 @@ function isCloudinaryTransformSegment(segment: string) {
     const separatorIndex = component.indexOf("_")
     return separatorIndex > 0 && CLOUDINARY_TRANSFORM_KEYS.has(component.slice(0, separatorIndex))
   })
+}
+
+type CloudinaryVideoFormat = "mp4" | "webm"
+
+const CLOUDINARY_VIDEO_DELIVERY_TRANSFORMS = new Set(["ac", "f", "q", "vc"])
+
+export function cloudinaryVideo(
+  url: string | undefined,
+  format: CloudinaryVideoFormat,
+) {
+  if (!url) return undefined
+
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return url
+  }
+
+  if (parsed.hostname !== "res.cloudinary.com" || !parsed.pathname.includes(CLOUDINARY_VIDEO_UPLOAD)) {
+    return url
+  }
+
+  const markerIndex = parsed.pathname.indexOf(CLOUDINARY_VIDEO_UPLOAD)
+  const beforeUpload = parsed.pathname.slice(0, markerIndex + CLOUDINARY_VIDEO_UPLOAD.length)
+  const afterUpload = parsed.pathname.slice(markerIndex + CLOUDINARY_VIDEO_UPLOAD.length)
+  const segments = afterUpload.split("/").filter(Boolean)
+  const versionIndex = segments.findIndex(segment => /^v\d+$/.test(segment))
+  const transformSegmentCount = versionIndex >= 0
+    ? versionIndex
+    : segments.findIndex(segment => !isCloudinaryTransformSegment(segment))
+  const safeTransformCount = transformSegmentCount === -1 ? 0 : transformSegmentCount
+  const existingTransforms = segments.slice(0, safeTransformCount).flatMap(segment => segment.split(","))
+  const assetPath = segments.slice(safeTransformCount).join("/")
+  if (!assetPath) return url
+
+  const preservedTransforms = existingTransforms.filter(transform => {
+    const separatorIndex = transform.indexOf("_")
+    return separatorIndex <= 0 ||
+      !CLOUDINARY_VIDEO_DELIVERY_TRANSFORMS.has(transform.slice(0, separatorIndex))
+  })
+  const codec = format === "webm" ? "vp9" : "h264"
+  const transforms = [
+    ...preservedTransforms,
+    "q_auto:eco",
+    `vc_${codec}`,
+    "ac_none",
+    `f_${format}`,
+  ]
+
+  parsed.pathname = `${beforeUpload}${transforms.join(",")}/${assetPath}`
+  return parsed.toString()
 }
 
 export function safePosterUrl(url: string | undefined, fallback: string): string {

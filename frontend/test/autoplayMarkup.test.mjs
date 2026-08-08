@@ -9,6 +9,27 @@ const componentPaths = [
   new URL("../src/pages/about.astro", import.meta.url),
 ]
 
+test("the site layout has no global video play or pause control", async () => {
+  const source = await readFile(
+    new URL("../src/layouts/Layout.astro", import.meta.url),
+    "utf8",
+  )
+
+  assert.doesNotMatch(source, /AutoplayControl|data-autoplay-control/)
+})
+
+test("About and biography videos retain an independent poster while playback starts", async () => {
+  const [about, preview] = await Promise.all([
+    readFile(new URL("../src/pages/about.astro", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/VideoPreview.astro", import.meta.url), "utf8"),
+  ])
+
+  assert.match(about, /data-autoplay-poster-root/)
+  assert.match(about, /class="about-page__hero-poster"/)
+  assert.match(preview, /data-autoplay-poster-root/)
+  assert.match(preview, /class="pp-poster"/)
+})
+
 test("background videos cannot start or fetch media before policy hydration", async () => {
   for (const path of componentPaths) {
     const source = await readFile(path, "utf8")

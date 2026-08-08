@@ -7,7 +7,7 @@ import LogosMarquee from "../components/LogosMarquee.astro"
 import TextPanel from "../components/TextPanel.astro"
 import { getBioWithPreview, getSeoSettings } from "../lib/sanity.queries"
 import { breadcrumbJsonLd, formatTitle, metaDescription, socialImage } from "../lib/seo"
-import { cloudinaryImage, defaultHeroMedia, imageAttributes, safePosterUrl } from "../lib/media"
+import { cloudinaryImage, cloudinaryVideo, defaultHeroMedia, imageAttributes, safePosterUrl } from "../lib/media"
 import { DEFAULT_APPROACH_PANEL, DEFAULT_CONTACT_REASONS, resolveContactReasons, resolveTextPanel } from "../lib/contentDefaults"
 
 const aboutDoc = await getBioWithPreview()
@@ -17,6 +17,8 @@ const {mp4: DEFAULT_HERO_MP4, webm: DEFAULT_HERO_WEBM, poster: DEFAULT_HERO_POST
 const heroTitle = aboutDoc?.heroTitle ?? aboutDoc?.seoH1 ?? "Filmmaking with clarity, rhythm and feel."
 const heroMp4 = aboutDoc?.heroVideo?.mp4 ?? DEFAULT_HERO_MP4
 const heroWebm = aboutDoc?.heroVideo?.webm ?? DEFAULT_HERO_WEBM
+const compatibleHeroMp4 = cloudinaryVideo(heroMp4, "mp4")
+const compatibleHeroWebm = cloudinaryVideo(heroWebm, "webm")
 const heroPoster = safePosterUrl(aboutDoc?.heroVideo?.poster, DEFAULT_HERO_POSTER)
 const optimizedHeroPoster = cloudinaryImage(heroPoster, 1920)
 const heroTitleScale = Math.min(1.8, Math.max(0.6, (aboutDoc?.heroTitleTextScale ?? 100) / 100))
@@ -59,7 +61,11 @@ const jsonLd = breadcrumbJsonLd(
   <div class="about-page">
     <section class="about-page__hero">
       <div class="about-page__inner about-page__hero-inner">
-        <div class="about-page__hero-frame" style={`--about-hero-title-scale: ${heroTitleScale};`}>
+        <div
+          class="about-page__hero-frame"
+          data-autoplay-poster-root
+          style={`--about-hero-title-scale: ${heroTitleScale};`}
+        >
           <video
             class="about-page__hero-video"
             data-about-autoplay-video
@@ -73,9 +79,21 @@ const jsonLd = breadcrumbJsonLd(
             height="1080"
             aria-hidden="true"
           >
-            {heroWebm ? <source data-src={heroWebm} type="video/webm" /> : null}
-            {heroMp4 ? <source data-src={heroMp4} type="video/mp4" /> : null}
+            {compatibleHeroWebm ? <source data-src={compatibleHeroWebm} type="video/webm" /> : null}
+            {compatibleHeroMp4 ? <source data-src={compatibleHeroMp4} type="video/mp4" /> : null}
           </video>
+          <img
+            class="about-page__hero-poster"
+            src={preloadHero.src}
+            srcset={preloadHero.srcset}
+            sizes={preloadHero.sizes}
+            width="1920"
+            height="1080"
+            alt=""
+            decoding="async"
+            fetchpriority="high"
+            aria-hidden="true"
+          />
           <div class="about-page__hero-shade" aria-hidden="true"></div>
       <div class="about-page__hero-content">
           <h1 class="about-page__title ds-title ds-title--hero"><LineBreakText text={heroTitle} /></h1>
@@ -141,6 +159,7 @@ const jsonLd = breadcrumbJsonLd(
     }
 
     .about-page__hero-video,
+    .about-page__hero-poster,
     .about-page__hero-shade {
       position: absolute;
       inset: 0;
@@ -150,6 +169,17 @@ const jsonLd = breadcrumbJsonLd(
 
     .about-page__hero-video {
       object-fit: cover;
+    }
+
+    .about-page__hero-poster {
+      object-fit: cover;
+      opacity: 1;
+      transition: opacity 180ms ease-out;
+      pointer-events: none;
+    }
+
+    .about-page__hero-frame.is-playing .about-page__hero-poster {
+      opacity: 0;
     }
 
     .about-page__hero-shade {

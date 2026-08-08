@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { cloudinaryImage } from "../src/lib/media.ts"
+import { cloudinaryImage, cloudinaryVideo } from "../src/lib/media.ts"
 
 test("adds transforms before a versioned Cloudinary asset", () => {
   assert.equal(
@@ -49,4 +49,39 @@ test("leaves non-Cloudinary and non-image URLs unchanged", () => {
   const video = "https://res.cloudinary.com/demo/video/upload/v1/video.mp4"
   assert.equal(cloudinaryImage(lookalike, 640), lookalike)
   assert.equal(cloudinaryImage(video, 640), video)
+})
+
+test("requests broadly compatible codecs for Cloudinary background video", () => {
+  assert.equal(
+    cloudinaryVideo(
+      "https://res.cloudinary.com/demo/video/upload/v123/folder/preview.webm",
+      "webm",
+    ),
+    "https://res.cloudinary.com/demo/video/upload/q_auto:eco,vc_vp9,ac_none,f_webm/v123/folder/preview.webm",
+  )
+  assert.equal(
+    cloudinaryVideo(
+      "https://res.cloudinary.com/demo/video/upload/v123/folder/preview.mp4",
+      "mp4",
+    ),
+    "https://res.cloudinary.com/demo/video/upload/q_auto:eco,vc_h264,ac_none,f_mp4/v123/folder/preview.mp4",
+  )
+})
+
+test("replaces incompatible video delivery settings while preserving layout transforms", () => {
+  assert.equal(
+    cloudinaryVideo(
+      "https://res.cloudinary.com/demo/video/upload/c_fill,w_800,q_50,vc_av1,ac_aac,f_webm/v123/preview.webm?download=1#clip",
+      "webm",
+    ),
+    "https://res.cloudinary.com/demo/video/upload/c_fill,w_800,q_auto:eco,vc_vp9,ac_none,f_webm/v123/preview.webm?download=1#clip",
+  )
+})
+
+test("leaves non-Cloudinary video URLs unchanged", () => {
+  const external = "https://media.example.test/preview.webm"
+  const lookalike = "https://res.cloudinary.com.evil.test/video/upload/v1/preview.webm"
+
+  assert.equal(cloudinaryVideo(external, "webm"), external)
+  assert.equal(cloudinaryVideo(lookalike, "webm"), lookalike)
 })
