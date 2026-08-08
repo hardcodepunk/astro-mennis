@@ -11,6 +11,7 @@ import {
   assertExplicitDeploymentVariables,
   assertNonInteractiveProductionConfirmation,
   DEPLOY_GUARD_VALUE,
+  deploymentArgumentsForKind,
   readSanityEnvironment,
 } from '../sanity.environment.ts'
 
@@ -22,6 +23,7 @@ const deploymentVariableNames = new Set([
   'SANITY_STUDIO_APP_ID',
   'SANITY_STUDIO_SITE_URL',
 ])
+const deploymentUsage = 'Usage: sanity-deploy.mjs <staging|production> <studio|graphql> [options]'
 
 async function readOptionalEnvironmentFile(path) {
   try {
@@ -45,18 +47,17 @@ export async function loadDeploymentFileEnvironment(target, directory = backendD
   )
 }
 
-function parseDeploymentRequest(arguments_) {
-  const [target, kind, ...unexpected] = arguments_
+export function parseDeploymentRequest(arguments_) {
+  const [target, kind, ...options] = arguments_
 
   if (
-    unexpected.length > 0 ||
     (target !== 'staging' && target !== 'production') ||
     (kind !== 'studio' && kind !== 'graphql')
   ) {
-    throw new Error('Usage: sanity-deploy.mjs <staging|production> <studio|graphql>')
+    throw new Error(deploymentUsage)
   }
 
-  return {target, kind}
+  return {target, kind, command: deploymentArgumentsForKind(kind, options)}
 }
 
 async function confirmProduction(originalEnvironment) {
@@ -79,6 +80,29 @@ async function confirmProduction(originalEnvironment) {
   }
 }
 
+export function attachSignalForwarding(child, parentProcess = process) {
+  let hasForwardedSignal = false
+  const signalHandlers = ['SIGINT', 'SIGTERM', 'SIGHUP'].map((signal) => [
+    signal,
+    () => {
+      if (child.exitCode !== null || child.signalCode !== null) return
+
+      const childSignal = hasForwardedSignal ? 'SIGKILL' : signal
+      if (child.kill(childSignal)) hasForwardedSignal = true
+    },
+  ])
+
+  for (const [signal, handler] of signalHandlers) {
+    parentProcess.on(signal, handler)
+  }
+
+  return () => {
+    for (const [signal, handler] of signalHandlers) {
+      parentProcess.removeListener(signal, handler)
+    }
+  }
+}
+
 function runSanity(arguments_, environment) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [sanityBinary, ...arguments_], {
@@ -87,21 +111,7 @@ function runSanity(arguments_, environment) {
       stdio: 'inherit',
     })
 
-    const signalHandlers = ['SIGINT', 'SIGTERM', 'SIGHUP'].map((signal) => [
-      signal,
-      () => {
-        if (!child.killed) child.kill(signal)
-      },
-    ])
-    const removeSignalHandlers = () => {
-      for (const [signal, handler] of signalHandlers) {
-        process.removeListener(signal, handler)
-      }
-    }
-
-    for (const [signal, handler] of signalHandlers) {
-      process.on(signal, handler)
-    }
+    const removeSignalHandlers = attachSignalForwarding(child)
 
     child.once('error', (error) => {
       removeSignalHandlers()
@@ -120,7 +130,7 @@ function runSanity(arguments_, environment) {
 }
 
 export async function main() {
-  const {target, kind} = parseDeploymentRequest(process.argv.slice(2))
+  const {target, kind, command} = parseDeploymentRequest(process.argv.slice(2))
   const fileEnvironment = await loadDeploymentFileEnvironment(target)
   const deploymentVariables = {
     ...fileEnvironment,
@@ -148,7 +158,6 @@ export async function main() {
     deploymentVariables.SANITY_DEPLOY_CONFIRMED = DEPLOY_CONFIRMATION_VALUE
   }
 
-  const command = kind === 'studio' ? ['deploy'] : ['graphql', 'deploy']
   process.exitCode = await runSanity(command, deploymentVariables)
 }
 

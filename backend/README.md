@@ -35,6 +35,25 @@ deployment. The wrapper accepts explicit values from `.env.<target>`, an optiona
 are ignored for deployment authorization, even though normal local Studio builds retain the
 checked production defaults.
 
+Run a guarded GraphQL dry-run to validate the schema and inspect breaking changes without
+deploying:
+
+```sh
+npm run deploy-graphql:staging -- --dry-run
+npm run deploy-graphql:production -- --dry-run
+```
+
+After reviewing the dry-run output, an intentional breaking deployment can use `--force`:
+
+```sh
+npm run deploy-graphql:staging -- --force
+npm run deploy-graphql:production -- --force
+```
+
+Warning: `--force` performs a real deployment and suppresses Sanity's breaking-change
+confirmation. Use it only after reviewing the dry-run output. It does not bypass target validation
+or production confirmation.
+
 The wrapper validates the project, dataset, hosted Studio application, and preview URL before it
 starts the Sanity CLI. A staging command is rejected if it resolves to a production target. A
 production command prints the resolved target and requires typing `production` before continuing.

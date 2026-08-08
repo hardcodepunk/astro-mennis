@@ -101,11 +101,19 @@ npm run deploy:staging
 npm run deploy:production
 npm run deploy-graphql:staging
 npm run deploy-graphql:production
+
+# Validate GraphQL changes without deploying
+npm run deploy-graphql:staging -- --dry-run
 ```
 
 Staging commands reject the production dataset and hosted application. Production commands require
 the exact approved target plus an independent `production` confirmation. Direct Sanity deployment
 commands are blocked; see `backend/README.md` for non-interactive automation confirmation details.
+
+To intentionally deploy reviewed breaking GraphQL changes, append `-- --force` to the guarded
+GraphQL command, for example `npm run deploy-graphql:staging -- --force`. Warning: `--force`
+performs a real deployment and suppresses Sanity's breaking-change confirmation; run a dry-run and
+review its output first. It does not bypass target validation or production confirmation.
 
 The frontend is statically generated, so content changes in Sanity are not visible on production until the frontend is rebuilt and redeployed.
 

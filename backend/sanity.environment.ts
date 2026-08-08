@@ -8,6 +8,12 @@ export const PRODUCTION_SANITY_ENVIRONMENT = Object.freeze({
   siteUrl: 'https://www.demennis.be',
 })
 
+const productionPreviewOrigins = new Set([
+  PRODUCTION_SANITY_ENVIRONMENT.siteUrl,
+  'https://demennis.be',
+  'https://astro-mennis.vercel.app',
+])
+
 export type DeployTarget = 'staging' | 'production'
 export type DeploymentKind = 'studio' | 'graphql'
 
@@ -56,6 +62,7 @@ function requireSiteUrl(value: string): string {
     parsed.protocol !== 'https:' ||
     parsed.username ||
     parsed.password ||
+    parsed.hostname.endsWith('.') ||
     parsed.pathname !== '/' ||
     parsed.search ||
     parsed.hash
@@ -80,7 +87,7 @@ export function readSanityEnvironment(environment: EnvironmentVariables): Sanity
     dataset: requireMatch(
       'SANITY_STUDIO_DATASET',
       environmentValue(environment, 'SANITY_STUDIO_DATASET', PRODUCTION_SANITY_ENVIRONMENT.dataset),
-      /^[a-z0-9](?:[-_a-z0-9]{0,62}[a-z0-9])$/,
+      /^[a-z0-9](?:[-_a-z0-9]{0,62}[a-z0-9])?$/,
     ),
     appId: requireMatch(
       'SANITY_STUDIO_APP_ID',
@@ -149,7 +156,7 @@ export function assertDeploymentEnvironment(
     throw new Error('Staging Studio deployment cannot target the production application')
   }
 
-  if (kind === 'studio' && environment.siteUrl === PRODUCTION_SANITY_ENVIRONMENT.siteUrl) {
+  if (kind === 'studio' && productionPreviewOrigins.has(environment.siteUrl)) {
     throw new Error('Staging Studio deployment cannot use the production preview URL')
   }
 }
@@ -180,7 +187,11 @@ export function assertNonInteractiveProductionConfirmation(variables: Environmen
 export function deploymentKindFromArguments(
   arguments_: readonly string[],
 ): DeploymentKind | undefined {
-  if (arguments_.some((argument) => argument === '--help' || argument === '-h')) {
+  const argumentSeparator = arguments_.indexOf('--')
+  const optionArguments =
+    argumentSeparator === -1 ? arguments_ : arguments_.slice(0, argumentSeparator)
+
+  if (optionArguments.some((argument) => argument === '--help' || argument === '-h')) {
     return undefined
   }
 
@@ -193,8 +204,48 @@ export function deploymentKindFromArguments(
   return undefined
 }
 
+const graphqlDeploymentOptions = new Set(['--dry-run', '--force'])
+
+export function deploymentArgumentsForKind(
+  kind: DeploymentKind,
+  options: readonly string[] = [],
+): string[] {
+  if (kind === 'studio') {
+    if (options.length > 0) {
+      throw new Error('Studio deployment does not accept command-line options')
+    }
+
+    return ['deploy']
+  }
+
+  const uniqueOptions = new Set<string>()
+  for (const option of options) {
+    if (!graphqlDeploymentOptions.has(option) || uniqueOptions.has(option)) {
+      throw new Error(
+        'GraphQL deployment options must be unique and limited to --dry-run and --force',
+      )
+    }
+
+    uniqueOptions.add(option)
+  }
+
+  return ['graphql', 'deploy', ...options]
+}
+
 function isDeployTarget(value: string | undefined): value is DeployTarget {
   return value === 'staging' || value === 'production'
+}
+
+function directDeploymentError(kind: DeploymentKind): Error {
+  if (kind === 'studio') {
+    return new Error(
+      'Direct Sanity Studio deployments are disabled. Use npm run deploy:staging or npm run deploy:production.',
+    )
+  }
+
+  return new Error(
+    'Direct Sanity GraphQL deployments are disabled. Use npm run deploy-graphql:staging or npm run deploy-graphql:production.',
+  )
 }
 
 export function assertGuardedCliDeployment(
@@ -214,12 +265,21 @@ export function assertGuardedCliDeployment(
     guardedKind !== detectedKind ||
     variables.SANITY_ACTIVE_ENV !== target
   ) {
-    throw new Error(
-      'Direct Sanity deployments are disabled. Use an explicit npm run deploy:* command.',
-    )
+    throw directDeploymentError(detectedKind)
   }
 
-  const expectedArguments = detectedKind === 'studio' ? ['deploy'] : ['graphql', 'deploy']
+  const commandArgumentCount = detectedKind === 'studio' ? 1 : 2
+  let expectedArguments: string[]
+
+  try {
+    expectedArguments = deploymentArgumentsForKind(
+      detectedKind,
+      arguments_.slice(commandArgumentCount),
+    )
+  } catch {
+    throw new Error('Deployment flags and positional target overrides are disabled')
+  }
+
   const hasOnlyExpectedArguments =
     arguments_.length === expectedArguments.length &&
     arguments_.every((argument, index) => argument === expectedArguments[index])
