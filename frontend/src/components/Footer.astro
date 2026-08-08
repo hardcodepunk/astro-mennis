@@ -29,6 +29,15 @@ const legalDownloadUrl = legalUrl
     </div>
 
     <div class="footer-meta">
+      <a
+        class="footer-credit ds-progress-link ds-progress-link--spacious"
+        href="https://hardcodepunk.be/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Website created by Hardcodepunk
+      </a>
+
       {
         legalDownloadUrl ? (
           <a
@@ -151,6 +160,7 @@ const legalDownloadUrl = legalUrl
       display: inline-block;
     }
 
+    .footer-credit,
     .footer-legal {
       color: var(--color-brand-primary);
       font-size: 0.72rem;

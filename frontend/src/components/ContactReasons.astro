@@ -11,6 +11,7 @@ type Props = {
 const { kicker, title, items, mirrorLayout = false } = Astro.props as Props
 const safeKicker = kicker?.trim() ?? ""
 const safeTitle = title?.trim() ?? ""
+const flowingTitle = safeTitle.replace(/\s+/g, " ")
 const safeItems = items.map(item => item.trim()).filter(Boolean)
 const hasHeading = Boolean(safeKicker || safeTitle)
 ---
@@ -25,7 +26,8 @@ const hasHeading = Boolean(safeKicker || safeTitle)
               {safeKicker ? <p class="cr-kicker ds-kicker">{safeKicker}</p> : null}
               {safeTitle ? (
                 <h2 id="contact-reasons-title" class="cr-title ds-title ds-title--xl">
-                  <LineBreakText text={safeTitle} />
+                  <span class="cr-title__formatted"><LineBreakText text={safeTitle} /></span>
+                  <span class="cr-title__flow">{flowingTitle}</span>
                 </h2>
               ) : null}
             </div>
@@ -80,6 +82,10 @@ const hasHeading = Boolean(safeKicker || safeTitle)
     max-width: 12ch;
   }
 
+  .cr-title__flow {
+    display: none;
+  }
+
   .cr-list {
     display: grid;
     gap: 1rem;
@@ -113,7 +119,15 @@ const hasHeading = Boolean(safeKicker || safeTitle)
     }
 
     .cr-title {
-      max-width: 14ch;
+      max-width: none;
+    }
+
+    .cr-title__formatted {
+      display: none;
+    }
+
+    .cr-title__flow {
+      display: inline;
     }
   }
 </style>
