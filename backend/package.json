@@ -1,6 +1,7 @@
 {
   "name": "mennis",
   "private": true,
+  "type": "module",
   "version": "1.0.0",
   "main": "package.json",
   "license": "UNLICENSED",
@@ -14,9 +15,12 @@
     "build": "sanity build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "check": "npm run lint && npm run typecheck && npm run build",
-    "deploy": "sanity deploy",
-    "deploy-graphql": "sanity graphql deploy"
+    "test": "node --test tests/*.test.mjs",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "deploy:staging": "node scripts/sanity-deploy.mjs staging studio",
+    "deploy:production": "node scripts/sanity-deploy.mjs production studio",
+    "deploy-graphql:staging": "node scripts/sanity-deploy.mjs staging graphql",
+    "deploy-graphql:production": "node scripts/sanity-deploy.mjs production graphql"
   },
   "keywords": [
     "sanity"
@@ -32,12 +36,14 @@
     "react-is": "^19.2.6"
   },
   "devDependencies": {
+    "@sanity/cli": "^6.6.0",
     "@sanity/eslint-config-studio": "^6.0.0",
     "@types/node": "^24.12.4",
     "@types/react": "^19.1",
     "eslint": "^9.28",
     "prettier": "^3.5",
-    "typescript": "^5.8"
+    "typescript": "^5.8",
+    "vite": "^7.3.2"
   },
   "prettier": {
     "semi": false,

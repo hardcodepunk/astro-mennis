@@ -59,10 +59,14 @@ const isActiveNav = (href: string) => {
   </div>
 </header>
 
-<div id="mobile-menu" class="mobile-menu" aria-hidden="true" data-menu-overlay>
+<div id="mobile-menu" class="mobile-menu" aria-hidden="true" data-menu-overlay hidden inert>
   <div class="mobile-menu__backdrop" data-menu-backdrop></div>
 
   <div class="mobile-menu__panel" role="dialog" aria-modal="true" aria-label="Site menu">
+    <button class="mobile-menu__close" type="button" aria-label="Close menu" data-menu-close>
+      <span class="mobile-menu__close-icon" aria-hidden="true"></span>
+    </button>
+
     <nav class="mobile-menu__nav px-6">
       <div class="mobile-menu__stack font-display text-2xl tracking-widest">
         {
@@ -185,8 +189,12 @@ const isActiveNav = (href: string) => {
   .mobile-menu {
     position: fixed;
     inset: 0;
-    z-index: 70;
+    z-index: 90;
     pointer-events: none;
+  }
+
+  .mobile-menu[hidden] {
+    display: none;
   }
 
   .mobile-menu__backdrop {
@@ -204,6 +212,34 @@ const isActiveNav = (href: string) => {
     width: 100%;
     transform: translateX(100%);
     transition: transform 240ms ease;
+  }
+
+  .mobile-menu__close {
+    position: absolute;
+    top: 0.5rem;
+    right: 1.5rem;
+    z-index: 1;
+    display: grid;
+    width: 2.5rem;
+    height: 3rem;
+    place-items: center;
+  }
+
+  .mobile-menu__close-icon,
+  .mobile-menu__close-icon::after {
+    width: 28px;
+    height: 3px;
+    background: var(--color-brand-secondary);
+    content: "";
+  }
+
+  .mobile-menu__close-icon {
+    transform: rotate(45deg);
+  }
+
+  .mobile-menu__close-icon::after {
+    display: block;
+    transform: rotate(90deg);
   }
 
   .mobile-menu__nav {
@@ -297,19 +333,120 @@ const isActiveNav = (href: string) => {
       return { header, btn, overlay, icon }
     }
 
-    const setMenuOpen = open => {
+    const restoreBackground = () => {
+      const inerted = window.__mennisMenuInerted || []
+      inerted.forEach(element => element.removeAttribute("inert"))
+      window.__mennisMenuInerted = []
+    }
+
+    const setBackgroundInert = overlay => {
+      restoreBackground()
+
+      const background = Array.from(document.body.children).filter(
+        element =>
+          element instanceof HTMLElement &&
+          element !== overlay &&
+          !element.hasAttribute("inert"),
+      )
+
+      background.forEach(element => element.setAttribute("inert", ""))
+      window.__mennisMenuInerted = background
+    }
+
+    const getMenuFocusable = () => {
+      const { overlay } = getHeaderParts()
+      if (!overlay) return []
+
+      return Array.from(
+        overlay.querySelectorAll(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter(element => !element.hasAttribute("inert"))
+    }
+
+    const focusFirstMenuItem = () => {
+      const { overlay } = getHeaderParts()
+      const firstItem = overlay?.querySelector(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (firstItem instanceof HTMLElement) firstItem.focus()
+    }
+
+    const clearPendingMenuClose = () => {
+      if (window.__mennisMenuCloseTimer) {
+        window.clearTimeout(window.__mennisMenuCloseTimer)
+      }
+      window.__mennisMenuCloseTimer = undefined
+
+      if (window.__mennisMenuCloseCleanup) window.__mennisMenuCloseCleanup()
+      window.__mennisMenuCloseCleanup = undefined
+    }
+
+    const setMenuOpen = (open, { returnFocus = true } = {}) => {
       const { header, btn, overlay, icon } = getHeaderParts()
       if (!btn || !overlay || !header) return
 
-      overlay.classList.toggle("is-open", open)
+      const wasOpen = btn.getAttribute("aria-expanded") === "true"
+      const transitionId = (window.__mennisMenuTransitionId || 0) + 1
+      window.__mennisMenuTransitionId = transitionId
+      clearPendingMenuClose()
+
+      if (open) {
+        overlay.hidden = false
+        overlay.removeAttribute("inert")
+        setBackgroundInert(overlay)
+      }
+
       overlay.setAttribute("aria-hidden", String(!open))
       btn.setAttribute("aria-expanded", String(open))
+      btn.setAttribute("aria-label", open ? "Close menu" : "Open menu")
       if (icon) icon.classList.toggle("is-open", open)
 
       header.classList.toggle("is-menu-open", open)
 
       document.documentElement.classList.toggle("overflow-hidden", open)
       document.body.classList.toggle("overflow-hidden", open)
+
+      if (open) {
+        if (!wasOpen) {
+          window.requestAnimationFrame(() => {
+            if (window.__mennisMenuTransitionId !== transitionId) return
+            window.requestAnimationFrame(() => {
+              if (window.__mennisMenuTransitionId !== transitionId) return
+              overlay.classList.add("is-open")
+              focusFirstMenuItem()
+            })
+          })
+        }
+        return
+      }
+
+      overlay.classList.remove("is-open")
+      overlay.setAttribute("inert", "")
+      restoreBackground()
+      if (wasOpen && returnFocus) btn.focus()
+
+      const finishClose = () => {
+        if (window.__mennisMenuTransitionId !== transitionId) return
+        clearPendingMenuClose()
+        overlay.hidden = true
+      }
+
+      if (!wasOpen || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        finishClose()
+        return
+      }
+
+      const panel = overlay.querySelector(".mobile-menu__panel")
+      const handleTransitionEnd = event => {
+        if (event.target !== panel || event.propertyName !== "transform") return
+        finishClose()
+      }
+      panel?.addEventListener("transitionend", handleTransitionEnd)
+      window.__mennisMenuCloseCleanup = () => {
+        panel?.removeEventListener("transitionend", handleTransitionEnd)
+      }
+      window.__mennisMenuCloseTimer = window.setTimeout(finishClose, 300)
     }
 
     const topThreshold = 8
@@ -343,27 +480,77 @@ const isActiveNav = (href: string) => {
 
         const button = target.closest("[data-menu-button]")
         if (button) {
-          const { overlay } = getHeaderParts()
-          if (!overlay) return
-          setMenuOpen(!overlay.classList.contains("is-open"))
+          setMenuOpen(button.getAttribute("aria-expanded") !== "true")
           return
         }
 
-        if (target.closest("[data-menu-backdrop]") || target.closest("[data-menu-link]")) {
+        if (target.closest("[data-menu-backdrop]") || target.closest("[data-menu-close]")) {
           setMenuOpen(false)
+          return
+        }
+
+        if (target.closest("[data-menu-link]")) {
+          setMenuOpen(false, { returnFocus: false })
         }
       })
 
       window.addEventListener("keydown", event => {
-        if (event.key === "Escape") setMenuOpen(false)
+        const { overlay } = getHeaderParts()
+        if (overlay?.getAttribute("aria-hidden") !== "false") return
+
+        if (event.key === "Escape") {
+          event.preventDefault()
+          setMenuOpen(false)
+          return
+        }
+
+        if (event.key !== "Tab") return
+
+        const focusable = getMenuFocusable()
+        if (!focusable.length) {
+          event.preventDefault()
+          return
+        }
+
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        const active = document.activeElement
+
+        if (event.shiftKey && (active === first || !focusable.includes(active))) {
+          event.preventDefault()
+          last.focus()
+        } else if (!event.shiftKey && (active === last || !focusable.includes(active))) {
+          event.preventDefault()
+          first.focus()
+        }
       })
 
-      window.addEventListener("hashchange", () => setMenuOpen(false))
+      document.addEventListener("focusin", event => {
+        const { overlay } = getHeaderParts()
+        if (overlay?.getAttribute("aria-hidden") !== "false") return
+        if (event.target instanceof Node && overlay.contains(event.target)) return
+        focusFirstMenuItem()
+      })
+
+      window.addEventListener("hashchange", () => setMenuOpen(false, { returnFocus: false }))
+      window.addEventListener("resize", () => {
+        if (window.matchMedia("(min-width: 768px)").matches) {
+          setMenuOpen(false, { returnFocus: false })
+        }
+      })
       window.addEventListener("scroll", updateHeaderBg, { passive: true })
-      document.addEventListener("astro:page-load", updateHeaderBg)
-      document.addEventListener("astro:after-swap", updateHeaderBg)
+      document.addEventListener("astro:before-swap", () => setMenuOpen(false, { returnFocus: false }))
+      document.addEventListener("astro:page-load", () => {
+        setMenuOpen(false, { returnFocus: false })
+        updateHeaderBg()
+      })
+      document.addEventListener("astro:after-swap", () => {
+        setMenuOpen(false, { returnFocus: false })
+        updateHeaderBg()
+      })
     }
 
+    setMenuOpen(false, { returnFocus: false })
     updateHeaderBg()
   })()
 </script>

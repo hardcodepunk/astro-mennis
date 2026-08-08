@@ -53,7 +53,11 @@ Backend:
 
 - `SANITY_STUDIO_PROJECT_ID`: Sanity project id. Defaults to `454gxa26` if unset.
 - `SANITY_STUDIO_DATASET`: Sanity dataset. Defaults to `production` if unset.
-- `SANITY_STUDIO_SITE_URL`: Production frontend URL used for Studio preview links. Defaults to `https://www.demennis.be`.
+- `SANITY_STUDIO_APP_ID`: hosted Studio application id. Production uses `st7zms5txswv66ebr4184g2g`.
+- `SANITY_STUDIO_SITE_URL`: frontend origin used for Studio preview links. Defaults to `https://www.demennis.be`.
+
+Deployment commands require their target values explicitly in `.env.staging` or `.env.production`;
+copy the corresponding checked example file before deploying.
 
 ## Quality Gates
 
@@ -67,7 +71,8 @@ cd ../backend
 npm run check
 ```
 
-The frontend check runs Astro diagnostics and a production static build. The backend check runs ESLint, TypeScript, and a Sanity Studio build.
+The frontend check runs Astro diagnostics and a production static build. The backend check runs
+ESLint, TypeScript, deployment safety and bundle tests, and a Sanity Studio build.
 
 GitHub Actions runs the same checks on pushes and pull requests targeting `main`.
 
@@ -82,12 +87,19 @@ npm run build
 
 The generated output is `frontend/dist`.
 
-Deploy the Studio with Sanity:
+Deploy the Studio or GraphQL schema through an explicit guarded target:
 
 ```sh
 cd backend
-npm run deploy
+npm run deploy:staging
+npm run deploy:production
+npm run deploy-graphql:staging
+npm run deploy-graphql:production
 ```
+
+Staging commands reject the production dataset and hosted application. Production commands require
+the exact approved target plus an independent `production` confirmation. Direct Sanity deployment
+commands are blocked; see `backend/README.md` for non-interactive CI confirmation details.
 
 The frontend is statically generated, so content changes in Sanity are not visible on production until the frontend is rebuilt and redeployed.
 

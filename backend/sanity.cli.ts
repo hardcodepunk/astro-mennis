@@ -1,12 +1,17 @@
 import {defineCliConfig} from 'sanity/cli'
+import {assertGuardedCliDeployment, readSanityEnvironmentFromProcess} from './sanity.environment'
+
+const environment = readSanityEnvironmentFromProcess()
+
+assertGuardedCliDeployment(process.argv.slice(2), process.env, environment)
 
 export default defineCliConfig({
   api: {
-    projectId: '454gxa26',
-    dataset: 'production',
+    projectId: environment.projectId,
+    dataset: environment.dataset,
   },
   deployment: {
-    appId: 'st7zms5txswv66ebr4184g2g',
+    appId: environment.appId,
     autoUpdates: true,
   },
 })
