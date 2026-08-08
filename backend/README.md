@@ -30,13 +30,15 @@ Deployments must go through an explicit guarded command:
 
 Copy `.env.staging.example` to `.env.staging` and replace every placeholder before the first
 staging deployment. Copy `.env.production.example` to `.env.production` before a production
-deployment. Deployment values must be present explicitly even though normal local Studio builds
-retain the checked production defaults.
+deployment. The wrapper accepts explicit values from `.env.<target>`, an optional
+`.env.<target>.local`, or the invoking process environment. Generic `.env` and `.env.local` files
+are ignored for deployment authorization, even though normal local Studio builds retain the
+checked production defaults.
 
 The wrapper validates the project, dataset, hosted Studio application, and preview URL before it
 starts the Sanity CLI. A staging command is rejected if it resolves to a production target. A
 production command prints the resolved target and requires typing `production` before continuing.
-For non-interactive production CI, set `SANITY_DEPLOY_CONFIRM=production` explicitly.
+For non-interactive production automation, set `SANITY_DEPLOY_CONFIRM=production` explicitly.
 
 Direct `sanity deploy` and `sanity graphql deploy` calls are blocked by `sanity.cli.ts` so their
 target cannot silently fall back to production.

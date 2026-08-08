@@ -2,7 +2,7 @@ import {
   normalizeStoredAutoplayChoice,
   resolveAutoplayAllowed,
   type AutoplayChoice,
-} from "../lib/autoplayPolicy"
+} from "../lib/autoplayPolicy.ts"
 
 const MAX_AUTOPLAY_ATTEMPTS = 6
 const MAX_THUMBNAIL_PLAYERS = 2

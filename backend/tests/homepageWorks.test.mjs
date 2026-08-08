@@ -7,6 +7,7 @@ import {
   legacyFeaturedOrderField,
 } from '../schemaTypes/homepageWorks.ts'
 import {
+  HOMEPAGE_WORKS_DRAFT_QUERY,
   HOMEPAGE_WORKS_MIGRATION_QUERY,
   assertHomepageWorksApplyGuard,
   createHomepageWorkReferences,
@@ -214,6 +215,7 @@ test('parses ordered selections while keeping dry-run as the default', () => {
 })
 
 test('the report reads published works separately and checks for a settings draft', () => {
-  assert.match(HOMEPAGE_WORKS_MIGRATION_QUERY, /drafts\.siteSettings/)
+  assert.doesNotMatch(HOMEPAGE_WORKS_MIGRATION_QUERY, /drafts\.siteSettings/)
   assert.match(HOMEPAGE_WORKS_MIGRATION_QUERY, /!\(_id in path\("drafts\.\*\*"\)\)/)
+  assert.match(HOMEPAGE_WORKS_DRAFT_QUERY, /_id == "drafts\.siteSettings"/)
 })

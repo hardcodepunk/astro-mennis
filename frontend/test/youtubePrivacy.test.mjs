@@ -73,5 +73,8 @@ test("Plyr enables privacy-enhanced mode without sharing the page path", async (
   assert.match(script, /noCookie:\s*true/)
   assert.match(script, /widget_referrer:\s*window\.location\.origin/)
   assert.doesNotMatch(script, /widget_referrer:\s*window\.location\.href/)
-  assert.match(script, /session\.onOverlayClick[\s\S]*ensureYouTubeNoCookiePreconnect\(\)[\s\S]*ensureYouTubeApi\(\)/)
+  assert.match(
+    script,
+    /session\.onOverlayClick[\s\S]*ensureYouTubeNoCookiePreconnect\(\)[\s\S]*runtime[\s\S]*\.loadYouTubeApi\(\)/,
+  )
 })

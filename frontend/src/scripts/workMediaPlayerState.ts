@@ -216,7 +216,7 @@ export function renderWorkMediaFeedback(
       status.textContent = `Loading ${mediaTitle}…`
       break
     case "ready":
-      overlay.setAttribute("aria-label", `Play ${mediaTitle}`)
+      overlay.setAttribute("aria-label", `Play ${mediaTitle} on YouTube`)
       status.textContent = `Ready: ${mediaTitle}. Press Play to start.`
       break
     case "error":
@@ -232,7 +232,7 @@ export function renderWorkMediaFeedback(
       break
     case "idle":
     case "playing":
-      overlay.setAttribute("aria-label", `Play ${mediaTitle}`)
+      overlay.setAttribute("aria-label", `Play ${mediaTitle} on YouTube`)
       status.textContent = ""
       break
   }

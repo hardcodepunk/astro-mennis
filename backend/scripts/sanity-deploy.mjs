@@ -1,10 +1,12 @@
 import {spawn} from 'node:child_process'
+import {readFile} from 'node:fs/promises'
+import {resolve} from 'node:path'
 import {createInterface} from 'node:readline/promises'
 import {fileURLToPath} from 'node:url'
-
-import {loadEnv} from '@sanity/cli'
+import {parseEnv} from 'node:util'
 
 import {
+  DEPLOY_CONFIRMATION_VALUE,
   assertDeploymentEnvironment,
   assertExplicitDeploymentVariables,
   assertNonInteractiveProductionConfirmation,
@@ -14,6 +16,34 @@ import {
 
 const backendDirectory = fileURLToPath(new URL('..', import.meta.url))
 const sanityBinary = fileURLToPath(new URL('../node_modules/sanity/bin/sanity', import.meta.url))
+const deploymentVariableNames = new Set([
+  'SANITY_STUDIO_PROJECT_ID',
+  'SANITY_STUDIO_DATASET',
+  'SANITY_STUDIO_APP_ID',
+  'SANITY_STUDIO_SITE_URL',
+])
+
+async function readOptionalEnvironmentFile(path) {
+  try {
+    return parseEnv(await readFile(path, 'utf8'))
+  } catch (error) {
+    if (error && typeof error === 'object' && error.code === 'ENOENT') return {}
+    throw error
+  }
+}
+
+export async function loadDeploymentFileEnvironment(target, directory = backendDirectory) {
+  const [targetEnvironment, localEnvironment] = await Promise.all([
+    readOptionalEnvironmentFile(resolve(directory, `.env.${target}`)),
+    readOptionalEnvironmentFile(resolve(directory, `.env.${target}.local`)),
+  ])
+
+  return Object.fromEntries(
+    Object.entries({...targetEnvironment, ...localEnvironment}).filter(([name]) =>
+      deploymentVariableNames.has(name),
+    ),
+  )
+}
 
 function parseDeploymentRequest(arguments_) {
   const [target, kind, ...unexpected] = arguments_
@@ -89,13 +119,14 @@ function runSanity(arguments_, environment) {
   })
 }
 
-async function main() {
+export async function main() {
   const {target, kind} = parseDeploymentRequest(process.argv.slice(2))
-  const fileEnvironment = loadEnv(target, backendDirectory, 'SANITY_STUDIO_')
+  const fileEnvironment = await loadDeploymentFileEnvironment(target)
   const deploymentVariables = {
     ...fileEnvironment,
     ...process.env,
     SANITY_ACTIVE_ENV: target,
+    SANITY_DEPLOY_CONFIRMED: '',
     SANITY_DEPLOY_GUARD: DEPLOY_GUARD_VALUE,
     SANITY_DEPLOY_KIND: kind,
     SANITY_DEPLOY_TARGET: target,
@@ -114,14 +145,17 @@ async function main() {
 
   if (target === 'production') {
     await confirmProduction(process.env)
+    deploymentVariables.SANITY_DEPLOY_CONFIRMED = DEPLOY_CONFIRMATION_VALUE
   }
 
   const command = kind === 'studio' ? ['deploy'] : ['graphql', 'deploy']
   process.exitCode = await runSanity(command, deploymentVariables)
 }
 
-main().catch((error) => {
-  const message = error instanceof Error ? error.message : String(error)
-  process.stderr.write(`Deployment blocked: ${message}\n`)
-  process.exitCode = 1
-})
+if (import.meta.main) {
+  main().catch((error) => {
+    const message = error instanceof Error ? error.message : String(error)
+    process.stderr.write(`Deployment blocked: ${message}\n`)
+    process.exitCode = 1
+  })
+}

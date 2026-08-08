@@ -83,6 +83,10 @@ class FakeVideo extends EventTarget {
     this.paused = true
   }
 
+  querySelectorAll() {
+    return []
+  }
+
   setAttribute(name, value) {
     this.attributes.set(name, value)
   }

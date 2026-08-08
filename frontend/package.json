@@ -15,7 +15,7 @@
     "postbuild": "node scripts/verify-built-sitemap.mjs",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test",
+    "test": "node --test && npm --prefix ../shared/media-contract test",
     "typecheck": "astro check",
     "lint": "astro check --minimumSeverity warning --minimumFailingSeverity warning",
     "check": "npm test && npm run lint && npm run typecheck && npm run build"

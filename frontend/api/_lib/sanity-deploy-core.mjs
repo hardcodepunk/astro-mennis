@@ -348,13 +348,47 @@ export function jsonResponse(status, body) {
 }
 
 export async function readBoundedBody(request, maximumBytes) {
-  const contentLength = Number(request.headers.get("content-length"))
-  if (Number.isFinite(contentLength) && contentLength > maximumBytes) {
-    throw new DeployWebhookError(413, "body_too_large", "Request body is too large")
+  if (!Number.isSafeInteger(maximumBytes) || maximumBytes < 0) {
+    throw new TypeError("maximumBytes must be a non-negative safe integer")
   }
-  const rawBody = await request.text()
-  if (Buffer.byteLength(rawBody, "utf8") > maximumBytes) {
-    throw new DeployWebhookError(413, "body_too_large", "Request body is too large")
+
+  const contentLengthHeader = request.headers.get("content-length")
+  if (contentLengthHeader !== null) {
+    if (!/^\d+$/.test(contentLengthHeader)) {
+      throw new DeployWebhookError(
+        400,
+        "invalid_content_length",
+        "Content-Length must be a decimal byte count",
+      )
+    }
+    if (BigInt(contentLengthHeader) > BigInt(maximumBytes)) {
+      throw new DeployWebhookError(413, "body_too_large", "Request body is too large")
+    }
   }
+
+  if (!request.body) return ""
+
+  const decoder = new TextDecoder()
+  const reader = request.body.getReader()
+  let bytesRead = 0
+  let rawBody = ""
+
+  try {
+    while (true) {
+      const {done, value} = await reader.read()
+      if (done) break
+
+      bytesRead += value.byteLength
+      if (bytesRead > maximumBytes) {
+        await reader.cancel("Request body is too large").catch(() => undefined)
+        throw new DeployWebhookError(413, "body_too_large", "Request body is too large")
+      }
+      rawBody += decoder.decode(value, {stream: true})
+    }
+    rawBody += decoder.decode()
+  } finally {
+    reader.releaseLock()
+  }
+
   return rawBody
 }

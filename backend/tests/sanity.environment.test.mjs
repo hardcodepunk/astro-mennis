@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
+  DEPLOY_CONFIRMATION_VALUE,
   assertDeploymentEnvironment,
   assertExplicitDeploymentVariables,
   assertGuardedCliDeployment,
@@ -146,6 +147,31 @@ test('allows the wrapper only when command, mode, and validated target agree', (
         SANITY_STUDIO_PROJECT_ID: stagingEnvironment.projectId,
       },
       stagingEnvironment,
+    ),
+  )
+})
+
+test('production CLI deployment requires confirmation recorded by the wrapper', () => {
+  const variables = {
+    SANITY_ACTIVE_ENV: 'production',
+    SANITY_DEPLOY_GUARD: DEPLOY_GUARD_VALUE,
+    SANITY_DEPLOY_KIND: 'studio',
+    SANITY_DEPLOY_TARGET: 'production',
+    SANITY_STUDIO_APP_ID: PRODUCTION_SANITY_ENVIRONMENT.appId,
+    SANITY_STUDIO_DATASET: PRODUCTION_SANITY_ENVIRONMENT.dataset,
+    SANITY_STUDIO_PROJECT_ID: PRODUCTION_SANITY_ENVIRONMENT.projectId,
+    SANITY_STUDIO_SITE_URL: PRODUCTION_SANITY_ENVIRONMENT.siteUrl,
+  }
+
+  assert.throws(
+    () => assertGuardedCliDeployment(['deploy'], variables, PRODUCTION_SANITY_ENVIRONMENT),
+    /has not been confirmed by the deployment wrapper/,
+  )
+  assert.doesNotThrow(() =>
+    assertGuardedCliDeployment(
+      ['deploy'],
+      {...variables, SANITY_DEPLOY_CONFIRMED: DEPLOY_CONFIRMATION_VALUE},
+      PRODUCTION_SANITY_ENVIRONMENT,
     ),
   )
 })

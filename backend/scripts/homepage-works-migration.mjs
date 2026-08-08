@@ -6,17 +6,18 @@ export const HOMEPAGE_WORKS_MIGRATION_QUERY = `{
     _rev,
     homepageWorks[]{_ref}
   },
-  "draftSiteSettings": *[_id == "drafts.siteSettings"][0]{
-    _id,
-    _rev,
-    homepageWorks[]{_ref}
-  },
   "works": *[_type == "work" && !(_id in path("drafts.**"))]{
     _id,
     title,
     featuredOnHome,
     featuredOrder
   }
+}`
+
+export const HOMEPAGE_WORKS_DRAFT_QUERY = `*[_id == "drafts.siteSettings"][0]{
+  _id,
+  _rev,
+  homepageWorks[]{_ref}
 }`
 
 function issue(code, message, details = {}) {

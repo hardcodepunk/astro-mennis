@@ -1,6 +1,7 @@
 import {getCliClient} from 'sanity/cli'
 
 import {
+  HOMEPAGE_WORKS_DRAFT_QUERY,
   HOMEPAGE_WORKS_MIGRATION_QUERY,
   assertHomepageWorksApplyGuard,
   createHomepageWorkReferences,
@@ -32,7 +33,10 @@ async function main() {
 
   const client = getCliClient({apiVersion: '2026-08-06'})
   const target = client.config()
-  const report = await client.fetch(HOMEPAGE_WORKS_MIGRATION_QUERY)
+  const [report, draftSiteSettings] = await Promise.all([
+    client.fetch(HOMEPAGE_WORKS_MIGRATION_QUERY),
+    client.withConfig({perspective: 'raw'}).fetch(HOMEPAGE_WORKS_DRAFT_QUERY),
+  ])
   const plan = planHomepageWorksMigration({
     siteSettings: report.siteSettings,
     works: report.works,
@@ -45,7 +49,7 @@ async function main() {
       dataset: target.dataset,
     },
     siteSettingsRevision: report.siteSettings?._rev,
-    draftSiteSettingsRevision: report.draftSiteSettings?._rev,
+    draftSiteSettingsRevision: draftSiteSettings?._rev,
     plan,
   }
 
@@ -64,7 +68,7 @@ async function main() {
     plan,
     target,
     siteSettingsRevision: report.siteSettings?._rev,
-    draftSiteSettings: report.draftSiteSettings,
+    draftSiteSettings,
     confirmations: options.confirmations,
   })
 

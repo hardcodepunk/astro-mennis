@@ -7,9 +7,12 @@ import {encodeSignatureHeader} from "@sanity/webhook"
 import {dispatchContentDeployment} from "../api/_lib/github-dispatch.mjs"
 import {
   DeployWebhookError,
+  MAX_CALLBACK_BODY_BYTES,
   MAX_RECENT_EVENT_KEYS,
+  MAX_WEBHOOK_BODY_BYTES,
   parseVerifiedSanityEvent,
   planEventReservation,
+  readBoundedBody,
 } from "../api/_lib/sanity-deploy-core.mjs"
 import {
   POST as sanityDeployPost,
@@ -95,9 +98,144 @@ function applyPatch(status, patch) {
   return next
 }
 
+function streamedRequest(chunks, {headers = {}, onCancel} = {}) {
+  const remainingChunks = chunks.map((chunk) =>
+    typeof chunk === "string" ? new TextEncoder().encode(chunk) : chunk,
+  )
+  return new Request("https://www.demennis.be/api/test", {
+    method: "POST",
+    headers,
+    body: new ReadableStream(
+      {
+        pull(controller) {
+          const chunk = remainingChunks.shift()
+          if (chunk) {
+            controller.enqueue(chunk)
+          } else {
+            controller.close()
+          }
+        },
+        cancel(reason) {
+          onCancel?.(reason)
+        },
+      },
+      {highWaterMark: 0},
+    ),
+    duplex: "half",
+  })
+}
+
 test("Vercel discovers the .mjs entries as importable POST handlers", () => {
   assert.equal(typeof sanityDeployPost, "function")
   assert.equal(typeof deployStatusPost, "function")
+})
+
+test("stops reading a chunked request as soon as its byte limit is exceeded", async () => {
+  let cancelReason
+  const request = streamedRequest(["12345678", "abcdefgh", "must-not-be-read"], {
+    onCancel(reason) {
+      cancelReason = reason
+    },
+  })
+
+  await assert.rejects(() => readBoundedBody(request, 10), (error) => {
+    assert.equal(error.code, "body_too_large")
+    return true
+  })
+  assert.equal(cancelReason, "Request body is too large")
+})
+
+test("does not trust a falsely low Content-Length", async () => {
+  const request = streamedRequest(["12345678", "abcdefgh"], {
+    headers: {"content-length": "1"},
+  })
+
+  await assert.rejects(() => readBoundedBody(request, 10), (error) => {
+    assert.equal(error.code, "body_too_large")
+    return true
+  })
+})
+
+test("rejects an oversized declared length before reading the body", async () => {
+  let cancelled = false
+  const request = streamedRequest(["must-not-be-read"], {
+    headers: {"content-length": "11"},
+    onCancel() {
+      cancelled = true
+    },
+  })
+
+  await assert.rejects(() => readBoundedBody(request, 10), (error) => {
+    assert.equal(error.code, "body_too_large")
+    return true
+  })
+  assert.equal(cancelled, false)
+})
+
+test("validates Content-Length syntax", async () => {
+  for (const contentLength of ["-1", "1.5", "0x10", "1, 1", "not-a-number"]) {
+    const request = streamedRequest(["x"], {headers: {"content-length": contentLength}})
+    await assert.rejects(() => readBoundedBody(request, 10), (error) => {
+      assert.equal(error.code, "invalid_content_length")
+      return true
+    })
+  }
+})
+
+test("counts split multibyte text by transport bytes", async () => {
+  const euroBytes = new TextEncoder().encode("€")
+  const chunks = [...euroBytes].map((byte) => Uint8Array.of(byte))
+
+  assert.equal(await readBoundedBody(streamedRequest(chunks), euroBytes.byteLength), "€")
+  await assert.rejects(
+    () => readBoundedBody(streamedRequest(chunks), euroBytes.byteLength - 1),
+    (error) => {
+      assert.equal(error.code, "body_too_large")
+      return true
+    },
+  )
+})
+
+test("webhook rejects an oversized stream before reserving or dispatching", async () => {
+  let storeCreated = false
+  let dispatched = false
+  const request = streamedRequest([new Uint8Array(MAX_WEBHOOK_BODY_BYTES + 1)], {
+    headers: {"content-type": "application/json"},
+  })
+  const response = await handleSanityDeployRequest(request, {
+    environment,
+    statusStoreFactory() {
+      storeCreated = true
+    },
+    async dispatch() {
+      dispatched = true
+    },
+  })
+
+  assert.equal(response.status, 413)
+  assert.equal((await response.json()).code, "body_too_large")
+  assert.equal(storeCreated, false)
+  assert.equal(dispatched, false)
+})
+
+test("authenticated callback rejects an oversized stream before opening its store", async () => {
+  let storeCreated = false
+  const request = streamedRequest([new Uint8Array(MAX_CALLBACK_BODY_BYTES + 1)], {
+    headers: {
+      authorization: `Bearer ${callbackSecret}`,
+      "content-type": "application/json",
+    },
+  })
+  const response = await handleDeployStatusRequest(request, {
+    environment,
+    statusStoreFactory() {
+      storeCreated = true
+    },
+  })
+
+  assert.equal(response.status, 413)
+  assert.equal((await response.json()).code, "body_too_large")
+  assert.equal(storeCreated, false)
 })
 
 test("workflow never treats a non-updating 202 claim as permission to deploy", async () => {

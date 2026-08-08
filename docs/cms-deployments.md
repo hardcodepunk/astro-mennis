@@ -87,8 +87,10 @@ write**, which GitHub requires for `POST /repos/{owner}/{repo}/dispatches`.
 
 ### 2. Configure and deploy the Vercel functions
 
-Confirm that the Vercel project root directory is `frontend` and Node.js is 24.x. Add these
-production environment variables:
+Confirm that the Vercel project root directory is `frontend`, Node.js is 24.x, and **Include source
+files outside of the Root Directory in the Build Step** is enabled. The frontend installs the
+checked-in `../shared/media-contract` package, so a deployment without that setting cannot install
+or build the application. Add these production environment variables:
 
 | Variable | Purpose |
 | --- | --- |

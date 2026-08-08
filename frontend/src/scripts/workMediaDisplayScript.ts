@@ -352,6 +352,10 @@ export function initWorkMediaRoot(
     if (!frame || !overlay || !status || !retry || !fallback) continue
 
     const mediaTitle = embed.dataset.ytTitle?.trim() || "project video"
+    const youtubeVideoId = fallback.dataset.ytVideoId?.trim()
+    if (youtubeVideoId) {
+      fallback.href = `https://www.youtube.com/watch?v=${encodeURIComponent(youtubeVideoId)}`
+    }
 
     const session: PlayerSession = {
       player: null,

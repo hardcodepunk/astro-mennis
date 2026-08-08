@@ -95,7 +95,7 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
             </button>
             <a
               class="yt-fallback"
-              href={`https://www.youtube.com/watch?v=${youtubeId}`}
+              data-yt-video-id={youtubeId}
               data-yt-fallback
               hidden
             >
@@ -166,7 +166,7 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
                     </button>
                     <a
                       class="yt-fallback"
-                      href={`https://www.youtube.com/watch?v=${id}`}
+                      data-yt-video-id={id}
                       data-yt-fallback
                       hidden
                     >

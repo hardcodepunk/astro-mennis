@@ -18,7 +18,7 @@ export default {
     workflowPanel: {
       kicker: "Fixture workflow",
       title: "One stable content snapshot",
-      body: "CI builds without mutable external content.",
+      body: "Offline builds without mutable external content.",
       mirrorLayout: false,
     },
   },
@@ -68,7 +68,7 @@ export default {
     heroTitle: "Fixture bio",
     heroTitleTextScale: 100,
     seoH1: "Fixture about heading",
-    bio: "A deterministic biography for CI.",
+    bio: "A deterministic biography for offline checks.",
     mirrorLayout: false,
     bioTextScale: 100,
     approach: {
