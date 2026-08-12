@@ -37,6 +37,20 @@ test("YouTube JSON-LD uses privacy-enhanced embed URLs", () => {
     title: "Privacy test",
     description: "Privacy test reels",
   })
+  const gallery = videoObjectJsonLd({
+    seo: undefined,
+    work: work({
+      media: {
+        mode: "gallery",
+        videos: [
+          {title: "Main film", youtubeUrl: "https://youtu.be/dQw4w9WgXcQ"},
+          {title: "Second cut", youtubeUrl: "https://www.youtube.com/watch?v=aqz-KE-bpKQ"},
+        ],
+      },
+    }),
+    title: "Privacy test",
+    description: "Privacy test gallery",
+  })
 
   assert.deepEqual(single.map(item => item.embedUrl), [
     "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
@@ -44,6 +58,10 @@ test("YouTube JSON-LD uses privacy-enhanced embed URLs", () => {
   assert.deepEqual(slider.map(item => item.embedUrl), [
     "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
     "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ",
+  ])
+  assert.deepEqual(gallery.map(item => [item.name, item.embedUrl]), [
+    ["Main film", "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"],
+    ["Second cut", "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ"],
   ])
 })
 
@@ -60,8 +78,18 @@ test("server-rendered facades do not eagerly reference YouTube infrastructure", 
   assert.match(display, /src:\s*work\.preview\.poster/)
   assert.doesNotMatch(display, /yt-overlay__provider|>Play on YouTube<\/span>/)
   assert.match(display, /aria-label=\{`Play \$\{singleMediaLabel\} on YouTube`\}/)
+  assert.match(display, /class="yt-rail yt-rail--landscape" data-yt-rail/)
+  assert.match(display, /class="yt-slide yt-slide--landscape"/)
+  assert.match(display, /class="yt-gallery__pagination" data-yt-pagination/)
+  assert.match(display, /data-yt-dot/)
+  assert.match(display, /\.yt-gallery__dot\s*\{[\s\S]*?width:\s*10px;[\s\S]*?height:\s*10px;[\s\S]*?var\(--color-brand-secondary\)/)
+  assert.match(display, /\.yt-gallery__dot\.is-active\s*\{[\s\S]*?var\(--color-brand-accent\)/)
+  assert.doesNotMatch(display, /\.yt-gallery__dot\s*\{[^}]*opacity:/)
+  assert.doesNotMatch(display, /\{index \+ 1\} \/ \{galleryItems\.length\}/)
+  assert.match(display, /src:\s*video\.poster \?\? work\.preview\.poster/)
+  assert.match(display, /\.yt-slide--landscape\s*\{[\s\S]*?flex:\s*0 0 100%/)
   assert.doesNotMatch(workPage, /youtubePoster|i\.ytimg\.com/i)
-  assert.match(workPage, /src:\s*work\.preview\.poster/)
+  assert.match(workPage, /work\.media\.videos\[0\]\?\.poster \?\? work\.preview\.poster/)
 })
 
 test("Plyr enables privacy-enhanced mode without sharing the page path", async () => {

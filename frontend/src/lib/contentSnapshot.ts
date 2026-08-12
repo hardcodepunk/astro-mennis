@@ -140,6 +140,11 @@ export const CONTENT_SNAPSHOT_QUERY = `{
     media{
       mode,
       youtubeUrl,
+      videos[]{
+        title,
+        youtubeUrl,
+        poster
+      },
       reels
     },
     overviewTitle,

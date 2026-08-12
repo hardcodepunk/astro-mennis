@@ -3,7 +3,12 @@ import "plyr/dist/plyr.css"
 import VideoPreview from "./VideoPreview.astro"
 import { imageAttributes, youtubeId as parseYouTubeId } from "../lib/media"
 
-type WorkMedia = { mode: "preview" } | { mode: "single"; youtubeUrl?: string } | { mode: "slider"; reels?: string[] }
+type WorkVideo = { title: string; youtubeUrl: string; poster?: string }
+type WorkMedia =
+  | { mode: "preview" }
+  | { mode: "single"; youtubeUrl?: string }
+  | { mode: "gallery"; videos?: WorkVideo[] }
+  | { mode: "slider"; reels?: string[] }
 
 const { work } = Astro.props as {
   work: {
@@ -19,6 +24,27 @@ function getYouTubeId(input?: string | null): string | null {
 
 const media = work.media
 const youtubeId = media && media.mode === "single" ? getYouTubeId(media.youtubeUrl ?? null) : null
+const galleryItems =
+  media && media.mode === "gallery"
+    ? (media.videos ?? [])
+        .flatMap((video, index) => {
+          const id = getYouTubeId(video.youtubeUrl)
+          if (!id) return []
+          const poster = imageAttributes({
+            src: video.poster ?? work.preview.poster,
+            widths: [320, 480, 720, 1024, 1280],
+            fallbackWidth: 1280,
+            sizes: "(max-width: 72rem) calc(100vw - 2rem), 72rem",
+          })
+          return [{
+            id,
+            title: video.title?.trim() || `Video ${index + 1}`,
+            poster,
+            posterSrc: poster.src ?? video.poster ?? work.preview.poster,
+          }]
+        })
+        .slice(0, 6)
+    : []
 const reelIds =
   media && media.mode === "slider"
     ? (media.reels ?? [])
@@ -28,7 +54,9 @@ const reelIds =
     : []
 
 const hasYouTube = Boolean(youtubeId)
+const hasGallery = galleryItems.length > 0
 const hasSlider = reelIds.length > 0
+const hasGalleryNav = galleryItems.length > 1
 const hasSliderNav = reelIds.length > 1
 const singleMediaLabel = work.title?.trim() ? `video for ${work.title.trim()}` : "project video"
 const singleStatusId = youtubeId ? `work-media-status-${youtubeId}` : undefined
@@ -103,6 +131,111 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
           </div>
         </div>
       </div>
+    ) : hasGallery ? (
+      <section
+        class="yt-gallery yt-gallery--landscape"
+        aria-label={work.title?.trim() ? `Videos for ${work.title.trim()}` : "Project videos"}
+      >
+        {hasGalleryNav ? (
+          <button class="yt-nav yt-nav--prev" type="button" aria-label="Previous video" data-yt-prev>
+            <span class="yt-nav__chevron" aria-hidden="true"></span>
+          </button>
+        ) : null}
+
+        <div class="yt-rail yt-rail--landscape" data-yt-rail>
+          {galleryItems.map((video, index) => {
+            const mediaLabel = `${video.title}, video ${index + 1} of ${galleryItems.length}`
+            const statusId = `work-media-status-gallery-${video.id}-${index}`
+
+            return (
+              <article
+                class="yt-slide yt-slide--landscape"
+                data-yt-slide
+                aria-label={`Video ${index + 1} of ${galleryItems.length}: ${video.title}`}
+                aria-current={index === 0 ? "true" : undefined}
+                aria-hidden={index === 0 ? undefined : "true"}
+                inert={index === 0 ? undefined : true}
+              >
+                <div class="yt-frame yt-frame--16x9" data-yt-frame>
+                  <div
+                    class="plyr__video-embed yt-embed"
+                    data-yt-embed
+                    data-yt-ratio="16:9"
+                    data-yt-title={mediaLabel}
+                    data-plyr-provider="youtube"
+                    data-plyr-embed-id={video.id}
+                    inert
+                    aria-hidden="true"
+                  />
+                  <button
+                    class="yt-overlay"
+                    type="button"
+                    aria-label={`Play ${mediaLabel} on YouTube`}
+                    aria-describedby={statusId}
+                    data-yt-overlay
+                  >
+                    <img
+                      class="yt-overlay__img"
+                      alt=""
+                      loading={index === 0 ? "eager" : "lazy"}
+                      decoding="async"
+                      fetchpriority={index === 0 ? "high" : undefined}
+                      width="1280"
+                      height="720"
+                      src={video.posterSrc}
+                      srcset={video.poster.srcset}
+                      sizes={video.poster.sizes}
+                    />
+                    <span class="yt-overlay__play" aria-hidden="true" />
+                  </button>
+                  <div class="yt-feedback">
+                    <p
+                      class="yt-status"
+                      id={statusId}
+                      data-yt-status
+                      role="status"
+                      aria-live="polite"
+                      aria-atomic="true"
+                    />
+                    <button class="yt-retry" type="button" data-yt-retry hidden>
+                      Retry {mediaLabel}
+                    </button>
+                    <a
+                      class="yt-fallback"
+                      data-yt-video-id={video.id}
+                      data-yt-fallback
+                      hidden
+                    >
+                      Watch {mediaLabel} on YouTube
+                    </a>
+                  </div>
+                </div>
+                <div class="yt-slide__meta">
+                  <span class="yt-slide__title ds-title">{video.title}</span>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+
+        <div class="yt-gallery__pagination" data-yt-pagination aria-hidden="true">
+          {galleryItems.map((_, index) => (
+            <span
+              class:list={["yt-gallery__dot", { "is-active": index === 0 }]}
+              data-yt-dot
+            />
+          ))}
+        </div>
+        <p class="sr-only" data-yt-pagination-status role="status" aria-live="polite">
+          Video 1 of {galleryItems.length}: {galleryItems[0].title}
+        </p>
+
+        {hasGalleryNav ? (
+          <button class="yt-nav yt-nav--next" type="button" aria-label="Next video" data-yt-next>
+            <span class="yt-nav__chevron" aria-hidden="true"></span>
+          </button>
+        ) : null}
+      </section>
     ) : hasSlider ? (
       <section class="yt-gallery" aria-label="Reels">
         {hasSliderNav ? (
@@ -200,6 +333,12 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     position: relative;
   }
 
+  .yt-gallery--landscape {
+    width: 100%;
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+
   .yt-nav {
     position: absolute;
     top: 50%;
@@ -248,10 +387,67 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     padding: 10px 0 16px;
   }
 
+  .yt-rail--landscape {
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    touch-action: auto;
+    padding-bottom: 38px;
+  }
+
+  .yt-rail--landscape::-webkit-scrollbar {
+    display: none;
+  }
+
   .yt-slide {
     flex: 0 0 auto;
     display: flex;
     justify-content: center;
+  }
+
+  .yt-slide--landscape {
+    flex: 0 0 100%;
+    display: block;
+    scroll-snap-align: start;
+  }
+
+  .yt-slide__meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    padding: 12px 1rem 0;
+    color: var(--color-brand-secondary);
+    text-align: center;
+  }
+
+  .yt-slide__title {
+    --ds-title-size: clamp(0.95rem, 1.4vw, 1.05rem);
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .yt-gallery__pagination {
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .yt-gallery__dot {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-brand-secondary);
+    transition: background-color 160ms ease;
+  }
+
+  .yt-gallery__dot.is-active {
+    background: var(--color-brand-accent);
   }
 
   .yt-frame {
@@ -414,6 +610,12 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
       width: 380px;
     }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .yt-gallery__dot {
+      transition: none;
+    }
+  }
 </style>
 
-{hasYouTube || hasSlider ? <script src="../scripts/workMediaDisplayScript.ts"></script> : null}
+{hasYouTube || hasGallery || hasSlider ? <script src="../scripts/workMediaDisplayScript.ts"></script> : null}

@@ -37,10 +37,19 @@ test("validates and freezes a complete build snapshot", () => {
   assert.equal(Object.isFrozen(snapshot), true)
   assert.equal(Object.isFrozen(snapshot.categories), true)
   assert.equal(Object.isFrozen(snapshot.works), true)
-  assert.equal(snapshot.works.length, 3)
+  assert.equal(snapshot.works.length, 4)
   assert.match(CONTENT_SNAPSHOT_QUERY, /"works": \*\[_type == "work"\]/)
   assert.match(CONTENT_SNAPSHOT_QUERY, /"siteSettings": \*\[_id == "siteSettings"\]\[0\]/)
   assert.match(CONTENT_SNAPSHOT_QUERY, /"homepageWorkIds": homepageWorks\[\]._ref/)
+
+  assert.match(CONTENT_SNAPSHOT_QUERY, /videos\[\]\{\s*title,\s*youtubeUrl,\s*poster\s*\}/)
+  const gallery = snapshot.works.find(work => work.media?.mode === "gallery")
+  assert.deepEqual(
+    gallery?.media?.mode === "gallery"
+      ? gallery.media.videos.map(video => video.title)
+      : [],
+    ["Piston Atelier", "Fonkel Silent Disco", "Alles Kan"],
+  )
 })
 
 test("all repository getters share one in-flight load", async () => {

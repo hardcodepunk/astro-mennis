@@ -1,11 +1,12 @@
 import {defineField, defineType} from 'sanity'
 import {
+  cloudinaryPosterUrl,
   youtubeUrl,
 } from './validation'
 import {defineCloudinaryVideoFields, defineDocumentSeoFields} from './shared'
 import {legacyFeaturedOnHomeField, legacyFeaturedOrderField} from './homepageWorks'
 
-type HeroMediaParent = {mode?: 'preview' | 'single' | 'slider'}
+type HeroMediaParent = {mode?: 'preview' | 'single' | 'slider' | 'gallery'}
 
 export const work = defineType({
   name: 'work',
@@ -100,12 +101,70 @@ export const work = defineType({
             list: [
               {title: 'Use thumbnail video', value: 'preview'},
               {title: 'Single YouTube video', value: 'single'},
+              {title: 'YouTube films carousel', value: 'gallery'},
               {title: 'YouTube reels slider', value: 'slider'},
             ],
             layout: 'radio',
           },
           initialValue: 'preview',
           validation: (r) => r.required(),
+        }),
+
+        defineField({
+          name: 'videos',
+          title: 'YouTube films',
+          description:
+            'Required when hero media type is YouTube films carousel. Add up to 6 landscape videos in display order.',
+          type: 'array',
+          of: [
+            {
+              name: 'projectVideo',
+              title: 'Project video',
+              type: 'object',
+              fields: [
+                defineField({
+                  name: 'title',
+                  title: 'Title',
+                  description: 'Short label shown below the video.',
+                  type: 'string',
+                  validation: (r) =>
+                    r.required().custom((value) =>
+                      !value || value.trim() ? true : 'Add a title',
+                    ),
+                }),
+                defineField({
+                  name: 'youtubeUrl',
+                  title: 'YouTube URL',
+                  type: 'url',
+                  validation: (r) => r.required().uri({scheme: ['https']}).custom(youtubeUrl),
+                }),
+                defineField({
+                  name: 'poster',
+                  title: 'Poster URL',
+                  description:
+                    'Optional Cloudinary image shown before playback. Falls back to the project card poster.',
+                  type: 'url',
+                  validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryPosterUrl),
+                }),
+              ],
+              preview: {
+                select: {
+                  title: 'title',
+                  subtitle: 'youtubeUrl',
+                  media: 'poster',
+                },
+              },
+            },
+          ],
+          hidden: ({parent}) => (parent as HeroMediaParent)?.mode !== 'gallery',
+          validation: (r) =>
+            r.custom((val, ctx) => {
+              const mode = (ctx.parent as HeroMediaParent | undefined)?.mode
+              if (mode !== 'gallery') return true
+              if (!Array.isArray(val) || val.length < 1) return 'Add at least 1 video'
+              if (val.length > 6) return 'Max 6 videos'
+              return true
+            }),
         }),
 
         defineField({

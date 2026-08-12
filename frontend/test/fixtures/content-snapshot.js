@@ -191,5 +191,66 @@ export default {
         },
       ],
     },
+    {
+      _id: "work-multiple-videos-demo",
+      slug: "multiple-videos-demo",
+      title: "Multiple Videos Demo",
+      category: "Events",
+      categorySlug: "events",
+      client: "UI Prototype",
+      year: "2026",
+      publishedAt: "2025-12-01T12:00:00.000Z",
+      updatedAt: "2026-08-12T12:00:00.000Z",
+      preview: {
+        poster:
+          "https://res.cloudinary.com/dkdquifbr/image/upload/v1780481470/Timeline_1_01_00_19_14_fsxgcx.jpg",
+      },
+      thumbnailAutoplay: false,
+      featuredOnHome: false,
+      seo: {
+        description: "Local UI prototype for a project with multiple landscape videos.",
+        noindex: true,
+      },
+      media: {
+        mode: "gallery",
+        videos: [
+          {
+            title: "Piston Atelier",
+            youtubeUrl: "https://youtu.be/uTGFZtjBpaA",
+            poster:
+              "https://res.cloudinary.com/dkdquifbr/image/upload/v1780481470/Timeline_1_01_00_19_14_fsxgcx.jpg",
+          },
+          {
+            title: "Fonkel Silent Disco",
+            youtubeUrl: "https://youtu.be/y3xJKpSCcAk",
+            poster:
+              "https://res.cloudinary.com/dkdquifbr/image/upload/v1780391165/mini_trailer_01_12_32_15_hhfc70.jpg",
+          },
+          {
+            title: "Alles Kan",
+            youtubeUrl: "https://youtu.be/zMtQ7tV7km0",
+            poster:
+              "https://res.cloudinary.com/dkdquifbr/image/upload/v1780390392/mini_trailer_01_09_52_00_hpq2nw.jpg",
+          },
+        ],
+      },
+      overviewTitle: "One project, multiple films",
+      body: [
+        {
+          _key: "multiple-videos-demo-block",
+          _type: "block",
+          style: "normal",
+          markDefs: [],
+          children: [
+            {
+              _key: "multiple-videos-demo-span",
+              _type: "span",
+              text: "Use the existing arrows or swipe to move through the films. Only the video you choose is loaded and played.",
+              marks: [],
+            },
+          ],
+        },
+      ],
+    },
   ],
 }

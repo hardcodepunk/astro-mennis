@@ -365,6 +365,21 @@ export function videoObjectJsonLd(params: {
     return [{ ...base, embedUrl }]
   }
 
+  if (work.media?.mode === "gallery") {
+    return work.media.videos
+      .map(video => ({video, embedUrl: youtubeEmbedUrl(video.youtubeUrl)}))
+      .filter((item): item is typeof item & {embedUrl: string} => Boolean(item.embedUrl))
+      .map(({video, embedUrl}) => {
+        const videoThumbnail = absoluteUrl(video.poster ?? image ?? work.preview.poster, seo?.siteUrl)
+        return {
+          ...base,
+          name: video.title,
+          thumbnailUrl: videoThumbnail ? [videoThumbnail] : undefined,
+          embedUrl,
+        }
+      })
+  }
+
   if (work.media?.mode === "slider") {
     return (work.media.reels ?? [])
       .map(url => youtubeEmbedUrl(url))

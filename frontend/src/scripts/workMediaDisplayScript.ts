@@ -839,6 +839,10 @@ export function initWorkMediaRoot(
   let updateNav: (() => void) | undefined
 
   if (rail) {
+    const slides = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-slide]"))
+    const paginationDots = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-dot]"))
+    const paginationStatus = root.querySelector<HTMLElement>("[data-yt-pagination-status]")
+
     const getAmount = () => {
       const first = rail.querySelector<HTMLElement>("[data-yt-slide]")
       if (!first) return 178
@@ -848,9 +852,12 @@ export function initWorkMediaRoot(
     }
 
     const scrollByCard = (direction: "left" | "right") => {
+      const reduceMotion =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
       rail.scrollBy({
         left: direction === "left" ? -getAmount() : getAmount(),
-        behavior: "smooth",
+        behavior: reduceMotion ? "auto" : "smooth",
       })
     }
 
@@ -871,9 +878,30 @@ export function initWorkMediaRoot(
     updateNav = () => {
       const left = rail.scrollLeft
       const max = Math.max(0, rail.scrollWidth - rail.clientWidth)
+      const atStart = left <= 2
+      const atEnd = left >= max - 2
 
-      if (prev) prev.hidden = left <= 2
-      if (next) next.hidden = left >= max - 2
+      if (atStart && document.activeElement === prev && next && !atEnd) next.focus()
+      if (atEnd && document.activeElement === next && prev && !atStart) prev.focus()
+      if (prev) prev.hidden = atStart
+      if (next) next.hidden = atEnd
+      if (paginationDots.length > 0 || paginationStatus) {
+        const amount = getAmount()
+        const activeIndex = Math.min(
+          Math.max(0, slides.length - 1),
+          Math.max(0, Math.round(left / amount)),
+        )
+        paginationDots.forEach((dot, index) => {
+          dot.classList.toggle("is-active", index === activeIndex)
+        })
+        if (paginationStatus && slides[activeIndex]) {
+          const title = slides[activeIndex]
+            .querySelector<HTMLElement>(".yt-slide__title")
+            ?.textContent
+            ?.trim()
+          paginationStatus.textContent = `Video ${activeIndex + 1} of ${slides.length}${title ? `: ${title}` : ""}`
+        }
+      }
     }
 
     updateNav()
@@ -885,20 +913,31 @@ export function initWorkMediaRoot(
     }
 
     if (typeof IntersectionObserver !== "undefined") {
-      const slides = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-slide]"))
       const sessionByFrame = new Map(sessions.map(session => [session.frame, session]))
+      const landscapeRail = rail.classList?.contains("yt-rail--landscape") ?? false
 
       intersectionObserver = new IntersectionObserver(
         entries => {
           if (disposed) return
 
           for (const entry of entries) {
-            const frame = (entry.target as HTMLElement).querySelector<HTMLElement>("[data-yt-frame]")
+            const slide = entry.target as HTMLElement
+            const frame = slide.querySelector<HTMLElement>("[data-yt-frame]")
             const session = frame ? sessionByFrame.get(frame) : undefined
             if (!session) continue
 
             session.intersecting = entry.isIntersecting && entry.intersectionRatio > 0
             session.sufficientlyVisible = entry.intersectionRatio >= 0.7
+            if (landscapeRail) {
+              slide.toggleAttribute("inert", !session.sufficientlyVisible)
+              if (session.sufficientlyVisible) {
+                slide.removeAttribute("aria-hidden")
+                slide.setAttribute("aria-current", "true")
+              } else {
+                slide.setAttribute("aria-hidden", "true")
+                slide.removeAttribute("aria-current")
+              }
+            }
             if (
               !session.intersecting &&
               !session.activated &&

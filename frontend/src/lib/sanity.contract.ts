@@ -2,6 +2,7 @@ import {
   isCloudinaryPosterUrl,
   isCloudinaryVideoUrl,
   parseYouTubeId,
+  validateYouTubeUrl,
 } from "@astro-mennis/media-contract"
 
 class SanityContractError extends Error {
@@ -147,7 +148,14 @@ export type Category = {
 type WorkMedia =
   | { mode: "preview" }
   | { mode: "single"; youtubeUrl?: string }
+  | { mode: "gallery"; videos: WorkVideo[] }
   | { mode: "slider"; reels?: string[] }
+
+type WorkVideo = {
+  title: string
+  youtubeUrl: string
+  poster?: string
+}
 
 const PORTABLE_TEXT_STYLES = new Set(["normal", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"])
 const PORTABLE_TEXT_LIST_ITEMS = new Set(["bullet", "number"])
@@ -451,6 +459,16 @@ function validateWorkMedia(value: unknown, path: string): WorkMedia {
       youtubeUrl,
     }
   }
+  if (mode === "gallery") {
+    const videos = arrayOf(obj.videos, `${path}.videos`, validateWorkVideo)
+    if (videos.length < 1 || videos.length > 6) {
+      throw new SanityContractError(`${path}.videos must contain between 1 and 6 videos`)
+    }
+    return {
+      mode,
+      videos,
+    }
+  }
   if (mode === "slider") {
     const reels = optionalStringArray(obj.reels, `${path}.reels`) ?? []
     if (reels.length < 1 || reels.length > 4) {
@@ -467,7 +485,25 @@ function validateWorkMedia(value: unknown, path: string): WorkMedia {
     }
   }
 
-  throw new SanityContractError(`${path}.mode expected "preview", "single", or "slider"; received ${formatValue(mode)}`)
+  throw new SanityContractError(`${path}.mode expected "preview", "single", "gallery", or "slider"; received ${formatValue(mode)}`)
+}
+
+function validateWorkVideo(value: unknown, path: string): WorkVideo {
+  const obj = objectAt(value, path)
+  const youtubeUrl = requiredString(obj.youtubeUrl, `${path}.youtubeUrl`)
+  const poster = optionalString(obj.poster, `${path}.poster`)
+  const youtubeValidation = validateYouTubeUrl(youtubeUrl)
+  if (youtubeValidation !== true) {
+    throw new SanityContractError(`${path}.youtubeUrl ${youtubeValidation}`)
+  }
+  if (poster && !isCloudinaryPosterUrl(poster)) {
+    throw new SanityContractError(`${path}.poster must be a Cloudinary image delivery URL`)
+  }
+  return {
+    title: requiredString(obj.title, `${path}.title`),
+    youtubeUrl,
+    ...(poster ? { poster } : {}),
+  }
 }
 
 export function validatePortableTextBody(value: unknown, path: string): PortableTextBody {

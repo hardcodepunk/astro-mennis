@@ -45,11 +45,14 @@ const description = workSeoDescription(seoSettings, work)
 const image = socialImage(seoSettings, work.seo?.socialImage ?? work.preview.poster)
 const canonicalPath = work.seo?.canonicalUrl ?? `/works/${work.slug}`
 const hasVerticalFacade = work.media?.mode === "slider"
+const heroPoster = work.media?.mode === "gallery"
+  ? work.media.videos[0]?.poster ?? work.preview.poster
+  : work.preview.poster
 const facadeSizes = hasVerticalFacade
   ? "(max-width: 30rem) 86vw, 420px"
   : "(max-width: 72rem) calc(100vw - 2rem), 72rem"
 const preloadHero = imageAttributes({
-  src: work.preview.poster,
+  src: heroPoster,
   widths: [320, 480, 720, 1024, 1280],
   fallbackWidth: hasVerticalFacade ? 720 : 1280,
   sizes: facadeSizes,
