@@ -463,7 +463,7 @@ export function initWorkMediaRoot(
 
       const player = runtime.createPlayer(embed, {
         ratio: embed.dataset.ytRatio || "16:9",
-        clickToPlay: false,
+        clickToPlay: true,
         controls: [
           "play",
           "progress",

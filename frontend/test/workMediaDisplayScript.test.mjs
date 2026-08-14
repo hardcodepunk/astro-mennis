@@ -855,5 +855,18 @@ test("an activated privacy facade stays consumed after leaving and returning to 
   assert.equal(firstFrame.overlay.hidden, true)
   assert.equal(secondFrame.overlay.hidden, true)
 
+  const firstPausesBeforeSurfaceReplay = firstPlayer.pauseCalls
+  assert.equal(firstPlayer.options.clickToPlay, true)
+  const surfaceReplayAllowed = firstPlayer.options.listeners.play()
+  assert.notEqual(surfaceReplayAllowed, false)
+  firstPlayer.play()
+  firstPlayer.emit("playing")
+  firstPlayer.currentTime = 1
+  firstPlayer.emit("timeupdate")
+
+  assert.equal(firstPlayer.playing, true)
+  assert.equal(firstPlayer.pauseCalls, firstPausesBeforeSurfaceReplay)
+  assert.equal(firstFrame.status.textContent, "")
+
   cleanup()
 })
