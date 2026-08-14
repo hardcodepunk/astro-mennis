@@ -484,6 +484,19 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     display: none;
   }
 
+  /*
+   * YouTube can expose its own play target inside the cross-origin iframe.
+   * Keep the iframe display-only so playback always goes through Plyr's
+   * coordinated controls after the one-time privacy facade is consumed.
+   */
+  .yt-frame :global(.plyr--youtube iframe) {
+    pointer-events: none;
+  }
+
+  .yt-frame :global(.plyr__control--overlaid) {
+    display: none !important;
+  }
+
   .yt-frame :global(.plyr[data-yt-player-locked]) {
     visibility: hidden;
     pointer-events: none;

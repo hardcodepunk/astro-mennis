@@ -88,6 +88,14 @@ test("server-rendered facades do not eagerly reference YouTube infrastructure", 
   assert.doesNotMatch(display, /\{index \+ 1\} \/ \{galleryItems\.length\}/)
   assert.match(display, /src:\s*video\.poster \?\? work\.preview\.poster/)
   assert.match(display, /\.yt-slide--landscape\s*\{[\s\S]*?flex:\s*0 0 100%/)
+  assert.match(
+    display,
+    /\.yt-frame\s+:global\(\.plyr--youtube iframe\)\s*\{[\s\S]*?pointer-events:\s*none;/,
+  )
+  assert.match(
+    display,
+    /\.yt-frame\s+:global\(\.plyr__control--overlaid\)\s*\{[\s\S]*?display:\s*none !important;/,
+  )
   assert.doesNotMatch(workPage, /youtubePoster|i\.ytimg\.com/i)
   assert.match(workPage, /work\.media\.videos\[0\]\?\.poster \?\? work\.preview\.poster/)
 })
@@ -100,6 +108,8 @@ test("Plyr enables privacy-enhanced mode without sharing the page path", async (
 
   assert.match(script, /noCookie:\s*true/)
   assert.match(script, /widget_referrer:\s*window\.location\.origin/)
+  assert.match(script, /clickToPlay:\s*false/)
+  assert.doesNotMatch(script, /["']play-large["']/)
   assert.doesNotMatch(script, /widget_referrer:\s*window\.location\.href/)
   assert.match(
     script,

@@ -816,3 +816,44 @@ test("playing below the visibility threshold cannot leave loading feedback", asy
 
   cleanup()
 })
+
+test("an activated privacy facade stays consumed after leaving and returning to its slide", async () => {
+  fakeWindow.resetTimeouts()
+  const firstFrame = new FakeFrame("video 1 of 2")
+  const secondFrame = new FakeFrame("video 2 of 2")
+  const root = new FakeRoot([firstFrame, secondFrame], { withRail: true })
+  const players = new Map()
+  const cleanup = initWorkMediaRoot(root, {
+    loadYouTubeApi: () => Promise.resolve(),
+    createPlayer(embed, options) {
+      const player = new FakePlayer(options)
+      players.set(embed, player)
+      return player
+    },
+  })
+  const observer = FakeIntersectionObserver.instances.at(-1)
+
+  observer.emit(root.slides[0], 1)
+  observer.emit(root.slides[1], 0)
+  firstFrame.overlay.dispatchEvent(new Event("click", { cancelable: true }))
+  await flushMicrotasks()
+  const firstPlayer = players.get(firstFrame.embed)
+  firstPlayer.emit("ready")
+  firstPlayer.emit("playing")
+  assert.equal(firstFrame.overlay.hidden, true)
+
+  observer.emit(root.slides[0], 0)
+  observer.emit(root.slides[1], 1)
+  secondFrame.overlay.dispatchEvent(new Event("click", { cancelable: true }))
+  await flushMicrotasks()
+  const secondPlayer = players.get(secondFrame.embed)
+  secondPlayer.emit("ready")
+  secondPlayer.emit("playing")
+
+  observer.emit(root.slides[1], 0)
+  observer.emit(root.slides[0], 1)
+  assert.equal(firstFrame.overlay.hidden, true)
+  assert.equal(secondFrame.overlay.hidden, true)
+
+  cleanup()
+})
