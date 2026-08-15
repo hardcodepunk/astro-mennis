@@ -467,7 +467,7 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     gap: 18px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
+    touch-action: auto;
     overscroll-behavior-x: contain;
     padding: 10px 0 16px;
   }
@@ -734,7 +734,11 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     }
 
     .yt-gallery__controls--reels {
-      inset-inline: -24px;
+      inset-inline: 12px;
+    }
+
+    .yt-gallery__controls--reels .yt-gallery__control {
+      border-color: var(--color-brand-accent);
     }
   }
 

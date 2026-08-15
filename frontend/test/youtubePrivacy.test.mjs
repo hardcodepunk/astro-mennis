@@ -302,7 +302,11 @@ test("media galleries share circular pill-chevron navigation without Plyr", asyn
   )
   assert.match(
     display,
-    /@media \(max-width:\s*700px\)\s*\{[\s\S]*?\.yt-gallery__controls--reels\s*\{[^}]*inset-inline:\s*-24px;/,
+    /@media \(max-width:\s*700px\)\s*\{[\s\S]*?\.yt-gallery__controls--reels\s*\{[^}]*inset-inline:\s*12px;/,
+  )
+  assert.match(
+    display,
+    /@media \(max-width:\s*700px\)\s*\{[\s\S]*?\.yt-gallery__controls--reels \.yt-gallery__control\s*\{[^}]*border-color:\s*var\(--color-brand-accent\);/,
   )
 
   const sharedControlRule = display.match(/\.yt-gallery__control\s*\{[^}]*\}/)?.[0]
@@ -347,6 +351,12 @@ test("media galleries share circular pill-chevron navigation without Plyr", asyn
     sharedControlInteractionRule,
     /color:\s*var\(--color-brand-secondary\);/,
   )
+
+  const railRule = display.match(/\.yt-rail\s*\{[^}]*\}/)?.[0]
+  assert.ok(railRule)
+  assert.match(railRule, /overflow-x:\s*auto;/)
+  assert.match(railRule, /touch-action:\s*auto;/)
+  assert.doesNotMatch(railRule, /touch-action:\s*pan-x;/)
 
   assert.match(display, /\.yt-rail--landscape\s*\{[^}]*padding-bottom:\s*38px;/)
   assert.match(
