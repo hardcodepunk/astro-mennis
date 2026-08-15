@@ -1,5 +1,4 @@
 ---
-import "plyr/dist/plyr.css"
 import VideoPreview from "./VideoPreview.astro"
 import { imageAttributes, youtubeId as parseYouTubeId } from "../lib/media"
 
@@ -78,12 +77,11 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
       <div class="hero-16x9">
         <div class="yt-frame yt-frame--16x9" data-yt-frame>
           <div
-            class="plyr__video-embed yt-embed"
+            class="yt-embed"
             data-yt-embed
+            data-yt-video-id={youtubeId}
             data-yt-ratio="16:9"
             data-yt-title={singleMediaLabel}
-            data-plyr-provider="youtube"
-            data-plyr-embed-id={youtubeId}
             inert
             aria-hidden="true"
           />
@@ -117,17 +115,14 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
               aria-live="polite"
               aria-atomic="true"
             />
-            <button class="yt-retry" type="button" data-yt-retry hidden>
-              Retry {singleMediaLabel}
-            </button>
-            <a
-              class="yt-fallback"
-              data-yt-video-id={youtubeId}
-              data-yt-fallback
+            <button
+              class="yt-retry ds-pill ds-kicker ds-kicker--compact"
+              type="button"
+              data-yt-retry
               hidden
             >
-              Watch {singleMediaLabel} on YouTube
-            </a>
+              Retry {singleMediaLabel}
+            </button>
           </div>
         </div>
       </div>
@@ -137,8 +132,21 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
         aria-label={work.title?.trim() ? `Videos for ${work.title.trim()}` : "Project videos"}
       >
         {hasGalleryNav ? (
-          <button class="yt-nav yt-nav--prev" type="button" aria-label="Previous video" data-yt-prev>
-            <span class="yt-nav__chevron" aria-hidden="true"></span>
+          <button
+            class="yt-gallery__control yt-gallery__control--prev ds-pill ds-kicker ds-kicker--compact"
+            type="button"
+            aria-label="Previous video"
+            data-yt-prev
+            hidden
+          >
+            <svg
+              class="yt-gallery__control-icon yt-gallery__control-icon--prev"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M8 4L16 12L8 20" />
+            </svg>
           </button>
         ) : null}
 
@@ -158,12 +166,11 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
               >
                 <div class="yt-frame yt-frame--16x9" data-yt-frame>
                   <div
-                    class="plyr__video-embed yt-embed"
+                    class="yt-embed"
                     data-yt-embed
+                    data-yt-video-id={video.id}
                     data-yt-ratio="16:9"
                     data-yt-title={mediaLabel}
-                    data-plyr-provider="youtube"
-                    data-plyr-embed-id={video.id}
                     inert
                     aria-hidden="true"
                   />
@@ -197,17 +204,14 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
                       aria-live="polite"
                       aria-atomic="true"
                     />
-                    <button class="yt-retry" type="button" data-yt-retry hidden>
-                      Retry {mediaLabel}
-                    </button>
-                    <a
-                      class="yt-fallback"
-                      data-yt-video-id={video.id}
-                      data-yt-fallback
+                    <button
+                      class="yt-retry ds-pill ds-kicker ds-kicker--compact"
+                      type="button"
+                      data-yt-retry
                       hidden
                     >
-                      Watch {mediaLabel} on YouTube
-                    </a>
+                      Retry {mediaLabel}
+                    </button>
                   </div>
                 </div>
                 <div class="yt-slide__meta">
@@ -218,10 +222,18 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
           })}
         </div>
 
-        <div class="yt-gallery__pagination" data-yt-pagination aria-hidden="true">
-          {galleryItems.map((_, index) => (
-            <span
+        <div
+          class="yt-gallery__pagination"
+          data-yt-pagination
+          role="group"
+          aria-label="Choose a video"
+        >
+          {galleryItems.map((video, index) => (
+            <button
+              type="button"
               class:list={["yt-gallery__dot", { "is-active": index === 0 }]}
+              aria-label={`Go to video ${index + 1}: ${video.title}`}
+              aria-current={index === 0 ? "true" : undefined}
               data-yt-dot
             />
           ))}
@@ -231,15 +243,33 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
         </p>
 
         {hasGalleryNav ? (
-          <button class="yt-nav yt-nav--next" type="button" aria-label="Next video" data-yt-next>
-            <span class="yt-nav__chevron" aria-hidden="true"></span>
+          <button
+            class="yt-gallery__control yt-gallery__control--next ds-pill ds-kicker ds-kicker--compact"
+            type="button"
+            aria-label="Next video"
+            data-yt-next
+          >
+            <svg
+              class="yt-gallery__control-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M8 4L16 12L8 20" />
+            </svg>
           </button>
         ) : null}
       </section>
     ) : hasSlider ? (
       <section class="yt-gallery" aria-label="Reels">
         {hasSliderNav ? (
-          <button class="yt-nav yt-nav--prev" type="button" aria-label="Previous" data-yt-prev>
+          <button
+            class="yt-nav yt-nav--prev"
+            type="button"
+            aria-label="Previous"
+            data-yt-prev
+            hidden
+          >
             <span class="yt-nav__chevron" aria-hidden="true"></span>
           </button>
         ) : null}
@@ -253,12 +283,11 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
               <article class="yt-slide" data-yt-slide>
                 <div class="yt-frame yt-frame--9x16" data-yt-frame>
                   <div
-                    class="plyr__video-embed yt-embed"
+                    class="yt-embed"
                     data-yt-embed
+                    data-yt-video-id={id}
                     data-yt-ratio="9:16"
                     data-yt-title={mediaLabel}
-                    data-plyr-provider="youtube"
-                    data-plyr-embed-id={id}
                     inert
                     aria-hidden="true"
                   />
@@ -292,17 +321,14 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
                       aria-live="polite"
                       aria-atomic="true"
                     />
-                    <button class="yt-retry" type="button" data-yt-retry hidden>
-                      Retry {mediaLabel}
-                    </button>
-                    <a
-                      class="yt-fallback"
-                      data-yt-video-id={id}
-                      data-yt-fallback
+                    <button
+                      class="yt-retry ds-pill ds-kicker ds-kicker--compact"
+                      type="button"
+                      data-yt-retry
                       hidden
                     >
-                      Watch {mediaLabel} on YouTube
-                    </a>
+                      Retry {mediaLabel}
+                    </button>
                   </div>
                 </div>
               </article>
@@ -337,6 +363,35 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     width: 100%;
     max-width: 72rem;
     margin: 0 auto;
+  }
+
+  .yt-gallery__control {
+    position: absolute;
+    bottom: 10px;
+    z-index: 30;
+  }
+
+  .yt-gallery__control--prev {
+    left: 1rem;
+  }
+
+  .yt-gallery__control--next {
+    right: 1rem;
+  }
+
+  .yt-gallery__control-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .yt-gallery__control-icon--prev {
+    transform: rotate(180deg);
   }
 
   .yt-nav {
@@ -414,7 +469,7 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     display: flex;
     align-items: baseline;
     justify-content: center;
-    padding: 12px 1rem 0;
+    padding: 12px 4.5rem 0;
     color: var(--color-brand-secondary);
     text-align: center;
   }
@@ -428,26 +483,57 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
   .yt-gallery__pagination {
     position: absolute;
     left: 50%;
-    bottom: 16px;
+    bottom: 7px;
     z-index: 2;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0;
     transform: translateX(-50%);
-    pointer-events: none;
   }
 
   .yt-gallery__dot {
+    -webkit-appearance: none;
+    appearance: none;
+    display: grid;
+    flex: 0 0 32px;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .yt-gallery__dot::before {
+    content: "";
+    box-sizing: content-box;
     display: block;
     width: 10px;
     height: 10px;
+    border: 2px solid transparent;
     border-radius: 50%;
-    background: var(--color-brand-secondary);
-    transition: background-color 160ms ease;
+    background-color: var(--color-brand-secondary);
+    background-clip: padding-box;
+    transition:
+      border-color 220ms ease,
+      background-color 220ms ease;
   }
 
-  .yt-gallery__dot.is-active {
-    background: var(--color-brand-accent);
+  .yt-gallery__dot:hover::before,
+  .yt-gallery__dot:focus-visible::before,
+  .yt-gallery__dot.is-active::before {
+    border-color: var(--color-brand-secondary);
+    background-color: var(--color-brand-accent);
+  }
+
+  .yt-gallery__dot:focus-visible {
+    outline: 2px solid var(--color-brand-accent);
+    outline-offset: -4px;
   }
 
   .yt-frame {
@@ -470,41 +556,19 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
   .yt-embed {
     position: absolute;
     inset: 0;
-  }
-
-  .yt-frame :global(.plyr),
-  .yt-frame :global(.plyr__video-wrapper),
-  .yt-frame :global(.plyr__video-embed),
-  .yt-frame :global(iframe) {
     width: 100%;
     height: 100%;
   }
 
-  .yt-frame :global(.plyr__poster) {
-    display: none;
-  }
-
-  /*
-   * YouTube can expose its own play target inside the cross-origin iframe.
-   * Keep the iframe display-only so playback always goes through Plyr's
-   * coordinated controls after the one-time privacy facade is consumed.
-   */
-  .yt-frame :global(.plyr--youtube iframe) {
+  .yt-embed[inert] {
     pointer-events: none;
   }
 
-  .yt-frame :global(.plyr__control--overlaid) {
-    display: none !important;
-  }
-
-  .yt-frame :global(.plyr[data-yt-player-locked]) {
-    visibility: hidden;
-    pointer-events: none;
-  }
-
-  .yt-frame :global(.plyr[data-yt-player-unlocking] .plyr__control),
-  .yt-frame :global(.plyr[data-yt-player-unlocking] .plyr__controls) {
-    transition: none;
+  .yt-embed :global(iframe) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
   }
 
   .yt-overlay {
@@ -555,62 +619,50 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     border-bottom: 12px solid transparent;
   }
 
+  .yt-frame[data-yt-feedback-state="error"] .yt-overlay__play,
+  .yt-frame[data-yt-feedback-state="unavailable"] .yt-overlay__play {
+    display: none;
+  }
+
   .yt-feedback {
     position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
+    inset: 0;
     z-index: 8;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
-    max-height: calc(100% - 24px);
+    box-sizing: border-box;
+    max-height: 100%;
+    padding: 1rem;
     overflow-y: auto;
-    pointer-events: auto;
+    pointer-events: none;
   }
 
-  .yt-retry,
-  .yt-fallback {
+  .yt-retry {
     position: static;
     box-sizing: border-box;
     max-width: 100%;
     margin: 0;
-    padding: 8px 10px;
-    color: #fff;
-    background: rgba(0, 0, 0, 0.82);
-    font-size: 0.9rem;
-    line-height: 1.3;
+    min-height: 48px;
+    background: var(--color-brand-primary);
+    pointer-events: auto;
+  }
+
+  .yt-retry:hover,
+  .yt-retry:focus-visible {
+    border-color: var(--color-brand-secondary);
+    background: var(--color-brand-secondary);
+    color: var(--color-brand-primary);
   }
 
   .yt-status {
     pointer-events: none;
   }
 
-  .yt-retry,
-  .yt-fallback {
-    pointer-events: auto;
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    text-decoration: underline;
-  }
-
-  .yt-retry[hidden],
-  .yt-fallback[hidden] {
+  .yt-retry[hidden] {
     display: none;
-  }
-
-  .yt-retry {
-    border: 2px solid rgba(255, 255, 255, 0.92);
-    cursor: pointer;
-    font: inherit;
-  }
-
-  .yt-frame :global(.plyr--video.plyr--hide-controls:focus-within .plyr__controls) {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0);
   }
 
   @media (min-width: 900px) {
@@ -619,8 +671,14 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     }
   }
 
+  @media (max-width: 700px) {
+    .yt-gallery__control {
+      bottom: 14px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .yt-gallery__dot {
+    .yt-gallery__dot::before {
       transition: none;
     }
   }

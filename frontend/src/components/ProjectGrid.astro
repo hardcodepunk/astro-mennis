@@ -25,18 +25,18 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
     <div class="pg-filters">
       {
         activeSlug === "all" ? (
-          <span class="pg-pill ds-kicker ds-kicker--compact is-active" aria-current="page">All</span>
+          <span class="ds-pill ds-kicker ds-kicker--compact is-active" aria-current="page">All</span>
         ) : (
-          <a class="pg-pill ds-kicker ds-kicker--compact" href={filterHref("all")}>All</a>
+          <a class="ds-pill ds-kicker ds-kicker--compact" href={filterHref("all")}>All</a>
         )
       }
 
       {
         categories.map(cat =>
         activeSlug === cat.slug ? (
-          <span class="pg-pill ds-kicker ds-kicker--compact is-active" aria-current="page">{cat.title}</span>
+          <span class="ds-pill ds-kicker ds-kicker--compact is-active" aria-current="page">{cat.title}</span>
         ) : (
-            <a class="pg-pill ds-kicker ds-kicker--compact" href={filterHref(cat.slug)}>{cat.title}</a>
+            <a class="ds-pill ds-kicker ds-kicker--compact" href={filterHref(cat.slug)}>{cat.title}</a>
         ),
       )
     }
@@ -64,33 +64,6 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
       margin-bottom: 3rem;
     }
 
-    .pg-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 48px;
-      padding: 0.65rem 1.25rem;
-      color: var(--color-brand-secondary);
-      border-radius: 999px;
-      border: 1px solid var(--color-brand-secondary);
-      text-decoration: none;
-      transition:
-        background 160ms ease,
-        color 160ms ease;
-    }
-
-    .pg-pill.is-active {
-      background: var(--color-brand-secondary);
-      color: var(--color-brand-primary);
-      cursor: default;
-    }
-
-    .pg-pill:not(.is-active):hover {
-      background: var(--color-brand-secondary);
-      border-color: var(--color-brand-secondary);
-      color: var(--color-brand-primary);
-    }
-
     .pg-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -115,12 +88,6 @@ const filterHref = (slug: string) => (slug === "all" ? "/projects" : `/projects/
       .pg-filters {
         gap: 0.5rem;
         margin-bottom: 2rem;
-      }
-
-      .pg-pill {
-        min-height: 40px;
-        padding: 0.5rem 0.9rem;
-        font-size: 0.82rem;
       }
     }
   </style>

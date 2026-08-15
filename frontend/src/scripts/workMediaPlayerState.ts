@@ -139,51 +139,6 @@ export function feedbackAfterVisibilityPause(
   return state === "error" || state === "unavailable" ? state : "playing"
 }
 
-export type PlayerShortcutContext = {
-  key: string
-  repeatedKey: boolean
-  modified: boolean
-  eventWithinPlayer: boolean
-  focusedIsEditable: boolean
-  focusedIsSeek: boolean
-  focusedIsButtonOrMenuitem: boolean
-}
-
-export class PlyrKeyRepeatTracker {
-  #lastKey: string | null = null
-
-  press(key: string) {
-    const repeated = key === this.#lastKey
-    this.#lastKey = key
-    return repeated
-  }
-
-  release() {
-    this.#lastKey = null
-  }
-}
-
-export function shouldRecordPlayerShortcut(context: PlayerShortcutContext) {
-  if (context.repeatedKey || context.modified || !context.eventWithinPlayer) return false
-
-  const isSpace = context.key === " "
-  if (context.key !== "k" && !isSpace) return false
-  if (context.focusedIsEditable && !context.focusedIsSeek) return false
-  if (isSpace && context.focusedIsButtonOrMenuitem) return false
-  return true
-}
-
-export type PlaybackAcknowledgementEvent = "waiting" | "pause" | "playing"
-
-export function playbackAcknowledgementAction(
-  event: PlaybackAcknowledgementEvent,
-  awaitingInitialPlaying: boolean,
-): "renew" | "acknowledge" | "ignore" {
-  if (event === "playing") return "acknowledge"
-  if (event === "pause") return "renew"
-  return awaitingInitialPlaying ? "renew" : "ignore"
-}
-
 type AttributeTarget = {
   setAttribute(name: string, value: string): void
   removeAttribute(name: string): void
@@ -193,7 +148,6 @@ export type WorkMediaFeedbackElements = {
   overlay: AttributeTarget
   status: { textContent: string | null }
   retry: { hidden: boolean | string }
-  fallback: { hidden: boolean | string }
 }
 
 export function renderWorkMediaFeedback(
@@ -201,12 +155,12 @@ export function renderWorkMediaFeedback(
   mediaTitle: string,
   state: WorkMediaFeedbackState,
 ) {
-  const { overlay, status, retry, fallback } = elements
+  const { overlay, status, retry } = elements
   overlay.removeAttribute("aria-busy")
   overlay.removeAttribute("aria-disabled")
+  overlay.removeAttribute("tabindex")
 
   retry.hidden = state !== "error"
-  if (state !== "error" && state !== "unavailable") fallback.hidden = true
 
   switch (state) {
     case "loading":
@@ -221,14 +175,13 @@ export function renderWorkMediaFeedback(
       break
     case "error":
       overlay.setAttribute("aria-label", `Retry loading ${mediaTitle}`)
-      status.textContent = `Could not load ${mediaTitle}. Retry or watch it on YouTube.`
-      fallback.hidden = false
+      status.textContent = `Could not load ${mediaTitle}. Retry.`
       break
     case "unavailable":
       overlay.setAttribute("aria-label", `${mediaTitle} unavailable`)
       overlay.setAttribute("aria-disabled", "true")
-      status.textContent = `Could not play ${mediaTitle}. Watch it on YouTube.`
-      fallback.hidden = false
+      overlay.setAttribute("tabindex", "-1")
+      status.textContent = `YouTube could not play ${mediaTitle}.`
       break
     case "idle":
     case "playing":

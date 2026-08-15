@@ -245,7 +245,7 @@ export default {
             {
               _key: "multiple-videos-demo-span",
               _type: "span",
-              text: "Use the existing arrows or swipe to move through the films. Only the video you choose is loaded and played.",
+              text: "Use the previous/next controls or swipe to move through the films. Only the video you choose is loaded and played.",
               marks: [],
             },
           ],

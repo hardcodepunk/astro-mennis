@@ -95,6 +95,45 @@ html {
     letter-spacing: 0.14em;
   }
 
+  .ds-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.65rem 1.25rem;
+    color: var(--color-brand-secondary);
+    border: 1px solid var(--color-brand-secondary);
+    border-radius: 999px;
+    background: transparent;
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background 160ms ease,
+      color 160ms ease;
+  }
+
+  .ds-pill.is-active {
+    background: var(--color-brand-secondary);
+    color: var(--color-brand-primary);
+    cursor: default;
+  }
+
+  .ds-pill:not(.is-active):hover,
+  .ds-pill:not(.is-active):focus-visible {
+    background: var(--color-brand-secondary);
+    border-color: var(--color-brand-secondary);
+    color: var(--color-brand-primary);
+  }
+
+  @media (max-width: 700px) {
+    .ds-pill {
+      min-height: 40px;
+      padding: 0.5rem 0.9rem;
+      font-size: 0.82rem;
+    }
+  }
+
   .ds-title {
     margin: 0;
     font-family: var(--font-display);

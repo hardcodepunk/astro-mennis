@@ -69,8 +69,6 @@ test("keeps the CSP script policy strict and limits runtime origins", () => {
   assert.deepEqual(csp["connect-src"], [
     "'self'",
     "https://res.cloudinary.com",
-    "https://cdn.plyr.io",
-    "https://noembed.com",
     "https://www.youtube-nocookie.com",
   ])
   assert.deepEqual(csp["frame-src"], ["https://www.youtube-nocookie.com"])

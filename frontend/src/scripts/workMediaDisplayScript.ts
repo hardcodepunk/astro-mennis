@@ -1,25 +1,49 @@
-import Plyr from "plyr"
 import {
   PlaybackAcknowledgementLease,
   PlaybackIntentCoordinator,
-  PlyrKeyRepeatTracker,
   feedbackAfterSupersession,
   feedbackAfterVisibilityPause,
-  playbackAcknowledgementAction,
   renderWorkMediaFeedback,
-  shouldRecordPlayerShortcut,
   type PlaybackIntentSession,
   type WorkMediaFeedbackState,
 } from "./workMediaPlayerState.ts"
 
+type YouTubePlayer = {
+  playVideo: () => void
+  pauseVideo: () => void
+  destroy: () => void
+  getPlayerState: () => number
+  getCurrentTime: () => number
+  getDuration: () => number
+  getIframe: () => HTMLIFrameElement
+}
+
+type YouTubePlayerEvent = { target: YouTubePlayer }
+type YouTubePlayerStateEvent = YouTubePlayerEvent & { data: number }
+type YouTubePlayerErrorEvent = YouTubePlayerEvent & { data: number }
+
+type YouTubePlayerOptions = {
+  events: {
+    onReady: (event: YouTubePlayerEvent) => void
+    onStateChange: (event: YouTubePlayerStateEvent) => void
+    onError: (event: YouTubePlayerErrorEvent) => void
+    onAutoplayBlocked: (event: YouTubePlayerEvent) => void
+  }
+}
+
+type YouTubePlayerConstructor = new (
+  iframe: HTMLIFrameElement,
+  options: YouTubePlayerOptions,
+) => YouTubePlayer
+
 type PlayerSession = PlaybackIntentSession & {
-  player: Plyr | null
+  player: YouTubePlayer | null
+  iframe: HTMLIFrameElement | null
   frame: HTMLElement
   embed: HTMLElement
   overlay: HTMLButtonElement
   status: HTMLElement
   retry: HTMLButtonElement
-  fallback: HTMLAnchorElement
   mediaTitle: string
   ready: boolean
   activated: boolean
@@ -31,40 +55,31 @@ type PlayerSession = PlaybackIntentSession & {
   awaitingInitialPlaying: boolean
   providerUnavailable: boolean
   lastAcknowledgedRequestId: number | null
-  endedGuardRequestId: number | null
-  replayBaselineTime: number | null
-  replayRequiresReset: boolean
-  replayPlayingRequestId: number | null
-  replayProgressRequestId: number | null
-  providerStateRevision: number
-  shortcutRepeatTracker: PlyrKeyRepeatTracker
-  accessibilityObserver: MutationObserver | null
-  onReady: () => void
+  playerRevision: number
   onOverlayClick: (event: MouseEvent) => void
-  onPlayerShortcutKey: (event: KeyboardEvent) => void
-  onPlay: () => void
-  onPlaying: () => void
-  onWaiting: () => void
-  onPause: () => void
-  onTimeUpdate: () => void
-  onEnded: () => void
-  onError: () => void
 }
 
 type YouTubeWindow = Window & {
-  YT?: { Player?: unknown }
+  YT?: { Player?: YouTubePlayerConstructor }
   onYouTubeIframeAPIReady?: () => void
 }
 
 export type WorkMediaRuntime = {
   loadYouTubeApi: () => Promise<void>
-  createPlayer: (embed: HTMLElement, options: Plyr.Options) => Plyr
+  createPlayer: (iframe: HTMLIFrameElement, options: YouTubePlayerOptions) => YouTubePlayer
 }
 
 const activeCleanups = new Set<() => void>()
 const youtubeApiUrl = "https://www.youtube.com/iframe_api"
 const playerReadyTimeoutMs = 15_000
 const youtubeNoCookieOrigin = "https://www.youtube-nocookie.com"
+const unavailableYouTubeErrorCodes = new Set([2, 5, 100, 101, 150, 153])
+const youtubePlayerState = {
+  ended: 0,
+  playing: 1,
+  paused: 2,
+  buffering: 3,
+} as const
 const failedYouTubeApiScripts = new WeakSet<HTMLScriptElement>()
 let youtubeApiPromise: Promise<void> | undefined
 
@@ -80,6 +95,29 @@ function ensureYouTubeNoCookiePreconnect() {
   link.href = youtubeNoCookieOrigin
   link.dataset.workMediaYoutubePreconnect = "1"
   document.head.append(link)
+}
+
+function createYouTubeIframe(videoId: string, mediaTitle: string) {
+  const iframe = document.createElement("iframe")
+  const parameters = new URLSearchParams({
+    controls: "1",
+    playsinline: "1",
+    enablejsapi: "1",
+    rel: "0",
+    origin: window.location.origin,
+    widget_referrer: window.location.origin,
+  })
+
+  iframe.src = `${youtubeNoCookieOrigin}/embed/${encodeURIComponent(videoId)}?${parameters}`
+  iframe.title = mediaTitle
+  iframe.allow =
+    "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  iframe.allowFullscreen = true
+  iframe.referrerPolicy = "strict-origin-when-cross-origin"
+  iframe.setAttribute("frameborder", "0")
+  iframe.setAttribute("inert", "")
+  iframe.setAttribute("aria-hidden", "true")
+  return iframe
 }
 
 function ensureYouTubeApi() {
@@ -152,12 +190,9 @@ function ensureYouTubeApi() {
   return youtubeApiPromise
 }
 
-function setPlayerLocked(frame: HTMLElement, embed: HTMLElement, locked: boolean) {
-  const container = frame.querySelector<HTMLElement>(".plyr")
-  const targets = new Set<HTMLElement>([embed])
-  if (container) targets.add(container)
-
-  for (const target of targets) {
+function setPlayerLocked(embed: HTMLElement, iframe: HTMLIFrameElement | null, locked: boolean) {
+  for (const target of [embed, iframe]) {
+    if (!target) continue
     target.toggleAttribute("inert", locked)
     if (locked) {
       target.setAttribute("aria-hidden", "true")
@@ -165,16 +200,17 @@ function setPlayerLocked(frame: HTMLElement, embed: HTMLElement, locked: boolean
       target.removeAttribute("aria-hidden")
     }
   }
-
-  container?.toggleAttribute("data-yt-player-locked", locked)
-  container?.toggleAttribute("data-yt-player-unlocking", !locked)
 }
 
 export function initWorkMediaRoot(
   root: HTMLElement,
   runtime: WorkMediaRuntime = {
     loadYouTubeApi: ensureYouTubeApi,
-    createPlayer: (embed, options) => new Plyr(embed, options),
+    createPlayer: (iframe, options) => {
+      const Player = (window as YouTubeWindow).YT?.Player
+      if (!Player) throw new Error("The YouTube player API is unavailable")
+      return new Player(iframe, options)
+    },
   },
 ) {
   if (root.dataset.workHeroInited === "1") return
@@ -189,29 +225,19 @@ export function initWorkMediaRoot(
   let disposed = false
   const sessions: PlayerSession[] = []
   const playbackIntent = new PlaybackIntentCoordinator(() => sessions)
-  let currentPlayingSession: PlayerSession | null = null
 
   const setFeedback = (session: PlayerSession, state: WorkMediaFeedbackState) => {
     session.feedbackState = state
+    session.frame.dataset.ytFeedbackState = state
     renderWorkMediaFeedback(
       {
         overlay: session.overlay,
         status: session.status,
         retry: session.retry,
-        fallback: session.fallback,
       },
       session.mediaTitle,
       state,
     )
-  }
-
-  const replayPositionShowsProgress = (session: PlayerSession, currentTime: number) => {
-    const baselineTime = session.replayBaselineTime
-    if (baselineTime === null || !Number.isFinite(currentTime)) return false
-
-    const resetFromBaseline = currentTime < baselineTime - 0.05
-    const advancedFromBaseline = currentTime > baselineTime + 0.01
-    return resetFromBaseline || (!session.replayRequiresReset && advancedFromBaseline)
   }
 
   const clearPlayAcknowledgement = (session: PlayerSession) => {
@@ -226,75 +252,49 @@ export function initWorkMediaRoot(
   }
 
   const cancelPlayback = (session: PlayerSession) => {
-    session.providerStateRevision += 1
     playbackIntent.cancel(session)
     clearPlayAcknowledgement(session)
-    session.endedGuardRequestId = null
-    session.replayBaselineTime = null
-    session.replayRequiresReset = false
-    session.replayPlayingRequestId = null
-    session.replayProgressRequestId = null
-    if (currentPlayingSession === session) currentPlayingSession = null
   }
 
   const pauseSession = (session: PlayerSession) => {
     cancelPlayback(session)
-    session.player?.pause()
+    try {
+      session.player?.pauseVideo()
+    } catch {
+      // A provider can disappear between a visibility change and this command.
+    }
   }
 
   const revealUnavailable = (session: PlayerSession) => {
-    const playerContainer = session.frame.querySelector<HTMLElement>(".plyr")
     const activeElement = document.activeElement
-    const moveFocusToFallback =
+    const moveFocusToIframe =
       activeElement === session.overlay ||
       activeElement === session.retry ||
-      (activeElement instanceof Node && playerContainer?.contains(activeElement))
+      activeElement === session.iframe
 
     session.providerUnavailable = true
     pauseSession(session)
-    session.player?.toggleControls(true)
-    setPlayerLocked(session.frame, session.embed, true)
-    session.overlay.hidden = false
+    session.overlay.hidden = true
+    setPlayerLocked(session.embed, session.iframe, false)
     setFeedback(session, "unavailable")
-    if (moveFocusToFallback) session.fallback.focus()
+    if (moveFocusToIframe) session.iframe?.focus()
   }
 
   const recordIntent = (session: PlayerSession, wantsPlayback: boolean) => {
     clearPlayAcknowledgement(session)
     const { requestId } = playbackIntent.record(session, wantsPlayback)
-    session.providerStateRevision += 1
-    const guardsReplay = wantsPlayback && session.lastAcknowledgedRequestId !== null
-    const replayBaselineTime = session.player?.currentTime
-    const replayDuration = session.player?.duration
-    const finiteReplayBaseline = Number.isFinite(replayBaselineTime)
-      ? (replayBaselineTime ?? null)
-      : null
-    const finiteReplayDuration = Number.isFinite(replayDuration) ? (replayDuration ?? null) : null
-    session.endedGuardRequestId = guardsReplay ? requestId : null
-    session.replayBaselineTime = guardsReplay ? finiteReplayBaseline : null
-    session.replayRequiresReset = Boolean(
-      guardsReplay &&
-        (session.player?.ended ||
-          (finiteReplayDuration !== null &&
-            finiteReplayDuration > 0 &&
-            finiteReplayBaseline !== null &&
-            finiteReplayBaseline >= finiteReplayDuration - 0.01)),
-    )
-    session.replayPlayingRequestId = null
-    session.replayProgressRequestId = null
 
     for (const other of sessions) {
       if (other === session) continue
       clearPlayAcknowledgement(other)
       clearPlayerReadyTimeout(other)
-      other.providerStateRevision += 1
-      other.endedGuardRequestId = null
-      other.replayBaselineTime = null
-      other.replayRequiresReset = false
-      other.replayPlayingRequestId = null
-      other.replayProgressRequestId = null
-      if (currentPlayingSession === other) currentPlayingSession = null
-      if (other.ready && other.activated) other.player?.pause()
+      if (other.ready && other.activated) {
+        try {
+          other.player?.pauseVideo()
+        } catch {
+          // The stale player will be reconciled by its next provider event.
+        }
+      }
 
       const nextFeedback = feedbackAfterSupersession(other.feedbackState, other.activated)
       if (nextFeedback) {
@@ -309,7 +309,6 @@ export function initWorkMediaRoot(
   const handlePlaybackBlocked = (session: PlayerSession, requestId: number | null) => {
     if (disposed || !playbackIntent.isWinning(session, requestId)) return
     pauseSession(session)
-    session.player?.toggleControls(true)
     setFeedback(session, "ready")
   }
 
@@ -330,41 +329,24 @@ export function initWorkMediaRoot(
     renewPlayAcknowledgement(session)
   }
 
-  const updatePlayAcknowledgement = (
-    session: PlayerSession,
-    event: "waiting" | "pause" | "playing",
-  ) => {
-    const action = playbackAcknowledgementAction(event, session.awaitingInitialPlaying)
-    if (action === "acknowledge") {
-      clearPlayAcknowledgement(session)
-    } else if (action === "renew") {
-      session.awaitingInitialPlaying = true
-      renewPlayAcknowledgement(session)
-    }
-  }
-
   for (const embed of embeds) {
     const frame = embed.closest<HTMLElement>("[data-yt-frame]")
     const overlay = frame?.querySelector<HTMLButtonElement>("[data-yt-overlay]")
     const status = frame?.querySelector<HTMLElement>("[data-yt-status]")
     const retry = frame?.querySelector<HTMLButtonElement>("[data-yt-retry]")
-    const fallback = frame?.querySelector<HTMLAnchorElement>("[data-yt-fallback]")
-    if (!frame || !overlay || !status || !retry || !fallback) continue
+    if (!frame || !overlay || !status || !retry) continue
 
     const mediaTitle = embed.dataset.ytTitle?.trim() || "project video"
-    const youtubeVideoId = fallback.dataset.ytVideoId?.trim()
-    if (youtubeVideoId) {
-      fallback.href = `https://www.youtube.com/watch?v=${encodeURIComponent(youtubeVideoId)}`
-    }
+    const youtubeVideoId = embed.dataset.ytVideoId?.trim()
 
     const session: PlayerSession = {
       player: null,
+      iframe: null,
       frame,
       embed,
       overlay,
       status,
       retry,
-      fallback,
       mediaTitle,
       ready: false,
       activationRequestId: null,
@@ -381,27 +363,40 @@ export function initWorkMediaRoot(
       awaitingInitialPlaying: false,
       providerUnavailable: false,
       lastAcknowledgedRequestId: null,
-      endedGuardRequestId: null,
-      replayBaselineTime: null,
-      replayRequiresReset: false,
-      replayPlayingRequestId: null,
-      replayProgressRequestId: null,
-      providerStateRevision: 0,
-      shortcutRepeatTracker: new PlyrKeyRepeatTracker(),
-      accessibilityObserver: null,
-      onReady: () => undefined,
+      playerRevision: 0,
       onOverlayClick: () => undefined,
-      onPlayerShortcutKey: () => undefined,
-      onPlay: () => undefined,
-      onPlaying: () => undefined,
-      onWaiting: () => undefined,
-      onPause: () => undefined,
-      onTimeUpdate: () => undefined,
-      onEnded: () => undefined,
-      onError: () => undefined,
     }
     sessions.push(session)
     setFeedback(session, "idle")
+
+    const resetSessionPlayer = () => {
+      clearPlayerReadyTimeout(session)
+      clearPlayAcknowledgement(session)
+      session.playerRevision += 1
+      const player = session.player
+      const iframe = session.iframe
+      session.player = null
+      session.iframe = null
+      session.ready = false
+      session.activated = false
+      try {
+        player?.destroy()
+      } catch {
+        // The provider may already have torn itself down after an error.
+      }
+      iframe?.remove()
+      setPlayerLocked(embed, null, true)
+    }
+
+    const showRetryableError = (restoreFocus: boolean, warning: string, error?: unknown) => {
+      playbackIntent.clear(session)
+      resetSessionPlayer()
+      overlay.hidden = false
+      setFeedback(session, "error")
+      if (restoreFocus) retry.focus()
+      if (error === undefined) console.warn(warning)
+      else console.warn(warning, error)
+    }
 
     const activate = () => {
       const player = session.player
@@ -415,286 +410,161 @@ export function initWorkMediaRoot(
         return
       }
 
-      const playControl = frame.querySelector<HTMLButtonElement>(
-        '.plyr__controls [data-plyr="play"]',
-      )
-      if (!playControl) {
-        revealUnavailable(session)
-        console.warn("Unable to initialize the YouTube player controls")
-        return
-      }
-
       const activationControlStillHasFocus =
         document.activeElement === overlay || document.activeElement === retry
-      const focusRequestId = session.activationRequestId
+      const requestId = session.activationRequestId
       session.activated = true
-      setPlayerLocked(frame, embed, false)
-      player.toggleControls(true)
       overlay.hidden = true
-      if (activationControlStillHasFocus) playControl.focus()
+      setPlayerLocked(embed, session.iframe, !session.sufficientlyVisible)
+      if (activationControlStillHasFocus && session.sufficientlyVisible) {
+        session.iframe?.focus()
+      }
 
-      const userActivation = (
-        navigator as Navigator & { userActivation?: { isActive: boolean } }
-      ).userActivation
-      const canUseOriginalGesture = !userActivation || userActivation.isActive
-
-      if (!session.sufficientlyVisible || !canUseOriginalGesture) {
+      if (!session.sufficientlyVisible) {
         cancelPlayback(session)
         setFeedback(session, "ready")
       } else {
         startPlayAcknowledgement(session)
         try {
-          const playAttempt = player.play()
-          playAttempt?.catch(() => handlePlaybackBlocked(session, focusRequestId))
+          player.playVideo()
         } catch {
-          handlePlaybackBlocked(session, focusRequestId)
+          handlePlaybackBlocked(session, requestId)
         }
       }
-
-      window.requestAnimationFrame(() => {
-        frame
-          .querySelector<HTMLElement>(".plyr")
-          ?.removeAttribute("data-yt-player-unlocking")
-      })
     }
 
     const createSessionPlayer = () => {
       if (disposed || session.player) return
+      if (!youtubeVideoId) throw new Error("The YouTube video ID is missing")
 
-      const player = runtime.createPlayer(embed, {
-        ratio: embed.dataset.ytRatio || "16:9",
-        clickToPlay: true,
-        controls: [
-          "play",
-          "progress",
-          "current-time",
-          "mute",
-          "volume",
-          "settings",
-          "fullscreen",
-        ],
-        i18n: {
-          play: `Play ${mediaTitle}`,
-          pause: `Pause ${mediaTitle}`,
-        },
-        listeners: {
-          play: () => {
-            const currentPlayer = session.player
-            if (!currentPlayer || disposed || !session.activated) return
+      const iframe = createYouTubeIframe(youtubeVideoId, mediaTitle)
+      embed.replaceChildren(iframe)
+      session.iframe = iframe
+      setPlayerLocked(embed, iframe, true)
+      const revision = ++session.playerRevision
 
-            if (session.providerUnavailable) {
-              recordIntent(session, false)
-              revealUnavailable(session)
-              return false
-            }
+      const acceptsEvent = (eventPlayer: YouTubePlayer) =>
+        !disposed &&
+        session.playerRevision === revision &&
+        (!session.player || session.player === eventPlayer)
 
-            const wantsPlayback = !currentPlayer.playing
-            recordIntent(session, wantsPlayback)
-            setFeedback(session, wantsPlayback ? "loading" : "playing")
-            if (wantsPlayback) startPlayAcknowledgement(session)
-          },
-        },
-        youtube: {
-          rel: 0,
-          modestbranding: 1,
-          noCookie: true,
-          widget_referrer: window.location.origin,
-        },
-      } as Plyr.Options)
-      session.player = player
+      const takeEventPlayer = (eventPlayer: YouTubePlayer) => {
+        if (!acceptsEvent(eventPlayer)) return false
+        if (!session.player) session.player = eventPlayer
+        return true
+      }
 
       const confirmProviderPlaying = () => {
-        updatePlayAcknowledgement(session, "playing")
+        clearPlayAcknowledgement(session)
         session.lastAcknowledgedRequestId = session.activationRequestId
-        currentPlayingSession = session
         setFeedback(session, "playing")
       }
 
-      session.onReady = () => {
+      const onReady = ({ target }: YouTubePlayerEvent) => {
+        if (!takeEventPlayer(target)) return
         clearPlayerReadyTimeout(session)
         session.ready = true
-        player.off("ready", session.onReady)
-
-        if (disposed) {
-          player.destroy()
-          return
+        const playerIframe = target.getIframe?.()
+        if (playerIframe) {
+          session.iframe = playerIframe
+          playerIframe.title = mediaTitle
         }
 
-        const iframe = frame.querySelector<HTMLIFrameElement>("iframe")
-        if (iframe) {
-          const preservePlayerAccessibility = () => {
-            if (iframe.title !== mediaTitle) iframe.title = mediaTitle
-            if (iframe.getAttribute("tabindex") !== "-1") iframe.setAttribute("tabindex", "-1")
-
-            const playLabel = `${player.playing ? "Pause" : "Play"} ${mediaTitle}`
-            frame
-              .querySelectorAll<HTMLButtonElement>('[data-plyr="play"]')
-              .forEach(playButton => {
-                if (playButton.getAttribute("aria-label") !== playLabel) {
-                  playButton.setAttribute("aria-label", playLabel)
-                }
-              })
-          }
-
-          preservePlayerAccessibility()
-          session.accessibilityObserver = new MutationObserver(preservePlayerAccessibility)
-          session.accessibilityObserver.observe(frame, {
-            subtree: true,
-            attributes: true,
-            attributeFilter: ["title", "tabindex", "aria-label"],
-          })
+        if (session.providerUnavailable) {
+          session.overlay.hidden = true
+          setPlayerLocked(embed, session.iframe, false)
+          return
         }
 
         if (playbackIntent.isWinning(session)) activate()
-        else setPlayerLocked(frame, embed, true)
+        else setPlayerLocked(embed, session.iframe, true)
       }
 
-      session.onPlay = () => {
-        if (disposed) return
-        playbackIntent.handleProviderPlayback(session, () => pauseSession(session))
-      }
+      const onStateChange = ({ target, data }: YouTubePlayerStateEvent) => {
+        if (!takeEventPlayer(target) || session.providerUnavailable) return
 
-      session.onWaiting = () => {
-        if (disposed) return
-        if (!playbackIntent.handleProviderPlayback(session, () => pauseSession(session))) return
-        updatePlayAcknowledgement(session, "waiting")
-      }
-
-      session.onPlaying = () => {
-        if (disposed) return
-        session.providerStateRevision += 1
-        if (!session.sufficientlyVisible) {
-          pauseSession(session)
-          setFeedback(session, feedbackAfterVisibilityPause(session.feedbackState))
-          return
-        }
-        if (!playbackIntent.handleProviderPlayback(session, () => pauseSession(session))) return
-
-        const acknowledgedRequestId = session.activationRequestId
-        let replayHasProgressEvidence = true
-        if (
-          acknowledgedRequestId !== null &&
-          session.endedGuardRequestId === acknowledgedRequestId
-        ) {
-          session.replayPlayingRequestId = acknowledgedRequestId
-          replayHasProgressEvidence =
-            session.lastAcknowledgedRequestId === acknowledgedRequestId ||
-            session.replayProgressRequestId === acknowledgedRequestId ||
-            replayPositionShowsProgress(session, player.currentTime)
-          if (replayHasProgressEvidence) {
-            session.replayProgressRequestId = acknowledgedRequestId
-          }
-        }
-
-        if (!replayHasProgressEvidence) {
-          setFeedback(session, "loading")
-          return
-        }
-
-        confirmProviderPlaying()
-      }
-
-      session.onPause = () => {
-        if (currentPlayingSession === session) currentPlayingSession = null
-        const requestId = session.activationRequestId
-        const pauseRevision = ++session.providerStateRevision
-        if (!playbackIntent.isWinning(session, requestId)) return
-
-        queueMicrotask(() => {
-          if (
-            disposed ||
-            session.providerUnavailable ||
-            session.providerStateRevision !== pauseRevision ||
-            !playbackIntent.isWinning(session, requestId)
-          ) {
+        if (data === youtubePlayerState.playing) {
+          if (!session.ready || !session.activated || !session.sufficientlyVisible) {
+            pauseSession(session)
+            setFeedback(session, feedbackAfterVisibilityPause(session.feedbackState))
             return
           }
-          updatePlayAcknowledgement(session, "pause")
-          setFeedback(session, "loading")
-        })
-      }
 
-      session.onTimeUpdate = () => {
-        if (
-          disposed ||
-          session.providerUnavailable ||
-          session.endedGuardRequestId === null ||
-          session.endedGuardRequestId !== session.activationRequestId ||
-          session.replayPlayingRequestId !== session.activationRequestId ||
-          !player.playing ||
-          !playbackIntent.isWinning(session)
-        ) {
-          return
-        }
-
-        const currentTime = player.currentTime
-        if (replayPositionShowsProgress(session, currentTime)) {
-          session.replayProgressRequestId = session.activationRequestId
-          if (session.lastAcknowledgedRequestId !== session.activationRequestId) {
-            confirmProviderPlaying()
+          // Native controls live inside a cross-origin iframe, so PLAYING is the
+          // first reliable signal that the visitor requested playback there.
+          if (!playbackIntent.isWinning(session)) {
+            const anotherSessionIsWinning = sessions.some(
+              other => other !== session && playbackIntent.isWinning(other),
+            )
+            if (anotherSessionIsWinning && document.activeElement !== session.iframe) {
+              pauseSession(session)
+              return
+            }
+            recordIntent(session, true)
           }
-        }
-      }
-
-      session.onEnded = () => {
-        if (disposed || session.providerUnavailable) return
-        session.providerStateRevision += 1
-        const guardsNewerPlayback =
-          session.endedGuardRequestId !== null &&
-          session.endedGuardRequestId === session.activationRequestId
-        const duration = player.duration
-        const currentTime = player.currentTime
-        const endTolerance = Math.max(0.25, duration * 0.001)
-        const isNaturalEndPosition =
-          Number.isFinite(duration) &&
-          duration > 0 &&
-          Number.isFinite(currentTime) &&
-          currentTime >= duration - endTolerance
-        const replayHasProgressEvidence =
-          session.replayPlayingRequestId === session.activationRequestId &&
-          (session.replayProgressRequestId === session.activationRequestId ||
-            replayPositionShowsProgress(session, currentTime))
-        const guardsUnsettledReplay =
-          guardsNewerPlayback && (!replayHasProgressEvidence || !isNaturalEndPosition)
-        const providerRequestUnsettled =
-          (session.awaitingInitialPlaying ||
-            session.lastAcknowledgedRequestId !== session.activationRequestId) &&
-          !replayHasProgressEvidence
-        if (
-          playbackIntent.isWinning(session) &&
-          (guardsUnsettledReplay || providerRequestUnsettled)
-        ) {
-          session.awaitingInitialPlaying = true
-          renewPlayAcknowledgement(session)
-          setFeedback(session, "loading")
+          confirmProviderPlaying()
           return
         }
 
-        cancelPlayback(session)
-        setFeedback(session, "playing")
+        if (data === youtubePlayerState.buffering) {
+          if (playbackIntent.isWinning(session) && session.awaitingInitialPlaying) {
+            clearPlayAcknowledgement(session)
+          }
+          return
+        }
+
+        if (data === youtubePlayerState.paused) {
+          if (!playbackIntent.isWinning(session)) return
+          if (session.awaitingInitialPlaying) {
+            renewPlayAcknowledgement(session)
+            setFeedback(session, "loading")
+          } else {
+            cancelPlayback(session)
+            setFeedback(session, "playing")
+          }
+          return
+        }
+
+        if (data === youtubePlayerState.ended) {
+          cancelPlayback(session)
+          setFeedback(session, "playing")
+        }
       }
 
-      session.onError = () => {
-        if (disposed) return
+      const onError = ({ target, data }: YouTubePlayerErrorEvent) => {
+        if (!takeEventPlayer(target) || session.providerUnavailable) return
         clearPlayerReadyTimeout(session)
-        session.providerStateRevision += 1
-        const shouldReveal = playbackIntent.isCurrent(session)
-        session.providerUnavailable = true
-        cancelPlayback(session)
-        if (shouldReveal) revealUnavailable(session)
+        const activeElement = document.activeElement
+        const restoreFocus =
+          activeElement === overlay || activeElement === retry || activeElement === session.iframe
+
+        if (unavailableYouTubeErrorCodes.has(data)) {
+          revealUnavailable(session)
+          return
+        }
+
+        showRetryableError(restoreFocus, `The YouTube player failed with error ${data}`)
       }
 
-      player.on("ready", session.onReady)
-      player.on("play", session.onPlay)
-      player.on("playing", session.onPlaying)
-      player.on("waiting", session.onWaiting)
-      player.on("pause", session.onPause)
-      player.on("timeupdate", session.onTimeUpdate)
-      player.on("ended", session.onEnded)
-      player.on("error", session.onError)
+      const onAutoplayBlocked = ({ target }: YouTubePlayerEvent) => {
+        if (!takeEventPlayer(target) || session.providerUnavailable) return
+        handlePlaybackBlocked(session, session.activationRequestId)
+      }
 
-      // Plyr creates its container synchronously but finishes the provider setup later.
-      setPlayerLocked(frame, embed, true)
+      try {
+        const player = runtime.createPlayer(iframe, {
+          events: { onReady, onStateChange, onError, onAutoplayBlocked },
+        })
+
+        if (disposed || session.playerRevision !== revision) {
+          player.destroy()
+          return
+        }
+        if (!session.player) session.player = player
+      } catch (error) {
+        if (session.playerRevision === revision) resetSessionPlayer()
+        throw error
+      }
     }
 
     const armPlayerReadyTimeout = (requestId: number) => {
@@ -715,65 +585,14 @@ export function initWorkMediaRoot(
         }
 
         const activeElement = document.activeElement
-        const restoreRetryFocus = activeElement === overlay || activeElement === retry
-        playbackIntent.clear(session)
-        overlay.hidden = false
-        setPlayerLocked(frame, embed, true)
-        setFeedback(session, "error")
-        if (restoreRetryFocus) retry.focus()
-        console.warn("The YouTube player did not become ready")
+        const restoreRetryFocus =
+          activeElement === overlay || activeElement === retry || activeElement === session.iframe
+        showRetryableError(
+          restoreRetryFocus,
+          "The YouTube player did not become ready",
+        )
       }, playerReadyTimeoutMs)
       session.readyTimeoutId = timeoutId
-    }
-
-    session.onPlayerShortcutKey = event => {
-      const player = session.player
-      if (disposed || !player || !session.activated) return
-
-      const target = event.target instanceof Element ? event.target : null
-      const playerContainer = target?.closest(".plyr")
-      const eventWithinPlayer = Boolean(playerContainer && frame.contains(playerContainer))
-      const modified = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey
-      if (!eventWithinPlayer || modified || !event.key) return
-
-      if (event.type === "keyup") {
-        session.shortcutRepeatTracker.release()
-        return
-      }
-
-      const focused = document.activeElement instanceof Element ? document.activeElement : null
-      const focusedIsSeek = focused?.matches('[data-plyr="seek"]') ?? false
-      const focusedIsEditable =
-        focused?.matches("input, textarea, select, [contenteditable]") ?? false
-      const focusedIsButtonOrMenuitem =
-        focused?.matches('button, [role^="menuitem"]') ?? false
-      if (focusedIsEditable && !focusedIsSeek) return
-      if (event.key === " " && focusedIsButtonOrMenuitem) return
-
-      const repeatedKey = session.shortcutRepeatTracker.press(event.key)
-      const shouldRecord = shouldRecordPlayerShortcut({
-        key: event.key,
-        repeatedKey,
-        modified,
-        eventWithinPlayer,
-        focusedIsEditable,
-        focusedIsSeek,
-        focusedIsButtonOrMenuitem,
-      })
-      if (!shouldRecord) return
-
-      if (session.providerUnavailable) {
-        recordIntent(session, false)
-        revealUnavailable(session)
-        event.preventDefault()
-        event.stopPropagation()
-        return
-      }
-
-      const wantsPlayback = !player.playing
-      recordIntent(session, wantsPlayback)
-      setFeedback(session, wantsPlayback ? "loading" : "playing")
-      if (wantsPlayback) startPlayAcknowledgement(session)
     }
 
     session.onOverlayClick = event => {
@@ -814,19 +633,17 @@ export function initWorkMediaRoot(
           const activeElement = document.activeElement
           const restoreRetryFocus =
             activationControlHadFocus && (activeElement === overlay || activeElement === retry)
-          playbackIntent.clear(session)
-          overlay.hidden = false
-          setFeedback(session, "error")
-          if (restoreRetryFocus) retry.focus()
-          console.warn("Unable to initialize the YouTube player", error)
+          showRetryableError(
+            restoreRetryFocus,
+            "Unable to initialize the YouTube player",
+            error,
+          )
         })
     }
 
     overlay.addEventListener("click", session.onOverlayClick)
     retry.addEventListener("click", session.onOverlayClick)
-    frame.addEventListener("keydown", session.onPlayerShortcutKey, true)
-    frame.addEventListener("keyup", session.onPlayerShortcutKey, true)
-    setPlayerLocked(frame, embed, true)
+    setPlayerLocked(embed, null, true)
   }
 
   const rail = root.querySelector<HTMLElement>("[data-yt-rail]")
@@ -836,12 +653,17 @@ export function initWorkMediaRoot(
   let intersectionObserver: IntersectionObserver | undefined
   let onPrevClick: ((event: MouseEvent) => void) | undefined
   let onNextClick: ((event: MouseEvent) => void) | undefined
+  const dotClickHandlers: Array<{
+    dot: HTMLElement
+    handler: (event: MouseEvent) => void
+  }> = []
   let updateNav: (() => void) | undefined
 
   if (rail) {
     const slides = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-slide]"))
     const paginationDots = Array.from(root.querySelectorAll<HTMLElement>("[data-yt-dot]"))
     const paginationStatus = root.querySelector<HTMLElement>("[data-yt-pagination-status]")
+    const landscapeRail = rail.classList?.contains("yt-rail--landscape") ?? false
 
     const getAmount = () => {
       const first = rail.querySelector<HTMLElement>("[data-yt-slide]")
@@ -851,14 +673,48 @@ export function initWorkMediaRoot(
       return first.getBoundingClientRect().width + gap
     }
 
-    const scrollByCard = (direction: "left" | "right") => {
+    const getActiveIndex = (left: number) => {
+      const amount = getAmount()
+      return Math.min(
+        Math.max(0, slides.length - 1),
+        Math.max(0, Math.round(left / amount)),
+      )
+    }
+
+    const syncNavControls = (left: number, activeIndex: number) => {
+      const max = Math.max(0, rail.scrollWidth - rail.clientWidth)
+      const atStart = landscapeRail ? activeIndex === 0 : left <= 2
+      const atEnd = landscapeRail ? activeIndex === slides.length - 1 : left >= max - 2
+      const focusedControl = document.activeElement
+
+      if (prev) prev.hidden = atStart
+      if (next) next.hidden = atEnd
+      if (atStart && focusedControl === prev && next && !atEnd) next.focus()
+      if (atEnd && focusedControl === next && prev && !atStart) prev.focus()
+    }
+
+    const getScrollBehavior = (): ScrollBehavior => {
       const reduceMotion =
         typeof window.matchMedia === "function" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      rail.scrollBy({
-        left: direction === "left" ? -getAmount() : getAmount(),
-        behavior: reduceMotion ? "auto" : "smooth",
+      return reduceMotion ? "auto" : "smooth"
+    }
+
+    const scrollToIndex = (index: number) => {
+      const amount = getAmount()
+      const boundedIndex = Math.min(
+        Math.max(0, slides.length - 1),
+        Math.max(0, index),
+      )
+      rail.scrollTo({
+        left: boundedIndex * amount,
+        behavior: getScrollBehavior(),
       })
+    }
+
+    const scrollByCard = (direction: "left" | "right") => {
+      const activeIndex = getActiveIndex(rail.scrollLeft)
+      scrollToIndex(activeIndex + (direction === "left" ? -1 : 1))
     }
 
     onPrevClick = event => {
@@ -874,25 +730,27 @@ export function initWorkMediaRoot(
 
     prev?.addEventListener("click", onPrevClick)
     next?.addEventListener("click", onNextClick)
+    paginationDots.forEach((dot, index) => {
+      const handler = (event: MouseEvent) => {
+        event.preventDefault()
+        event.stopPropagation()
+        scrollToIndex(index)
+      }
+      dot.addEventListener("click", handler)
+      dotClickHandlers.push({ dot, handler })
+    })
 
     updateNav = () => {
       const left = rail.scrollLeft
-      const max = Math.max(0, rail.scrollWidth - rail.clientWidth)
-      const atStart = left <= 2
-      const atEnd = left >= max - 2
-
-      if (atStart && document.activeElement === prev && next && !atEnd) next.focus()
-      if (atEnd && document.activeElement === next && prev && !atStart) prev.focus()
-      if (prev) prev.hidden = atStart
-      if (next) next.hidden = atEnd
+      const tracksActiveSlide = landscapeRail || paginationDots.length > 0 || Boolean(paginationStatus)
+      const activeIndex = tracksActiveSlide ? getActiveIndex(left) : 0
+      syncNavControls(left, activeIndex)
       if (paginationDots.length > 0 || paginationStatus) {
-        const amount = getAmount()
-        const activeIndex = Math.min(
-          Math.max(0, slides.length - 1),
-          Math.max(0, Math.round(left / amount)),
-        )
         paginationDots.forEach((dot, index) => {
-          dot.classList.toggle("is-active", index === activeIndex)
+          const active = index === activeIndex
+          dot.classList.toggle("is-active", active)
+          if (active) dot.setAttribute("aria-current", "true")
+          else dot.removeAttribute("aria-current")
         })
         if (paginationStatus && slides[activeIndex]) {
           const title = slides[activeIndex]
@@ -914,7 +772,6 @@ export function initWorkMediaRoot(
 
     if (typeof IntersectionObserver !== "undefined") {
       const sessionByFrame = new Map(sessions.map(session => [session.frame, session]))
-      const landscapeRail = rail.classList?.contains("yt-rail--landscape") ?? false
 
       intersectionObserver = new IntersectionObserver(
         entries => {
@@ -928,6 +785,13 @@ export function initWorkMediaRoot(
 
             session.intersecting = entry.isIntersecting && entry.intersectionRatio > 0
             session.sufficientlyVisible = entry.intersectionRatio >= 0.7
+            if (session.ready && session.activated && !session.providerUnavailable) {
+              setPlayerLocked(
+                session.embed,
+                session.iframe,
+                !session.sufficientlyVisible,
+              )
+            }
             if (landscapeRail) {
               slide.toggleAttribute("inert", !session.sufficientlyVisible)
               if (session.sufficientlyVisible) {
@@ -968,6 +832,9 @@ export function initWorkMediaRoot(
     if (rail && updateNav) rail.removeEventListener("scroll", updateNav)
     if (prev && onPrevClick) prev.removeEventListener("click", onPrevClick)
     if (next && onNextClick) next.removeEventListener("click", onNextClick)
+    for (const { dot, handler } of dotClickHandlers) {
+      dot.removeEventListener("click", handler)
+    }
     resizeObserver?.disconnect()
     intersectionObserver?.disconnect()
     playbackIntent.dispose()
@@ -975,20 +842,26 @@ export function initWorkMediaRoot(
     for (const session of sessions) {
       session.overlay.removeEventListener("click", session.onOverlayClick)
       session.retry.removeEventListener("click", session.onOverlayClick)
-      session.frame.removeEventListener("keydown", session.onPlayerShortcutKey, true)
-      session.frame.removeEventListener("keyup", session.onPlayerShortcutKey, true)
+      session.overlay.removeAttribute("tabindex")
+      delete session.frame.dataset.ytFeedbackState
       clearPlayAcknowledgement(session)
       clearPlayerReadyTimeout(session)
-      session.accessibilityObserver?.disconnect()
-      if (session.ready) {
-        session.player?.pause()
-        session.player?.destroy()
+      session.playerRevision += 1
+      try {
+        session.player?.pauseVideo()
+      } catch {
+        // The provider may already be unavailable while Astro swaps the page.
       }
-      // When the SDK is loaded but Plyr is still waiting for the provider, its
-      // disposed-aware ready handler performs the normal public teardown.
+      try {
+        session.player?.destroy()
+      } catch {
+        // The provider may already have destroyed itself.
+      }
+      session.iframe?.remove()
+      session.player = null
+      session.iframe = null
     }
 
-    currentPlayingSession = null
     delete root.dataset.workHeroInited
     activeCleanups.delete(cleanup)
   }

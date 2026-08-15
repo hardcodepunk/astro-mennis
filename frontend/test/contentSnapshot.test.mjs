@@ -44,10 +44,11 @@ test("validates and freezes a complete build snapshot", () => {
 
   assert.match(CONTENT_SNAPSHOT_QUERY, /videos\[\]\{\s*title,\s*youtubeUrl,\s*poster\s*\}/)
   const gallery = snapshot.works.find(work => work.media?.mode === "gallery")
+  const galleryVideos = gallery?.media?.mode === "gallery" ? gallery.media.videos : []
+  assert.equal(galleryVideos.length, 3)
+  assert.equal(galleryVideos[0]?.youtubeUrl, "https://youtu.be/uTGFZtjBpaA")
   assert.deepEqual(
-    gallery?.media?.mode === "gallery"
-      ? gallery.media.videos.map(video => video.title)
-      : [],
+    galleryVideos.map(video => video.title),
     ["Piston Atelier", "Fonkel Silent Disco", "Alles Kan"],
   )
 })

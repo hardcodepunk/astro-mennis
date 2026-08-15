@@ -4,12 +4,9 @@ import test from "node:test"
 import {
   PlaybackAcknowledgementLease,
   PlaybackIntentCoordinator,
-  PlyrKeyRepeatTracker,
   feedbackAfterSupersession,
   feedbackAfterVisibilityPause,
-  playbackAcknowledgementAction,
   renderWorkMediaFeedback,
-  shouldRecordPlayerShortcut,
 } from "../src/scripts/workMediaPlayerState.ts"
 
 const makeSession = name => ({
@@ -125,14 +122,6 @@ test("playback acknowledgement lease times out only unacknowledged requests", ()
   assert.equal(pending.size, 0)
 })
 
-test("pre-play buffering and winning pauses renew the lease; only playing confirms it", () => {
-  assert.equal(playbackAcknowledgementAction("waiting", true), "renew")
-  assert.equal(playbackAcknowledgementAction("pause", true), "renew")
-  assert.equal(playbackAcknowledgementAction("playing", true), "acknowledge")
-  assert.equal(playbackAcknowledgementAction("waiting", false), "ignore")
-  assert.equal(playbackAcknowledgementAction("pause", false), "renew")
-})
-
 test("superseding an activated loading reel clears its live feedback", () => {
   assert.equal(feedbackAfterSupersession("loading", true), "playing")
   assert.equal(feedbackAfterSupersession("ready", true), "playing")
@@ -140,51 +129,10 @@ test("superseding an activated loading reel clears its live feedback", () => {
   assert.equal(feedbackAfterSupersession("unavailable", true), null)
 })
 
-test("visibility pauses preserve provider failure feedback and fallback state", () => {
+test("visibility pauses preserve provider failure feedback states", () => {
   assert.equal(feedbackAfterVisibilityPause("unavailable"), "unavailable")
   assert.equal(feedbackAfterVisibilityPause("error"), "error")
   assert.equal(feedbackAfterVisibilityPause("loading"), "playing")
-})
-
-test("shortcut tracking mirrors Plyr keyboard eligibility", () => {
-  const eligible = {
-    key: "k",
-    repeatedKey: false,
-    modified: false,
-    eventWithinPlayer: true,
-    focusedIsEditable: false,
-    focusedIsSeek: false,
-    focusedIsButtonOrMenuitem: false,
-  }
-
-  assert.equal(shouldRecordPlayerShortcut(eligible), true)
-  assert.equal(shouldRecordPlayerShortcut({ ...eligible, repeatedKey: true }), false)
-  assert.equal(shouldRecordPlayerShortcut({ ...eligible, key: "K" }), false)
-  assert.equal(shouldRecordPlayerShortcut({ ...eligible, eventWithinPlayer: false }), false)
-  assert.equal(shouldRecordPlayerShortcut({ ...eligible, focusedIsEditable: true }), false)
-  assert.equal(
-    shouldRecordPlayerShortcut({
-      ...eligible,
-      key: " ",
-      focusedIsEditable: true,
-      focusedIsSeek: true,
-    }),
-    true,
-  )
-  assert.equal(
-    shouldRecordPlayerShortcut({ ...eligible, key: " ", focusedIsButtonOrMenuitem: true }),
-    false,
-  )
-})
-
-test("shortcut repeat tracking follows Plyr keydown and keyup history", () => {
-  const tracker = new PlyrKeyRepeatTracker()
-
-  assert.equal(tracker.press("k"), false)
-  assert.equal(tracker.press("k"), true)
-  assert.equal(tracker.press("ArrowRight"), false)
-  tracker.release()
-  assert.equal(tracker.press("k"), false)
 })
 
 class FakeAttributeTarget {
@@ -207,7 +155,6 @@ const makeFeedbackElements = () => ({
   overlay: new FakeAttributeTarget(),
   status: { textContent: "" },
   retry: { hidden: true },
-  fallback: { hidden: true },
 })
 
 test("loading feedback is announced and guards repeated activation", () => {
@@ -220,10 +167,9 @@ test("loading feedback is announced and guards repeated activation", () => {
   assert.equal(elements.overlay.getAttribute("aria-disabled"), "true")
   assert.equal(elements.status.textContent, "Loading reel 1 of 3…")
   assert.equal(elements.retry.hidden, true)
-  assert.equal(elements.fallback.hidden, true)
 })
 
-test("SDK failure feedback enables retry and exposes a contextual fallback", () => {
+test("SDK failure feedback exposes Retry without a custom provider fallback", () => {
   const elements = makeFeedbackElements()
   renderWorkMediaFeedback(elements, "project video", "loading")
 
@@ -232,24 +178,32 @@ test("SDK failure feedback enables retry and exposes a contextual fallback", () 
   assert.equal(elements.overlay.getAttribute("aria-label"), "Retry loading project video")
   assert.equal(elements.overlay.getAttribute("aria-busy"), null)
   assert.equal(elements.overlay.getAttribute("aria-disabled"), null)
-  assert.equal(
-    elements.status.textContent,
-    "Could not load project video. Retry or watch it on YouTube.",
-  )
+  assert.equal(elements.status.textContent, "Could not load project video. Retry.")
   assert.equal(elements.retry.hidden, false)
-  assert.equal(elements.fallback.hidden, false)
 })
 
-test("provider failure offers only the available YouTube fallback", () => {
+test("provider failure leaves its message to the native YouTube player", () => {
   const elements = makeFeedbackElements()
 
   renderWorkMediaFeedback(elements, "project video", "unavailable")
 
   assert.equal(elements.overlay.getAttribute("aria-label"), "project video unavailable")
   assert.equal(elements.overlay.getAttribute("aria-disabled"), "true")
-  assert.equal(elements.status.textContent, "Could not play project video. Watch it on YouTube.")
+  assert.equal(elements.overlay.getAttribute("tabindex"), "-1")
+  assert.equal(elements.status.textContent, "YouTube could not play project video.")
   assert.equal(elements.retry.hidden, true)
-  assert.equal(elements.fallback.hidden, false)
+})
+
+test("only unavailable feedback removes the inert overlay from tab order", () => {
+  const elements = makeFeedbackElements()
+
+  for (const state of ["idle", "loading", "ready", "playing", "error"]) {
+    renderWorkMediaFeedback(elements, "project video", "unavailable")
+    assert.equal(elements.overlay.getAttribute("tabindex"), "-1")
+
+    renderWorkMediaFeedback(elements, "project video", state)
+    assert.equal(elements.overlay.getAttribute("tabindex"), null)
+  }
 })
 
 test("ready and playing feedback clear busy state without removing the live region", () => {
@@ -268,5 +222,4 @@ test("ready and playing feedback clear busy state without removing the live regi
   renderWorkMediaFeedback(elements, "project video", "playing")
   assert.equal(elements.overlay.getAttribute("aria-label"), "Play project video on YouTube")
   assert.equal(elements.status.textContent, "")
-  assert.equal(elements.fallback.hidden, true)
 })
