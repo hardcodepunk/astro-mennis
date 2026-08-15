@@ -304,9 +304,10 @@ test("media galleries share circular pill-chevron navigation without Plyr", asyn
     display,
     /@media \(max-width:\s*700px\)\s*\{[\s\S]*?\.yt-gallery__controls--reels\s*\{[^}]*inset-inline:\s*12px;/,
   )
-  assert.match(
+  assert.doesNotMatch(
     display,
-    /@media \(max-width:\s*700px\)\s*\{[\s\S]*?\.yt-gallery__controls--reels \.yt-gallery__control\s*\{[^}]*border-color:\s*var\(--color-brand-accent\);/,
+    /@media \(max-width:\s*700px\)\s*\{[\s\S]*?\.yt-gallery__controls--reels \.yt-gallery__control\s*\{/,
+    "the shared accent border should not need a reel-only mobile override",
   )
 
   const sharedControlRule = display.match(/\.yt-gallery__control\s*\{[^}]*\}/)?.[0]
@@ -321,7 +322,7 @@ test("media galleries share circular pill-chevron navigation without Plyr", asyn
   assert.match(sharedControlRule, /padding:\s*0;/)
   assert.match(
     sharedControlRule,
-    /border:\s*2px solid var\(--color-brand-secondary\);/,
+    /border:\s*2px solid var\(--color-brand-accent\);/,
   )
   assert.match(sharedControlRule, /border-radius:\s*50%;/)
   assert.match(
@@ -343,6 +344,10 @@ test("media galleries share circular pill-chevron navigation without Plyr", asyn
     /\.yt-gallery__control:hover,\s*\.yt-gallery__control:focus-visible\s*\{[^}]*\}/,
   )?.[0]
   assert.ok(sharedControlInteractionRule)
+  assert.match(
+    sharedControlInteractionRule,
+    /border-color:\s*var\(--color-brand-accent\);/,
+  )
   assert.match(
     sharedControlInteractionRule,
     /background-color:\s*var\(--color-brand-accent\);/,
