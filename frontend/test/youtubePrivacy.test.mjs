@@ -151,6 +151,39 @@ test("server-rendered facades do not eagerly reference YouTube infrastructure", 
     display,
     /\.yt-frame\[data-yt-feedback-state="error"\] \.yt-overlay__play,\s*\.yt-frame\[data-yt-feedback-state="unavailable"\] \.yt-overlay__play\s*\{\s*display:\s*none;/,
   )
+  const facadePlayRule = display.match(/\.yt-overlay__play\s*\{[^}]*\}/)?.[0]
+  assert.ok(facadePlayRule)
+  assert.match(facadePlayRule, /width:\s*64px;/)
+  assert.match(facadePlayRule, /height:\s*64px;/)
+  assert.match(facadePlayRule, /border:\s*2px solid var\(--color-brand-secondary\);/)
+  assert.match(facadePlayRule, /border-radius:\s*50%;/)
+  assert.match(facadePlayRule, /background-color:\s*var\(--color-brand-secondary\);/)
+  assert.match(
+    facadePlayRule,
+    /transition:\s*border-color 220ms ease,\s*background-color 220ms ease;/,
+  )
+  assert.doesNotMatch(facadePlayRule, /box-shadow/)
+  const facadePlayIconRule = display.match(/\.yt-overlay__play::after\s*\{[^}]*\}/)?.[0]
+  assert.ok(facadePlayIconRule)
+  assert.match(facadePlayIconRule, /border-left:\s*18px solid #fff;/)
+  assert.match(facadePlayIconRule, /transition:\s*border-left-color 220ms ease;/)
+  const facadePlayInteractionRule = display.match(
+    /\.yt-overlay:hover \.yt-overlay__play,\s*\.yt-overlay:focus-visible \.yt-overlay__play\s*\{[^}]*\}/,
+  )?.[0]
+  assert.ok(facadePlayInteractionRule)
+  assert.match(
+    facadePlayInteractionRule,
+    /border-color:\s*var\(--color-brand-secondary\);/,
+  )
+  assert.match(
+    facadePlayInteractionRule,
+    /background-color:\s*var\(--color-brand-accent\);/,
+  )
+  assert.doesNotMatch(facadePlayInteractionRule, /box-shadow/)
+  assert.match(
+    display,
+    /\.yt-overlay:hover \.yt-overlay__play::after,\s*\.yt-overlay:focus-visible \.yt-overlay__play::after\s*\{[^}]*border-left-color:\s*var\(--color-brand-secondary\);/,
+  )
   assert.match(
     display,
     /\.yt-gallery__dot\s*\{[\s\S]*?appearance:\s*none;[\s\S]*?display:\s*grid;[\s\S]*?flex:\s*0 0 32px;[\s\S]*?width:\s*32px;[\s\S]*?height:\s*32px;[\s\S]*?cursor:\s*pointer;[\s\S]*?touch-action:\s*manipulation;/,
@@ -176,6 +209,14 @@ test("server-rendered facades do not eagerly reference YouTube infrastructure", 
   assert.match(
     display,
     /@media \(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.yt-gallery__dot::before\s*\{[\s\S]*?transition:\s*none;/,
+  )
+  assert.match(
+    display,
+    /@media \(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.yt-overlay__play\s*\{[\s\S]*?transition:\s*none;/,
+  )
+  assert.match(
+    display,
+    /@media \(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.yt-overlay__play::after\s*\{[\s\S]*?transition:\s*none;/,
   )
   assert.doesNotMatch(display, /\.yt-gallery__dot\s*\{[^}]*opacity:/)
   assert.doesNotMatch(display, /\{index \+ 1\} \/ \{galleryItems\.length\}/)

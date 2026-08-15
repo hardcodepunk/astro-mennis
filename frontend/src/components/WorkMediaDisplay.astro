@@ -601,11 +601,16 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 76px;
-    height: 76px;
+    box-sizing: border-box;
+    width: 64px;
+    height: 64px;
     transform: translate(-50%, -50%);
-    border-radius: 0;
-    background: rgba(255, 255, 255, 0.18);
+    border: 2px solid var(--color-brand-secondary);
+    border-radius: 50%;
+    background-color: var(--color-brand-secondary);
+    transition:
+      border-color 220ms ease,
+      background-color 220ms ease;
   }
 
   .yt-overlay__play::after {
@@ -614,9 +619,25 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     top: 50%;
     left: 50%;
     transform: translate(-42%, -50%);
-    border-left: 18px solid rgba(255, 255, 255, 0.9);
+    border-left: 18px solid #fff;
     border-top: 12px solid transparent;
     border-bottom: 12px solid transparent;
+    transition: border-left-color 220ms ease;
+  }
+
+  .yt-overlay:hover .yt-overlay__play,
+  .yt-overlay:focus-visible .yt-overlay__play {
+    border-color: var(--color-brand-secondary);
+    background-color: var(--color-brand-accent);
+  }
+
+  .yt-overlay:hover .yt-overlay__play::after,
+  .yt-overlay:focus-visible .yt-overlay__play::after {
+    border-left-color: var(--color-brand-secondary);
+  }
+
+  .yt-overlay:focus-visible {
+    outline: none;
   }
 
   .yt-frame[data-yt-feedback-state="error"] .yt-overlay__play,
@@ -679,6 +700,14 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
 
   @media (prefers-reduced-motion: reduce) {
     .yt-gallery__dot::before {
+      transition: none;
+    }
+
+    .yt-overlay__play {
+      transition: none;
+    }
+
+    .yt-overlay__play::after {
       transition: none;
     }
   }
