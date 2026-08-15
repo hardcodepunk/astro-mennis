@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 
 import {
+  hasPortableTextContent,
   portableTextToHtml,
   sanitizePortableTextHtml,
 } from "../src/lib/portableText.ts"
@@ -23,6 +24,21 @@ function textBlock(overrides = {}) {
     ...overrides,
   }
 }
+
+test("detects meaningful Portable Text content", () => {
+  assert.equal(hasPortableTextContent(undefined), false)
+  assert.equal(hasPortableTextContent([]), false)
+  assert.equal(hasPortableTextContent([textBlock({
+    children: [{ _key: "span-1", _type: "span", text: " \n\t ", marks: [] }],
+  })]), false)
+  assert.equal(hasPortableTextContent([textBlock()]), true)
+  assert.equal(hasPortableTextContent([{
+    _key: "image-1",
+    _type: "inlineImage",
+    alt: "Project still",
+    asset: { url: sanityImageUrl },
+  }]), true)
+})
 
 test("validates and renders the supported Portable Text allowlist", () => {
   const body = validatePortableTextBody(

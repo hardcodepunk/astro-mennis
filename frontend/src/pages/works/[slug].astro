@@ -7,7 +7,7 @@ import {
   type WorkDetail,
   type WorkSummary,
 } from "../../lib/sanity.queries"
-import { portableTextToHtml } from "../../lib/portableText"
+import { hasPortableTextContent, portableTextToHtml } from "../../lib/portableText"
 import RecentWorks from "../../components/RecentWorks.astro"
 import WorkMediaDisplay from "../../components/WorkMediaDisplay.astro"
 import {
@@ -39,7 +39,10 @@ type Props = {
 }
 
 const {work, recent, seoSettings} = Astro.props as Props
-const bodyHtml = portableTextToHtml(work.body)
+const overviewTitle = work.overviewTitle?.trim() ?? ""
+const hasBody = hasPortableTextContent(work.body)
+const bodyHtml = hasBody ? portableTextToHtml(work.body) : ""
+const hasArticle = Boolean(overviewTitle || hasBody)
 const title = workSeoTitle(seoSettings, work)
 const description = workSeoDescription(seoSettings, work)
 const image = socialImage(seoSettings, work.seo?.socialImage ?? work.preview.poster)
@@ -100,7 +103,7 @@ const jsonLd = [
   preloadImageSrcset={preloadHero.srcset}
   preloadImageSizes={preloadHero.sizes}
 >
-  <div class="page">
+  <div class:list={["page", { "page--meta-only": !hasArticle }]}>
     <div class="page-inner ds-shell--content">
       <h1 class="page-title ds-title ds-title--work text-brand-secondary">{work.title}</h1>
 
@@ -108,7 +111,7 @@ const jsonLd = [
         <WorkMediaDisplay work={work} />
       </div>
 
-      <div class="page-content">
+      <div class:list={["page-content", { "page-content--meta-only": !hasArticle }]}>
         <aside class="page-meta" aria-label="Project details">
           <div class="page-meta-item">
             <div class="page-meta-label ds-meta-label">Year</div>
@@ -129,12 +132,12 @@ const jsonLd = [
         </aside>
 
         {
-          work.overviewTitle || bodyHtml ? (
+          hasArticle ? (
             <article class="page-article">
               <div class="page-article-card">
                 {
-                  work.overviewTitle ? (
-                    <h2 class="page-overview-title ds-title ds-title--section">{work.overviewTitle}</h2>
+                  overviewTitle ? (
+                    <h2 class="page-overview-title ds-title ds-title--section">{overviewTitle}</h2>
                   ) : null
                 }
 
@@ -147,12 +150,16 @@ const jsonLd = [
     </div>
   </div>
 
-  <RecentWorks items={recent} />
+  <RecentWorks items={recent} compactTop={!hasArticle} />
 
   <style>
     .page {
       padding: 28px 0 96px;
       background: var(--color-brand-primary);
+    }
+
+    .page--meta-only {
+      padding-bottom: 32px;
     }
 
     .page-inner {
@@ -169,6 +176,12 @@ const jsonLd = [
       gap: clamp(2rem, 5vw, 5rem);
       align-items: start;
       margin-top: 72px;
+    }
+
+    .page-content--meta-only {
+      grid-template-columns: minmax(10rem, 14rem);
+      justify-content: end;
+      margin-top: 48px;
     }
 
     .page-article {
@@ -190,6 +203,10 @@ const jsonLd = [
       gap: 20px;
       position: sticky;
       top: 96px;
+    }
+
+    .page-content--meta-only .page-meta {
+      grid-column: 1;
     }
 
     .page-meta-val {
@@ -333,7 +350,12 @@ const jsonLd = [
       .page-content {
         grid-template-columns: 1fr;
         gap: 34px;
+        justify-content: stretch;
         margin-top: 42px;
+      }
+
+      .page-content--meta-only {
+        margin-top: 34px;
       }
 
       .page-article,
@@ -360,6 +382,30 @@ const jsonLd = [
     }
 
     @media (max-width: 700px) {
+      .page {
+        padding: 20px 0 64px;
+      }
+
+      .page--meta-only {
+        padding-bottom: 20px;
+      }
+
+      .page-inner {
+        margin-top: 3rem;
+      }
+
+      .page-hero {
+        margin-top: 28px;
+      }
+
+      .page-content {
+        margin-top: 32px;
+      }
+
+      .page-content--meta-only {
+        margin-top: 28px;
+      }
+
       .page-meta {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;

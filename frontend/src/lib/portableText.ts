@@ -114,6 +114,15 @@ export function sanitizePortableTextHtml(value: string): string {
   return sanitizeHtml(value, portableTextSanitizeOptions)
 }
 
+export function hasPortableTextContent(value: PortableTextBody | undefined) {
+  if (!value?.length) return false
+
+  return value.some(item =>
+    item._type === "inlineImage"
+      || item.children.some(child => child.text.trim().length > 0),
+  )
+}
+
 export function portableTextToHtml(value: PortableTextBody | undefined) {
   if (!value?.length) return ""
   const html = toHTML(value, {

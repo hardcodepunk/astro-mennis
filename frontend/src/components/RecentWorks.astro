@@ -2,10 +2,13 @@
 import WorkThumbnailCard from "./WorkThumbnailCard.astro"
 import type { WorkSummary } from "../lib/sanity.queries"
 
-const { items = [] } = Astro.props as { items: WorkSummary[] }
+const { items = [], compactTop = false } = Astro.props as {
+  items: WorkSummary[]
+  compactTop?: boolean
+}
 ---
 
-<section class="rw">
+<section class:list={["rw", { "rw--compact-top": compactTop }]}>
   <div class="rw-inner ds-shell ds-shell--wide">
     <h2 class="rw-title ds-title ds-title--large">Keep on watching</h2>
 
@@ -17,6 +20,10 @@ const { items = [] } = Astro.props as { items: WorkSummary[] }
   <style>
     .rw {
       padding: 88px 0;
+    }
+
+    .rw--compact-top {
+      padding-top: 48px;
     }
 
     .rw-grid {
@@ -32,6 +39,14 @@ const { items = [] } = Astro.props as { items: WorkSummary[] }
     }
 
     @media (max-width: 700px) {
+      .rw {
+        padding: 64px 0;
+      }
+
+      .rw--compact-top {
+        padding-top: 32px;
+      }
+
       .rw-grid {
         grid-template-columns: 1fr;
       }
