@@ -261,19 +261,7 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
         ) : null}
       </section>
     ) : hasSlider ? (
-      <section class="yt-gallery" aria-label="Reels">
-        {hasSliderNav ? (
-          <button
-            class="yt-nav yt-nav--prev"
-            type="button"
-            aria-label="Previous"
-            data-yt-prev
-            hidden
-          >
-            <span class="yt-nav__chevron" aria-hidden="true"></span>
-          </button>
-        ) : null}
-
+      <section class="yt-gallery yt-gallery--reels" aria-label="Reels">
         <div class="yt-rail" data-yt-rail>
           {reelIds.map((id, index) => {
             const mediaLabel = `reel ${index + 1} of ${reelIds.length}`
@@ -337,9 +325,39 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
         </div>
 
         {hasSliderNav ? (
-          <button class="yt-nav yt-nav--next" type="button" aria-label="Next" data-yt-next>
-            <span class="yt-nav__chevron" aria-hidden="true"></span>
-          </button>
+          <div class="yt-gallery__controls--reels" role="group" aria-label="Reel navigation">
+            <button
+              class="yt-gallery__control yt-gallery__control--prev ds-pill ds-kicker ds-kicker--compact"
+              type="button"
+              aria-label="Previous reel"
+              data-yt-prev
+              hidden
+            >
+              <svg
+                class="yt-gallery__control-icon yt-gallery__control-icon--prev"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M8 4L16 12L8 20" />
+              </svg>
+            </button>
+            <button
+              class="yt-gallery__control yt-gallery__control--next ds-pill ds-kicker ds-kicker--compact"
+              type="button"
+              aria-label="Next reel"
+              data-yt-next
+            >
+              <svg
+                class="yt-gallery__control-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M8 4L16 12L8 20" />
+              </svg>
+            </button>
+          </div>
         ) : null}
       </section>
     ) : (
@@ -369,6 +387,31 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     position: absolute;
     bottom: 10px;
     z-index: 30;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    min-height: 48px;
+    padding: 0;
+    border: 2px solid var(--color-brand-secondary);
+    border-radius: 50%;
+    background-color: var(--color-brand-secondary);
+    color: #fff;
+    transition:
+      border-color 220ms ease,
+      background-color 220ms ease,
+      color 220ms ease;
+  }
+
+  .yt-gallery__control:hover,
+  .yt-gallery__control:focus-visible {
+    border-color: var(--color-brand-secondary);
+    background-color: var(--color-brand-accent);
+    color: var(--color-brand-secondary);
+  }
+
+  .yt-gallery__control[hidden] {
+    display: none;
   }
 
   .yt-gallery__control--prev {
@@ -394,42 +437,29 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     transform: rotate(180deg);
   }
 
-  .yt-nav {
+  .yt-gallery__controls--reels {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 56px;
-    height: 56px;
-    border-radius: 0;
-    border: 2px solid rgba(255, 255, 255, 0.92);
-    background: var(--color-brand-secondary);
-    display: grid;
-    place-items: center;
-    cursor: pointer;
+    inset: 0 -29px;
     z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+    pointer-events: none;
   }
 
-  .yt-nav__chevron {
-    width: 13px;
-    height: 13px;
-    border-top: 4px solid #fff;
-    border-right: 4px solid #fff;
+  .yt-gallery__controls--reels .yt-gallery__control {
+    position: static;
+    pointer-events: auto;
   }
 
-  .yt-nav--prev .yt-nav__chevron {
-    transform: translateX(3px) rotate(-135deg);
+  .yt-gallery__controls--reels .yt-gallery__control--prev {
+    grid-column: 1;
+    justify-self: start;
   }
 
-  .yt-nav--next .yt-nav__chevron {
-    transform: translateX(-3px) rotate(45deg);
-  }
-
-  .yt-nav--prev {
-    left: -12px;
-  }
-
-  .yt-nav--next {
-    right: -12px;
+  .yt-gallery__controls--reels .yt-gallery__control--next {
+    grid-column: 2;
+    justify-self: end;
   }
 
   .yt-rail {
@@ -694,12 +724,26 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
 
   @media (max-width: 700px) {
     .yt-gallery__control {
+      width: 40px;
+      height: 40px;
+      min-height: 40px;
+    }
+
+    .yt-gallery--landscape .yt-gallery__control {
       bottom: 14px;
+    }
+
+    .yt-gallery__controls--reels {
+      inset-inline: -24px;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .yt-gallery__dot::before {
+      transition: none;
+    }
+
+    .yt-gallery__control {
       transition: none;
     }
 

@@ -108,7 +108,7 @@ test("server-rendered facades do not eagerly reference YouTube infrastructure", 
     /class="yt-gallery__control yt-gallery__control--prev ds-pill ds-kicker ds-kicker--compact"[\s\S]*?class="yt-gallery__control-icon yt-gallery__control-icon--prev"[\s\S]*?<path d="M8 4L16 12L8 20" \/>[\s\S]*?<\/button>/,
   )
   assert.match(display, /aria-label="Previous video"\s+data-yt-prev\s+hidden/)
-  assert.match(display, /aria-label="Previous"\s+data-yt-prev\s+hidden/)
+  assert.match(display, /aria-label="Previous reel"\s+data-yt-prev\s+hidden/)
   assert.match(
     display,
     /class="yt-gallery__control yt-gallery__control--next ds-pill ds-kicker ds-kicker--compact"[\s\S]*?class="yt-gallery__control-icon"[\s\S]*?<path d="M8 4L16 12L8 20" \/>[\s\S]*?<\/button>/,
@@ -238,6 +238,137 @@ test("server-rendered facades do not eagerly reference YouTube infrastructure", 
   assert.doesNotMatch(display, /plyr/i)
   assert.doesNotMatch(workPage, /youtubePoster|i\.ytimg\.com/i)
   assert.match(workPage, /work\.media\.videos\[0\]\?\.poster \?\? work\.preview\.poster/)
+})
+
+test("media galleries share circular pill-chevron navigation without Plyr", async () => {
+  const [display, script, packageSource, lockSource] = await Promise.all([
+    readFile(new URL("../src/components/WorkMediaDisplay.astro", import.meta.url), "utf8"),
+    readFile(new URL("../src/scripts/workMediaDisplayScript.ts", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../package-lock.json", import.meta.url), "utf8"),
+  ])
+
+  const reelBranchStart = display.indexOf(") : hasSlider ? (")
+  const reelBranchEnd = display.indexOf(") : (", reelBranchStart + 1)
+  assert.notEqual(reelBranchStart, -1)
+  assert.notEqual(reelBranchEnd, -1)
+  const reelBranch = display.slice(reelBranchStart, reelBranchEnd)
+
+  assert.match(reelBranch, /<section class="yt-gallery yt-gallery--reels" aria-label="Reels">/)
+
+  const railIndex = reelBranch.indexOf('<div class="yt-rail" data-yt-rail>')
+  const controlsIndex = reelBranch.indexOf(
+    '<div class="yt-gallery__controls--reels" role="group" aria-label="Reel navigation">',
+  )
+  assert.notEqual(railIndex, -1)
+  assert.ok(controlsIndex > railIndex, "the reel controls must follow the reel rail in DOM order")
+
+  const controls = reelBranch.match(
+    /<div class="yt-gallery__controls--reels" role="group" aria-label="Reel navigation">[\s\S]*?<\/div>/,
+  )?.[0]
+  assert.ok(controls)
+  assert.match(
+    controls,
+    /class="yt-gallery__control yt-gallery__control--prev ds-pill ds-kicker ds-kicker--compact"[\s\S]*?aria-label="Previous reel"[\s\S]*?data-yt-prev[\s\S]*?hidden[\s\S]*?class="yt-gallery__control-icon yt-gallery__control-icon--prev"[\s\S]*?<path d="M8 4L16 12L8 20" \/>/,
+  )
+  assert.match(
+    controls,
+    /class="yt-gallery__control yt-gallery__control--next ds-pill ds-kicker ds-kicker--compact"[\s\S]*?aria-label="Next reel"[\s\S]*?data-yt-next[\s\S]*?class="yt-gallery__control-icon"[\s\S]*?<path d="M8 4L16 12L8 20" \/>/,
+  )
+  assert.doesNotMatch(reelBranch, /data-yt-dot|yt-gallery__pagination/)
+  assert.doesNotMatch(display, /(?:class="yt-nav|\.yt-nav(?:__|--|\s|\{))/)
+
+  const controlsRule = display.match(/\.yt-gallery__controls--reels\s*\{[^}]*\}/)?.[0]
+  assert.ok(controlsRule)
+  assert.match(controlsRule, /position:\s*absolute;/)
+  assert.match(controlsRule, /inset:\s*0 -29px;/)
+  assert.match(controlsRule, /z-index:\s*30;/)
+  assert.match(controlsRule, /display:\s*grid;/)
+  assert.match(controlsRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/)
+  assert.match(controlsRule, /align-items:\s*center;/)
+  assert.match(controlsRule, /pointer-events:\s*none;/)
+  assert.doesNotMatch(controlsRule, /(?:margin-top|min-height|padding-top):/)
+  assert.match(
+    display,
+    /\.yt-gallery__controls--reels \.yt-gallery__control\s*\{[^}]*position:\s*static;[^}]*pointer-events:\s*auto;/,
+  )
+  assert.match(
+    display,
+    /\.yt-gallery__controls--reels \.yt-gallery__control--prev\s*\{[^}]*grid-column:\s*1;[^}]*justify-self:\s*start;/,
+  )
+  assert.match(
+    display,
+    /\.yt-gallery__controls--reels \.yt-gallery__control--next\s*\{[^}]*grid-column:\s*2;[^}]*justify-self:\s*end;/,
+  )
+  assert.match(
+    display,
+    /@media \(max-width:\s*700px\)\s*\{[\s\S]*?\.yt-gallery__controls--reels\s*\{[^}]*inset-inline:\s*-24px;/,
+  )
+
+  const sharedControlRule = display.match(/\.yt-gallery__control\s*\{[^}]*\}/)?.[0]
+  assert.ok(sharedControlRule)
+  assert.match(sharedControlRule, /position:\s*absolute;/)
+  assert.match(sharedControlRule, /bottom:\s*10px;/)
+  assert.match(sharedControlRule, /display:\s*grid;/)
+  assert.match(sharedControlRule, /place-items:\s*center;/)
+  assert.match(sharedControlRule, /width:\s*48px;/)
+  assert.match(sharedControlRule, /height:\s*48px;/)
+  assert.match(sharedControlRule, /min-height:\s*48px;/)
+  assert.match(sharedControlRule, /padding:\s*0;/)
+  assert.match(
+    sharedControlRule,
+    /border:\s*2px solid var\(--color-brand-secondary\);/,
+  )
+  assert.match(sharedControlRule, /border-radius:\s*50%;/)
+  assert.match(
+    sharedControlRule,
+    /background-color:\s*var\(--color-brand-secondary\);/,
+  )
+  assert.match(sharedControlRule, /color:\s*#fff;/)
+  assert.match(
+    sharedControlRule,
+    /transition:\s*border-color 220ms ease,\s*background-color 220ms ease,\s*color 220ms ease;/,
+  )
+  assert.match(
+    display,
+    /\.yt-gallery__control\[hidden\]\s*\{\s*display:\s*none;/,
+    "the component display rule must not override the native hidden state",
+  )
+
+  const sharedControlInteractionRule = display.match(
+    /\.yt-gallery__control:hover,\s*\.yt-gallery__control:focus-visible\s*\{[^}]*\}/,
+  )?.[0]
+  assert.ok(sharedControlInteractionRule)
+  assert.match(
+    sharedControlInteractionRule,
+    /background-color:\s*var\(--color-brand-accent\);/,
+  )
+  assert.match(
+    sharedControlInteractionRule,
+    /color:\s*var\(--color-brand-secondary\);/,
+  )
+
+  assert.match(display, /\.yt-rail--landscape\s*\{[^}]*padding-bottom:\s*38px;/)
+  assert.match(
+    display,
+    /@media \(max-width:\s*700px\)\s*\{[\s\S]*?\.yt-gallery__control\s*\{[^}]*width:\s*40px;[^}]*height:\s*40px;[^}]*min-height:\s*40px;/,
+  )
+  assert.match(
+    display,
+    /@media \(max-width:\s*700px\)\s*\{[\s\S]*?\.yt-gallery--landscape \.yt-gallery__control\s*\{[^}]*bottom:\s*14px;/,
+  )
+  assert.match(
+    display,
+    /@media \(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.yt-gallery__control\s*\{[^}]*transition:\s*none;/,
+  )
+
+  const packageJson = JSON.parse(packageSource)
+  const packageLock = JSON.parse(lockSource)
+  assert.equal(packageJson.dependencies?.plyr, undefined)
+  assert.equal(packageJson.devDependencies?.plyr, undefined)
+  assert.equal(packageLock.packages?.["node_modules/plyr"], undefined)
+  assert.doesNotMatch(display, /plyr/i)
+  assert.doesNotMatch(script, /(?:import\s+Plyr|new\s+Plyr|plyr\/dist)/)
 })
 
 test("native YouTube uses privacy-enhanced embeds without sharing the page path", async () => {
