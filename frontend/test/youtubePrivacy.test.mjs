@@ -82,6 +82,7 @@ test("server-rendered facades do not eagerly reference YouTube infrastructure", 
   assert.match(display, /class="yt-slide yt-slide--landscape"/)
   assert.match(display, /class="yt-gallery__pagination" data-yt-pagination/)
   assert.match(display, /data-yt-dot/)
+  assert.match(display, /class="yt-status sr-only"/)
   assert.match(display, /\.yt-gallery__dot\s*\{[\s\S]*?width:\s*10px;[\s\S]*?height:\s*10px;[\s\S]*?var\(--color-brand-secondary\)/)
   assert.match(display, /\.yt-gallery__dot\.is-active\s*\{[\s\S]*?var\(--color-brand-accent\)/)
   assert.doesNotMatch(display, /\.yt-gallery__dot\s*\{[^}]*opacity:/)
