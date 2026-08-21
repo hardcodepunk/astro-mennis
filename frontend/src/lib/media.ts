@@ -2,6 +2,8 @@ import {
   isImageDeliveryUrl,
   parseYouTubeId,
 } from "@astro-mennis/media-contract"
+import { createImageUrlBuilder } from "@sanity/image-url"
+import type { WorkPoster } from "./sanity.contract"
 
 const CLOUDINARY_UPLOAD = "/upload/"
 const CLOUDINARY_VIDEO_UPLOAD = "/video/upload/"
@@ -18,6 +20,22 @@ type ImageDimensions = {
   width?: number
   height?: number
 }
+
+export type ImageSource = string | WorkPoster
+
+export const LANDSCAPE_POSTER_PRESET = Object.freeze({
+  widths: Object.freeze([320, 480, 720, 1024, 1280]),
+  fallbackWidth: 1280,
+  sizes: "(max-width: 72rem) calc(100vw - 2rem), 72rem",
+  aspectRatio: 16 / 9,
+})
+
+export const REEL_POSTER_PRESET = Object.freeze({
+  widths: Object.freeze([320, 480, 720]),
+  fallbackWidth: 720,
+  sizes: "(max-width: 30rem) 86vw, 420px",
+  aspectRatio: 9 / 16,
+})
 
 export function cloudinaryImage(url: string | undefined, width: number, quality: CloudinaryQuality = "auto") {
   if (!url) return undefined
@@ -114,7 +132,7 @@ export function safePosterUrl(url: string | undefined, fallback: string): string
   return url && isImageDeliveryUrl(url) ? url : fallback
 }
 
-function imageSrcset(url: string | undefined, widths: number[], quality: CloudinaryQuality = "auto") {
+function cloudinaryImageSrcset(url: string | undefined, widths: readonly number[], quality: CloudinaryQuality = "auto") {
   if (!url) return undefined
   if (!url.includes("res.cloudinary.com") || !url.includes(CLOUDINARY_UPLOAD)) return undefined
 
@@ -131,18 +149,87 @@ function imageSrcset(url: string | undefined, widths: number[], quality: Cloudin
 }
 
 export function imageAttributes(options: {
-  src: string | undefined
-  widths: number[]
+  src: ImageSource | undefined
+  widths: readonly number[]
   fallbackWidth: number
   sizes: string
   quality?: CloudinaryQuality
+  aspectRatio?: number
 }) {
-  const { src, widths, fallbackWidth, sizes, quality = "auto" } = options
+  const { src, widths, fallbackWidth, sizes, quality = "auto", aspectRatio } = options
+  if (src && typeof src !== "string" && src.provider === "sanity") {
+    const builder = sanityPosterBuilder(src)
+    const transformedUrl = (width: number) => {
+      if (!builder) return sanityImageUrl({
+        src: src.url,
+        width,
+        crop: src.crop,
+        dimensions: src.dimensions,
+      })
+      const sized = aspectRatio
+        ? builder.width(width).height(Math.round(width / aspectRatio)).fit("crop")
+        : builder.width(width).fit("max")
+      return sized.auto("format").url()
+    }
+    const srcset = widths
+      .filter((width, index, list) => width > 0 && list.indexOf(width) === index)
+      .sort((a, b) => a - b)
+      .map(width => {
+        const transformed = transformedUrl(width)
+        return transformed ? `${transformed} ${width}w` : undefined
+      })
+      .filter((entry): entry is string => Boolean(entry))
+      .join(", ") || undefined
+
+    return {
+      src: transformedUrl(fallbackWidth) ?? src.url,
+      srcset,
+      sizes,
+    }
+  }
+
+  const url = typeof src === "string" ? src : src?.url
   return {
-    src: cloudinaryImage(src, fallbackWidth, quality) ?? src,
-    srcset: imageSrcset(src, widths, quality),
+    src: cloudinaryImage(url, fallbackWidth, quality) ?? url,
+    srcset: cloudinaryImageSrcset(url, widths, quality),
     sizes,
   }
+}
+
+function sanityPosterBuilder(source: Extract<ImageSource, {provider: "sanity"}>) {
+  let parsed: URL
+  try {
+    parsed = new URL(source.url)
+  } catch {
+    return undefined
+  }
+  const segments = parsed.pathname.split("/").filter(Boolean)
+  if (parsed.hostname !== "cdn.sanity.io" || segments[0] !== "images") return undefined
+  const projectId = segments[1]
+  const dataset = segments[2]
+  if (!projectId || !dataset) return undefined
+
+  const crop = source.crop
+  const hotspot = source.hotspot
+  const image = {
+    asset: {url: source.url},
+    ...(crop
+      && typeof crop.top === "number"
+      && typeof crop.bottom === "number"
+      && typeof crop.left === "number"
+      && typeof crop.right === "number"
+      ? {crop: {top: crop.top, bottom: crop.bottom, left: crop.left, right: crop.right}}
+      : {}),
+    ...(hotspot
+      && typeof hotspot.x === "number"
+      && typeof hotspot.y === "number"
+      && typeof hotspot.width === "number"
+      && typeof hotspot.height === "number"
+      ? {hotspot: {x: hotspot.x, y: hotspot.y, width: hotspot.width, height: hotspot.height}}
+      : {}),
+  }
+
+  return createImageUrlBuilder({projectId, dataset}).image(image)
 }
 
 export function sanityImageUrl(options: {

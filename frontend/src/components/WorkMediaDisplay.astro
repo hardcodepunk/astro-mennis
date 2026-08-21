@@ -1,20 +1,15 @@
 ---
 import VideoPreview from "./VideoPreview.astro"
-import { imageAttributes, youtubeId as parseYouTubeId } from "../lib/media"
-
-type WorkVideo = { title: string; youtubeUrl: string; poster?: string }
-type WorkMedia =
-  | { mode: "preview" }
-  | { mode: "single"; youtubeUrl?: string }
-  | { mode: "gallery"; videos?: WorkVideo[] }
-  | { mode: "slider"; reels?: string[] }
+import {
+  LANDSCAPE_POSTER_PRESET,
+  REEL_POSTER_PRESET,
+  imageAttributes,
+  youtubeId as parseYouTubeId,
+} from "../lib/media"
+import type { WorkDetail } from "../lib/sanity.queries"
 
 const { work } = Astro.props as {
-  work: {
-    title?: string
-    preview: { poster: string; mp4?: string; webm?: string }
-    media?: WorkMedia
-  }
+  work: Pick<WorkDetail, "title" | "preview" | "media">
 }
 
 function getYouTubeId(input?: string | null): string | null {
@@ -31,42 +26,46 @@ const galleryItems =
           if (!id) return []
           const poster = imageAttributes({
             src: video.poster ?? work.preview.poster,
-            widths: [320, 480, 720, 1024, 1280],
-            fallbackWidth: 1280,
-            sizes: "(max-width: 72rem) calc(100vw - 2rem), 72rem",
+            ...LANDSCAPE_POSTER_PRESET,
           })
           return [{
             id,
             title: video.title?.trim() || `Video ${index + 1}`,
             poster,
-            posterSrc: poster.src ?? video.poster ?? work.preview.poster,
+            posterSrc: poster.src ?? work.preview.poster,
           }]
         })
         .slice(0, 6)
     : []
-const reelIds =
+const reelItems =
   media && media.mode === "slider"
     ? (media.reels ?? [])
-        .map(u => getYouTubeId(u))
-        .filter((x): x is string => Boolean(x))
-        .slice(0, 8)
+        .flatMap(reel => {
+          const id = getYouTubeId(reel.youtubeUrl)
+          if (!id) return []
+          const poster = imageAttributes({
+            src: reel.poster ?? work.preview.poster,
+            ...REEL_POSTER_PRESET,
+          })
+          return [{
+            id,
+            poster,
+            posterSrc: poster.src ?? work.preview.poster,
+          }]
+        })
+        .slice(0, 4)
     : []
 
 const hasYouTube = Boolean(youtubeId)
 const hasGallery = galleryItems.length > 0
-const hasSlider = reelIds.length > 0
+const hasSlider = reelItems.length > 0
 const hasGalleryNav = galleryItems.length > 1
-const hasSliderNav = reelIds.length > 1
+const hasSliderNav = reelItems.length > 1
 const singleMediaLabel = work.title?.trim() ? `video for ${work.title.trim()}` : "project video"
 const singleStatusId = youtubeId ? `work-media-status-${youtubeId}` : undefined
-const facadeSizes = hasSlider
-  ? "(max-width: 30rem) 86vw, 420px"
-  : "(max-width: 72rem) calc(100vw - 2rem), 72rem"
 const facadePoster = imageAttributes({
   src: work.preview.poster,
-  widths: [320, 480, 720, 1024, 1280],
-  fallbackWidth: hasSlider ? 720 : 1280,
-  sizes: facadeSizes,
+  ...LANDSCAPE_POSTER_PRESET,
 })
 const facadePosterSrc = facadePoster.src ?? work.preview.poster
 ---
@@ -263,9 +262,9 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
     ) : hasSlider ? (
       <section class="yt-gallery yt-gallery--reels" aria-label="Reels">
         <div class="yt-rail" data-yt-rail>
-          {reelIds.map((id, index) => {
-            const mediaLabel = `reel ${index + 1} of ${reelIds.length}`
-            const statusId = `work-media-status-${id}-${index}`
+          {reelItems.map((reel, index) => {
+            const mediaLabel = `reel ${index + 1} of ${reelItems.length}`
+            const statusId = `work-media-status-${reel.id}-${index}`
 
             return (
               <article class="yt-slide" data-yt-slide>
@@ -273,7 +272,7 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
                   <div
                     class="yt-embed"
                     data-yt-embed
-                    data-yt-video-id={id}
+                    data-yt-video-id={reel.id}
                     data-yt-ratio="9:16"
                     data-yt-title={mediaLabel}
                     inert
@@ -294,9 +293,9 @@ const facadePosterSrc = facadePoster.src ?? work.preview.poster
                       fetchpriority={index === 0 ? "high" : undefined}
                       width="720"
                       height="1280"
-                      src={facadePosterSrc}
-                      srcset={facadePoster.srcset}
-                      sizes={facadePoster.sizes}
+                      src={reel.posterSrc}
+                      srcset={reel.poster.srcset}
+                      sizes={reel.poster.sizes}
                     />
                     <span class="yt-overlay__play" aria-hidden="true" />
                   </button>

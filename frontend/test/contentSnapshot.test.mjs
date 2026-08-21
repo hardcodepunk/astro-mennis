@@ -42,7 +42,7 @@ test("validates and freezes a complete build snapshot", () => {
   assert.match(CONTENT_SNAPSHOT_QUERY, /"siteSettings": \*\[_id == "siteSettings"\]\[0\]/)
   assert.match(CONTENT_SNAPSHOT_QUERY, /"homepageWorkIds": homepageWorks\[\]._ref/)
 
-  assert.match(CONTENT_SNAPSHOT_QUERY, /videos\[\]\{\s*title,\s*youtubeUrl,\s*poster\s*\}/)
+  assert.match(CONTENT_SNAPSHOT_QUERY, /videos\[\]\{[\s\S]*?posterImage\{/)
   const gallery = snapshot.works.find(work => work.media?.mode === "gallery")
   const galleryVideos = gallery?.media?.mode === "gallery" ? gallery.media.videos : []
   assert.equal(galleryVideos.length, 3)
@@ -51,6 +51,31 @@ test("validates and freezes a complete build snapshot", () => {
     galleryVideos.map(video => video.title),
     ["Piston Atelier", "Fonkel Silent Disco", "Alles Kan"],
   )
+  assert.equal(galleryVideos[0]?.poster?.provider, "sanity")
+  assert.equal(galleryVideos[1]?.poster?.provider, "cloudinary")
+  assert.equal(galleryVideos[2]?.poster, undefined)
+
+  assert.match(CONTENT_SNAPSHOT_QUERY, /\breels\b/)
+  assert.doesNotMatch(CONTENT_SNAPSHOT_QUERY, /reels\[\]\s*\{/)
+  assert.match(CONTENT_SNAPSHOT_QUERY, /"reelPosters": reels\[/)
+  const slider = snapshot.works.find(work => work.media?.mode === "slider")
+  const reels = slider?.media?.mode === "slider" ? slider.media.reels : []
+  assert.deepEqual(reels, [
+    {
+      youtubeUrl: "https://youtu.be/dQw4w9WgXcQ",
+      poster: {
+        provider: "sanity",
+        url: "https://cdn.sanity.io/images/454gxa26/production/44215b5f7e7d20b4e0ad54fa750cce23ca1ea743-2480x3508.png",
+        crop: {top: 0.05, bottom: 0.05, left: 0.05, right: 0.05},
+        hotspot: {x: 0.45, y: 0.55, width: 0.4, height: 0.4},
+        dimensions: {width: 2480, height: 3508},
+      },
+    },
+    {youtubeUrl: "https://www.youtube.com/shorts/aqz-KE-bpKQ"},
+  ])
+
+  const revalidated = validateContentSnapshot(JSON.parse(JSON.stringify(snapshot)))
+  assert.deepEqual(revalidated, snapshot)
 })
 
 test("all repository getters share one in-flight load", async () => {

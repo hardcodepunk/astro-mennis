@@ -1,4 +1,4 @@
-import {defineField, defineType} from 'sanity'
+import {defineArrayMember, defineField, defineType} from 'sanity'
 import {
   cloudinaryPosterUrl,
   youtubeUrl,
@@ -139,19 +139,39 @@ export const work = defineType({
                   validation: (r) => r.required().uri({scheme: ['https']}).custom(youtubeUrl),
                 }),
                 defineField({
-                  name: 'poster',
-                  title: 'Poster URL',
+                  name: 'posterImage',
+                  title: 'Poster',
                   description:
-                    'Optional Cloudinary image shown before playback. Falls back to the project card poster.',
+                    'Optional image shown before playback. Upload or select it here. Falls back to the project card poster.',
+                  type: 'image',
+                  options: {hotspot: true},
+                }),
+                defineField({
+                  name: 'poster',
+                  title: 'Legacy poster URL (fallback)',
+                  description:
+                    'Read-only Cloudinary poster used only when Poster is empty. Upload a Poster above to replace it.',
                   type: 'url',
+                  hidden: ({value}) => !value,
+                  readOnly: true,
                   validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryPosterUrl),
                 }),
               ],
               preview: {
                 select: {
                   title: 'title',
-                  subtitle: 'youtubeUrl',
-                  media: 'poster',
+                  youtubeUrl: 'youtubeUrl',
+                  posterImage: 'posterImage',
+                  legacyPoster: 'poster',
+                },
+                prepare({title, youtubeUrl, posterImage, legacyPoster}) {
+                  return {
+                    title: title || 'Project video',
+                    subtitle: legacyPoster && !posterImage
+                      ? `${youtubeUrl || 'YouTube video'} - uses legacy poster URL`
+                      : youtubeUrl,
+                    media: posterImage,
+                  }
                 },
               },
             },
@@ -184,14 +204,56 @@ export const work = defineType({
 
         defineField({
           name: 'reels',
-          title: 'YouTube reels URLs',
-          description: 'Required when hero media type is YouTube reels slider. Add up to 4 URLs.',
+          title: 'YouTube reels',
+          description:
+            'Required when hero media type is YouTube reels slider. Add up to 4 reels in display order. Each reel can use its own optional poster.',
           type: 'array',
           of: [
-            {
-              type: 'url',
-              validation: (r) => r.uri({scheme: ['https']}).custom(youtubeUrl),
-            },
+            defineArrayMember({
+              name: 'projectReel',
+              title: 'Reel',
+              type: 'object',
+              fields: [
+                defineField({
+                  name: 'youtubeUrl',
+                  title: 'YouTube URL',
+                  type: 'url',
+                  validation: (r) => r.required().uri({scheme: ['https']}).custom(youtubeUrl),
+                }),
+                defineField({
+                  name: 'posterImage',
+                  title: 'Poster',
+                  description:
+                    'Optional image shown before playback. Upload or select it here. Falls back to the project card poster.',
+                  type: 'image',
+                  options: {hotspot: true},
+                }),
+                defineField({
+                  name: 'poster',
+                  title: 'Legacy poster URL (fallback)',
+                  description:
+                    'Read-only Cloudinary poster used only when Poster is empty. Upload a Poster above to replace it.',
+                  type: 'url',
+                  hidden: ({value}) => !value,
+                  readOnly: true,
+                  validation: (r) => r.uri({scheme: ['https']}).custom(cloudinaryPosterUrl),
+                }),
+              ],
+              preview: {
+                select: {
+                  title: 'youtubeUrl',
+                  posterImage: 'posterImage',
+                  legacyPoster: 'poster',
+                },
+                prepare({title, posterImage, legacyPoster}) {
+                  return {
+                    title: title || 'Reel',
+                    subtitle: posterImage || legacyPoster ? 'Custom poster' : 'Uses project card poster',
+                    media: posterImage,
+                  }
+                },
+              },
+            }),
           ],
           hidden: ({parent}) => (parent as HeroMediaParent)?.mode !== 'slider',
           validation: (r) =>

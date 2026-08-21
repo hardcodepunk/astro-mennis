@@ -3,6 +3,15 @@ import { readFile } from "node:fs/promises"
 import test from "node:test"
 
 import { videoObjectJsonLd } from "../src/lib/seo.ts"
+import { REEL_POSTER_PRESET, imageAttributes } from "../src/lib/media.ts"
+
+const nativePoster = {
+  provider: "sanity",
+  url: "https://cdn.sanity.io/images/example/production/privacyreel-720x1280.jpg",
+  crop: {top: 0, bottom: 0, left: 0, right: 0},
+  hotspot: {x: 0.5, y: 0.5, width: 0.5, height: 0.5},
+  dimensions: {width: 720, height: 1280},
+}
 
 const work = overrides => ({
   slug: "privacy-test",
@@ -31,7 +40,13 @@ test("YouTube JSON-LD uses privacy-enhanced embed URLs", () => {
     work: work({
       media: {
         mode: "slider",
-        reels: ["https://youtu.be/dQw4w9WgXcQ", "https://www.youtube.com/shorts/aqz-KE-bpKQ"],
+        reels: [
+          {
+            youtubeUrl: "https://youtu.be/dQw4w9WgXcQ",
+            poster: nativePoster,
+          },
+          {youtubeUrl: "https://www.youtube.com/shorts/aqz-KE-bpKQ"},
+        ],
       },
     }),
     title: "Privacy test",
@@ -43,8 +58,15 @@ test("YouTube JSON-LD uses privacy-enhanced embed URLs", () => {
       media: {
         mode: "gallery",
         videos: [
-          {title: "Main film", youtubeUrl: "https://youtu.be/dQw4w9WgXcQ"},
-          {title: "Second cut", youtubeUrl: "https://www.youtube.com/watch?v=aqz-KE-bpKQ"},
+          {title: "Main film", youtubeUrl: "https://youtu.be/dQw4w9WgXcQ", poster: nativePoster},
+          {
+            title: "Second cut",
+            youtubeUrl: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+            poster: {
+              provider: "cloudinary",
+              url: "https://res.cloudinary.com/example/image/upload/v1/second-cut.jpg",
+            },
+          },
         ],
       },
     }),
@@ -59,10 +81,16 @@ test("YouTube JSON-LD uses privacy-enhanced embed URLs", () => {
     "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
     "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ",
   ])
+  assert.deepEqual(slider.map(item => item.thumbnailUrl), [
+    [imageAttributes({src: nativePoster, ...REEL_POSTER_PRESET}).src],
+    ["https://res.cloudinary.com/example/image/upload/v1/privacy-test.jpg"],
+  ])
   assert.deepEqual(gallery.map(item => [item.name, item.embedUrl]), [
     ["Main film", "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"],
     ["Second cut", "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ"],
   ])
+  assert.match(gallery[0].thumbnailUrl[0], /cdn\.sanity\.io[\s\S]*w=1280[\s\S]*h=720/)
+  assert.match(gallery[1].thumbnailUrl[0], /res\.cloudinary\.com[\s\S]*w_1280/)
 })
 
 test("server-rendered facades do not eagerly reference YouTube infrastructure", async () => {
@@ -221,6 +249,11 @@ test("server-rendered facades do not eagerly reference YouTube infrastructure", 
   assert.doesNotMatch(display, /\.yt-gallery__dot\s*\{[^}]*opacity:/)
   assert.doesNotMatch(display, /\{index \+ 1\} \/ \{galleryItems\.length\}/)
   assert.match(display, /src:\s*video\.poster \?\? work\.preview\.poster/)
+  assert.match(display, /src:\s*reel\.poster \?\? work\.preview\.poster/)
+  assert.match(display, /src:\s*video\.poster \?\? work\.preview\.poster,[\s\S]*?\.\.\.LANDSCAPE_POSTER_PRESET/)
+  assert.match(display, /src:\s*reel\.poster \?\? work\.preview\.poster,[\s\S]*?\.\.\.REEL_POSTER_PRESET/)
+  assert.match(display, /src=\{reel\.posterSrc\}/)
+  assert.match(display, /srcset=\{reel\.poster\.srcset\}/)
   assert.match(display, /\.yt-slide--landscape\s*\{[\s\S]*?flex:\s*0 0 100%/)
   assert.match(
     display,
@@ -238,6 +271,8 @@ test("server-rendered facades do not eagerly reference YouTube infrastructure", 
   assert.doesNotMatch(display, /plyr/i)
   assert.doesNotMatch(workPage, /youtubePoster|i\.ytimg\.com/i)
   assert.match(workPage, /work\.media\.videos\[0\]\?\.poster \?\? work\.preview\.poster/)
+  assert.match(workPage, /work\.media\.reels\[0\]\?\.poster \?\? work\.preview\.poster/)
+  assert.match(workPage, /const posterPreset = hasVerticalFacade \? REEL_POSTER_PRESET : LANDSCAPE_POSTER_PRESET/)
 })
 
 test("media galleries share circular pill-chevron navigation without Plyr", async () => {

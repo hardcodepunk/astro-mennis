@@ -1,5 +1,10 @@
 import type { Category, SeoSettings, WorkDetail, WorkSummary } from "./sanity.queries"
 import { parseYouTubeId } from "@astro-mennis/media-contract"
+import {
+  LANDSCAPE_POSTER_PRESET,
+  REEL_POSTER_PRESET,
+  imageAttributes,
+} from "./media.ts"
 
 export const DEFAULT_SITE_URL = "https://www.demennis.be"
 export const DEFAULT_TITLE = "De Mennis"
@@ -370,7 +375,10 @@ export function videoObjectJsonLd(params: {
       .map(video => ({video, embedUrl: youtubeEmbedUrl(video.youtubeUrl)}))
       .filter((item): item is typeof item & {embedUrl: string} => Boolean(item.embedUrl))
       .map(({video, embedUrl}) => {
-        const videoThumbnail = absoluteUrl(video.poster ?? image ?? work.preview.poster, seo?.siteUrl)
+        const posterUrl = video.poster
+          ? imageAttributes({src: video.poster, ...LANDSCAPE_POSTER_PRESET}).src
+          : undefined
+        const videoThumbnail = absoluteUrl(posterUrl ?? image ?? work.preview.poster, seo?.siteUrl)
         return {
           ...base,
           name: video.title,
@@ -382,13 +390,20 @@ export function videoObjectJsonLd(params: {
 
   if (work.media?.mode === "slider") {
     return (work.media.reels ?? [])
-      .map(url => youtubeEmbedUrl(url))
-      .filter((url): url is string => Boolean(url))
-      .map((embedUrl, index) => ({
-        ...base,
-        name: index === 0 ? title : `${title} reel ${index + 1}`,
-        embedUrl,
-      }))
+      .map(reel => ({reel, embedUrl: youtubeEmbedUrl(reel.youtubeUrl)}))
+      .filter((item): item is typeof item & {embedUrl: string} => Boolean(item.embedUrl))
+      .map(({reel, embedUrl}, index) => {
+        const posterUrl = reel.poster
+          ? imageAttributes({src: reel.poster, ...REEL_POSTER_PRESET}).src
+          : undefined
+        const reelThumbnail = absoluteUrl(posterUrl ?? image ?? work.preview.poster, seo?.siteUrl)
+        return {
+          ...base,
+          name: index === 0 ? title : `${title} reel ${index + 1}`,
+          thumbnailUrl: reelThumbnail ? [reelThumbnail] : undefined,
+          embedUrl,
+        }
+      })
   }
 
   const contentUrl = work.preview.mp4 || work.preview.webm

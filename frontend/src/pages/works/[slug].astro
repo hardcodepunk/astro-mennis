@@ -18,7 +18,11 @@ import {
   workSeoDescription,
   workSeoTitle,
 } from "../../lib/seo"
-import { imageAttributes } from "../../lib/media"
+import {
+  LANDSCAPE_POSTER_PRESET,
+  REEL_POSTER_PRESET,
+  imageAttributes,
+} from "../../lib/media"
 
 export async function getStaticPaths() {
   const snapshot = await getContentSnapshot()
@@ -50,15 +54,13 @@ const canonicalPath = work.seo?.canonicalUrl ?? `/works/${work.slug}`
 const hasVerticalFacade = work.media?.mode === "slider"
 const heroPoster = work.media?.mode === "gallery"
   ? work.media.videos[0]?.poster ?? work.preview.poster
-  : work.preview.poster
-const facadeSizes = hasVerticalFacade
-  ? "(max-width: 30rem) 86vw, 420px"
-  : "(max-width: 72rem) calc(100vw - 2rem), 72rem"
+  : work.media?.mode === "slider"
+    ? work.media.reels[0]?.poster ?? work.preview.poster
+    : work.preview.poster
+const posterPreset = hasVerticalFacade ? REEL_POSTER_PRESET : LANDSCAPE_POSTER_PRESET
 const preloadHero = imageAttributes({
   src: heroPoster,
-  widths: [320, 480, 720, 1024, 1280],
-  fallbackWidth: hasVerticalFacade ? 720 : 1280,
-  sizes: facadeSizes,
+  ...posterPreset,
 })
 const jsonLd = [
   breadcrumbJsonLd(

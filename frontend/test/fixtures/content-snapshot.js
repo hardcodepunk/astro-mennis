@@ -2,6 +2,12 @@ const cloudinaryImage = name =>
   `https://res.cloudinary.com/demo/image/upload/v1/${name}.jpg`
 const cloudinaryVideo = (name, extension) =>
   `https://res.cloudinary.com/demo/video/upload/v1/${name}.${extension}`
+const sanityPoster = (url, width, height) => ({
+  url,
+  crop: {top: 0.05, bottom: 0.05, left: 0.05, right: 0.05},
+  hotspot: {x: 0.45, y: 0.55, width: 0.4, height: 0.4},
+  dimensions: {width, height},
+})
 
 export default {
   siteSettings: {
@@ -168,15 +174,32 @@ export default {
       year: "2024",
       publishedAt: "2026-01-01T12:00:00.000Z",
       updatedAt: "2026-01-02T12:00:00.000Z",
-      preview: {poster: cloudinaryImage("fixture-slider")},
+      preview: {
+        poster:
+          "https://res.cloudinary.com/dkdquifbr/image/upload/v1780481470/Timeline_1_01_00_19_14_fsxgcx.jpg",
+      },
       thumbnailAutoplay: false,
       featuredOnHome: false,
       seo: {description: "Fixture slider project.", noindex: true},
       media: {
         mode: "slider",
         reels: [
-          "https://youtu.be/dQw4w9WgXcQ",
+          {
+            _key: "fixture-reel-native",
+            youtubeUrl: "https://youtu.be/dQw4w9WgXcQ",
+            poster: cloudinaryImage("fixture-slider-legacy-reel"),
+          },
           "https://www.youtube.com/shorts/aqz-KE-bpKQ",
+        ],
+        reelPosters: [
+          {
+            _key: "fixture-reel-native",
+            posterImage: sanityPoster(
+              "https://cdn.sanity.io/images/454gxa26/production/44215b5f7e7d20b4e0ad54fa750cce23ca1ea743-2480x3508.png",
+              2480,
+              3508,
+            ),
+          },
         ],
       },
       body: [
@@ -217,8 +240,11 @@ export default {
           {
             title: "Piston Atelier",
             youtubeUrl: "https://youtu.be/uTGFZtjBpaA",
-            poster:
-              "https://res.cloudinary.com/dkdquifbr/image/upload/v1780481470/Timeline_1_01_00_19_14_fsxgcx.jpg",
+            posterImage: sanityPoster(
+              "https://cdn.sanity.io/images/454gxa26/production/1b38f9bc88421087fa7693104f4127fd40024294-2049x1449.png",
+              2049,
+              1449,
+            ),
           },
           {
             title: "Fonkel Silent Disco",
@@ -229,8 +255,6 @@ export default {
           {
             title: "Alles Kan",
             youtubeUrl: "https://youtu.be/zMtQ7tV7km0",
-            poster:
-              "https://res.cloudinary.com/dkdquifbr/image/upload/v1780390392/mini_trailer_01_09_52_00_hpq2nw.jpg",
           },
         ],
       },

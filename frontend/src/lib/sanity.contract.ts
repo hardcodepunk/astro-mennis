@@ -149,13 +149,31 @@ type WorkMedia =
   | { mode: "preview" }
   | { mode: "single"; youtubeUrl?: string }
   | { mode: "gallery"; videos: WorkVideo[] }
-  | { mode: "slider"; reels?: string[] }
+  | { mode: "slider"; reels: WorkReel[] }
 
 type WorkVideo = {
   title: string
   youtubeUrl: string
-  poster?: string
+  poster?: WorkPoster
 }
+
+type WorkReel = {
+  youtubeUrl: string
+  poster?: WorkPoster
+}
+
+export type WorkPoster =
+  | {
+      provider: "sanity"
+      url: string
+      crop?: { top: number; bottom: number; left: number; right: number }
+      hotspot?: { x: number; y: number; width: number; height: number }
+      dimensions?: { width: number; height: number }
+    }
+  | {
+      provider: "cloudinary"
+      url: string
+    }
 
 const PORTABLE_TEXT_STYLES = new Set(["normal", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"])
 const PORTABLE_TEXT_LIST_ITEMS = new Set(["bullet", "number"])
@@ -470,15 +488,14 @@ function validateWorkMedia(value: unknown, path: string): WorkMedia {
     }
   }
   if (mode === "slider") {
-    const reels = optionalStringArray(obj.reels, `${path}.reels`) ?? []
+    const reelPosters = validateReelPosterLookup(obj.reelPosters, `${path}.reelPosters`)
+    const reels = obj.reels === null || obj.reels === undefined
+      ? []
+      : arrayOf(obj.reels, `${path}.reels`, (reel, reelPath) =>
+          validateWorkReel(reel, reelPath, reelPosters))
     if (reels.length < 1 || reels.length > 4) {
-      throw new SanityContractError(`${path}.reels must contain between 1 and 4 YouTube URLs`)
+      throw new SanityContractError(`${path}.reels must contain between 1 and 4 reels`)
     }
-    reels.forEach((url, index) => {
-      if (!parseYouTubeId(url)) {
-        throw new SanityContractError(`${path}.reels[${index}] must be a supported YouTube URL`)
-      }
-    })
     return {
       mode,
       reels,
@@ -491,18 +508,131 @@ function validateWorkMedia(value: unknown, path: string): WorkMedia {
 function validateWorkVideo(value: unknown, path: string): WorkVideo {
   const obj = objectAt(value, path)
   const youtubeUrl = requiredString(obj.youtubeUrl, `${path}.youtubeUrl`)
-  const poster = optionalString(obj.poster, `${path}.poster`)
+  const sanityPoster = optionalObject(obj.posterImage, `${path}.posterImage`, validateSanityPoster)
+  const storedPoster = validatePoster(obj.poster, `${path}.poster`)
+  const poster = sanityPoster ?? storedPoster
   const youtubeValidation = validateYouTubeUrl(youtubeUrl)
   if (youtubeValidation !== true) {
     throw new SanityContractError(`${path}.youtubeUrl ${youtubeValidation}`)
-  }
-  if (poster && !isCloudinaryPosterUrl(poster)) {
-    throw new SanityContractError(`${path}.poster must be a Cloudinary image delivery URL`)
   }
   return {
     title: requiredString(obj.title, `${path}.title`),
     youtubeUrl,
     ...(poster ? { poster } : {}),
+  }
+}
+
+function validateWorkReel(
+  value: unknown,
+  path: string,
+  reelPosters: ReadonlyMap<string, WorkPoster>,
+): WorkReel {
+  if (typeof value === "string") {
+    if (!parseYouTubeId(value)) {
+      throw new SanityContractError(`${path} must be a supported YouTube URL`)
+    }
+    return { youtubeUrl: value }
+  }
+
+  const obj = objectAt(value, path)
+  const youtubeUrl = requiredString(obj.youtubeUrl, `${path}.youtubeUrl`)
+  const key = optionalString(obj._key, `${path}._key`)
+  const storedPoster = validatePoster(obj.poster, `${path}.poster`)
+  const poster = (key ? reelPosters.get(key) : undefined) ?? storedPoster
+  const youtubeValidation = validateYouTubeUrl(youtubeUrl)
+  if (youtubeValidation !== true) {
+    throw new SanityContractError(`${path}.youtubeUrl ${youtubeValidation}`)
+  }
+  return {
+    youtubeUrl,
+    ...(poster ? { poster } : {}),
+  }
+}
+
+function validateReelPosterLookup(value: unknown, path: string): ReadonlyMap<string, WorkPoster> {
+  const entries = value === null || value === undefined
+    ? []
+    : arrayOf(value, path, (entry, entryPath) => {
+        const obj = objectAt(entry, entryPath)
+        const key = requiredString(obj._key, `${entryPath}._key`)
+        const poster = optionalObject(
+          obj.posterImage,
+          `${entryPath}.posterImage`,
+          validateSanityPoster,
+        )
+        if (!poster) {
+          throw new SanityContractError(`${entryPath}.posterImage must contain a Sanity image`)
+        }
+        return { key, poster }
+      })
+
+  const posters = new Map<string, WorkPoster>()
+  entries.forEach(({key, poster}, index) => {
+    if (posters.has(key)) {
+      throw new SanityContractError(`${path}[${index}]._key duplicates reel key ${JSON.stringify(key)}`)
+    }
+    posters.set(key, poster)
+  })
+  return posters
+}
+
+function validatePoster(value: unknown, path: string): WorkPoster | undefined {
+  if (value === null || value === undefined || value === "") return undefined
+  if (typeof value === "string") {
+    if (!isCloudinaryPosterUrl(value)) {
+      throw new SanityContractError(`${path} must be a Cloudinary image delivery URL`)
+    }
+    return {provider: "cloudinary", url: value}
+  }
+
+  const obj = objectAt(value, path)
+  const provider = requiredString(obj.provider, `${path}.provider`)
+  if (provider === "sanity") return validateSanityPoster(obj, path)
+  if (provider === "cloudinary") {
+    const url = requiredString(obj.url, `${path}.url`)
+    if (!isCloudinaryPosterUrl(url)) {
+      throw new SanityContractError(`${path}.url must be a Cloudinary image delivery URL`)
+    }
+    return {provider, url}
+  }
+  throw new SanityContractError(`${path}.provider expected "sanity" or "cloudinary"`)
+}
+
+function validateSanityPoster(value: Record<string, unknown>, path: string): WorkPoster {
+  const url = requiredString(value.url, `${path}.url`).trim()
+  if (!isSafeSanityImageUrl(url)) {
+    throw new SanityContractError(`${path}.url must be an HTTPS Sanity image URL`)
+  }
+
+  const crop = optionalObject(value.crop, `${path}.crop`, cropValue => {
+    const result = {
+      top: unitNumber(cropValue.top, `${path}.crop.top`),
+      bottom: unitNumber(cropValue.bottom, `${path}.crop.bottom`),
+      left: unitNumber(cropValue.left, `${path}.crop.left`),
+      right: unitNumber(cropValue.right, `${path}.crop.right`),
+    }
+    if (result.top + result.bottom >= 1 || result.left + result.right >= 1) {
+      throw new SanityContractError(`${path}.crop must leave a visible image area`)
+    }
+    return result
+  })
+  const hotspot = optionalObject(value.hotspot, `${path}.hotspot`, hotspotValue => ({
+    x: unitNumber(hotspotValue.x, `${path}.hotspot.x`),
+    y: unitNumber(hotspotValue.y, `${path}.hotspot.y`),
+    width: positiveUnitNumber(hotspotValue.width, `${path}.hotspot.width`),
+    height: positiveUnitNumber(hotspotValue.height, `${path}.hotspot.height`),
+  }))
+  const dimensions = optionalObject(value.dimensions, `${path}.dimensions`, dimensionsValue => ({
+    width: positiveFiniteNumber(dimensionsValue.width, `${path}.dimensions.width`),
+    height: positiveFiniteNumber(dimensionsValue.height, `${path}.dimensions.height`),
+  }))
+
+  return {
+    provider: "sanity",
+    url,
+    ...(crop ? {crop} : {}),
+    ...(hotspot ? {hotspot} : {}),
+    ...(dimensions ? {dimensions} : {}),
   }
 }
 

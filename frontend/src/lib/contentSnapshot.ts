@@ -29,6 +29,12 @@ const previewSelection = `preview{ poster, webm, mp4 }`
 const textPanelSelection = `kicker, title, body, mirrorLayout`
 const mediaSelection = `mp4, webm, poster`
 const contactReasonsSelection = `kicker, title, items, mirrorLayout`
+const posterImageSelection = `
+  "url": asset->url,
+  crop,
+  hotspot,
+  "dimensions": asset->metadata.dimensions
+`
 
 export const CONTENT_SNAPSHOT_QUERY = `{
   "siteSettings": *[_id == "siteSettings"][0]{
@@ -143,9 +149,14 @@ export const CONTENT_SNAPSHOT_QUERY = `{
       videos[]{
         title,
         youtubeUrl,
-        poster
+        poster,
+        posterImage{${posterImageSelection}}
       },
-      reels
+      reels,
+      "reelPosters": reels[_type == "projectReel" && defined(posterImage.asset)]{
+        _key,
+        posterImage{${posterImageSelection}}
+      }
     },
     overviewTitle,
     body[]{
