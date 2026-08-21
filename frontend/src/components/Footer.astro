@@ -180,6 +180,16 @@ const legalDownloadUrl = legalUrl
       color: var(--color-brand-accent);
     }
 
+    @media (min-width: 701px) {
+      .footer {
+        padding-bottom: clamp(2.5rem, calc(5vw + 0.25rem), 3.75rem);
+      }
+
+      .footer-credit {
+        margin-top: clamp(2.25rem, 4vw, 3rem);
+      }
+    }
+
     @media (max-width: 700px) {
       .footer-main,
       .footer-meta {
