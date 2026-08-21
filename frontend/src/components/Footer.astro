@@ -62,7 +62,7 @@ const legalDownloadUrl = legalUrl
       target="_blank"
       rel="noopener noreferrer"
     >
-      Website created by Hardcodepunk
+      Website created by <span class="footer-credit-name">Hardcodepunk</span>
     </a>
   </div>
 
@@ -173,6 +173,11 @@ const legalDownloadUrl = legalUrl
     .footer-credit {
       margin-top: clamp(1rem, 2.5vw, 1.5rem);
       font-family: var(--font-display);
+      font-size: 0.864rem;
+    }
+
+    .footer-credit-name {
+      color: var(--color-brand-accent);
     }
 
     @media (max-width: 700px) {
