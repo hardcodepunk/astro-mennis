@@ -11,7 +11,6 @@ type Props = {
 const { kicker, title, items, mirrorLayout = false } = Astro.props as Props
 const safeKicker = kicker?.trim() ?? ""
 const safeTitle = title?.trim() ?? ""
-const flowingTitle = safeTitle.replace(/\s+/g, " ")
 const safeItems = items.map(item => item.trim()).filter(Boolean)
 const hasHeading = Boolean(safeKicker || safeTitle)
 ---
@@ -26,8 +25,7 @@ const hasHeading = Boolean(safeKicker || safeTitle)
               {safeKicker ? <p class="cr-kicker ds-kicker">{safeKicker}</p> : null}
               {safeTitle ? (
                 <h2 id="contact-reasons-title" class="cr-title ds-title ds-title--xl">
-                  <span class="cr-title__formatted"><LineBreakText text={safeTitle} /></span>
-                  <span class="cr-title__flow">{flowingTitle}</span>
+                  <LineBreakText text={safeTitle} />
                 </h2>
               ) : null}
             </div>
@@ -53,6 +51,7 @@ const hasHeading = Boolean(safeKicker || safeTitle)
   }
 
   .cr-inner {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
     max-width: 90rem;
     padding-block: clamp(1.5rem, 4vw, 3rem);
     padding-inline: clamp(1.5rem, 5vw, 4rem);
@@ -79,11 +78,8 @@ const hasHeading = Boolean(safeKicker || safeTitle)
   }
 
   .cr-title {
-    max-width: 12ch;
-  }
-
-  .cr-title__flow {
-    display: none;
+    max-width: none;
+    white-space: nowrap;
   }
 
   .cr-list {
@@ -112,22 +108,24 @@ const hasHeading = Boolean(safeKicker || safeTitle)
     background: var(--color-brand-secondary);
   }
 
+  @media (min-width: 901px) {
+    .cr.is-mirrored .cr-inner:not(.is-list-only) {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    }
+  }
+
   @media (max-width: 900px) {
     .cr-inner {
       grid-template-columns: 1fr;
       gap: 24px;
     }
+  }
 
+  @media (max-width: 420px) {
     .cr-title {
-      max-width: none;
-    }
-
-    .cr-title__formatted {
-      display: none;
-    }
-
-    .cr-title__flow {
-      display: inline;
+      --ds-heading-title-size: clamp(1.4rem, 7vw, 1.8rem);
+      overflow-wrap: anywhere;
+      white-space: normal;
     }
   }
 </style>
