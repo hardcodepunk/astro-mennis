@@ -29,15 +29,6 @@ const legalDownloadUrl = legalUrl
     </div>
 
     <div class="footer-meta">
-      <a
-        class="footer-credit ds-progress-link ds-progress-link--spacious"
-        href="https://hardcodepunk.be/"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Website created by Hardcodepunk
-      </a>
-
       {
         legalDownloadUrl ? (
           <a
@@ -64,6 +55,15 @@ const legalDownloadUrl = legalUrl
         <span class="footer-instagram-copy">Instagram</span>
       </a>
     </div>
+
+    <a
+      class="footer-credit ds-progress-link ds-progress-link--spacious"
+      href="https://hardcodepunk.be/"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Website created by Hardcodepunk
+    </a>
   </div>
 
   <style>
@@ -168,6 +168,10 @@ const legalDownloadUrl = legalUrl
       letter-spacing: 0;
       line-height: 1.2;
       text-decoration: none;
+    }
+
+    .footer-credit {
+      margin-top: clamp(0.5rem, 2vw, 1rem);
     }
 
     @media (max-width: 700px) {
